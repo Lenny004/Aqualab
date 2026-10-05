@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Simulador educativo 3D de purificación de agua por capas." />
+    <title>AquaLab · Simulador 3D de purificación</title>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="AquaLab inicio">
+          <span class="brand-mark"><span></span><span></span><span></span></span>
+          <span>Aqua<span>Lab</span></span>
+        </a>
+        <div class="topbar-meta">
+          <span class="live-dot"></span>
+          <span>Simulación interactiva</span>
+          <span class="meta-divider"></span>
+          <span>Modo educativo</span>
+        </div>
+        <button class="icon-button" id="helpButton" type="button" aria-label="Abrir ayuda">?</button>
+      </header>
+
+      <main>
+        <section class="intro section-wrap">
+          <div>
+            <p class="eyebrow">LABORATORIO VIRTUAL · 01</p>
+            <h1>Observa cómo el agua<br /><em>recupera su claridad.</em></h1>
+            <p class="intro-copy">Controla el tiempo, inspecciona cada capa y descubre qué sucede con la calidad del agua durante el recorrido.</p>
+            <div class="intro-tags" aria-label="Características del simulador"><span>4 etapas</span><span>Escena 3D</span><span>Datos ilustrativos</span></div>
+          </div>
+          <div class="intro-note">
+            <span class="note-line"></span>
+            <div><b>Explora el proceso</b><p>Arrastra la línea de tiempo<br />o selecciona una capa</p></div>
+          </div>
+        </section>
+
+        <section class="simulation-layout section-wrap" aria-label="Simulación de purificación">
+          <aside class="layers-card floating-layers-panel" aria-label="Configuración de capas">
+            <div class="card-heading"><div><p class="eyebrow">CONFIGURACIÓN</p><h2>Capas activas</h2></div><span class="layer-count" id="layerCount">3 / 4</span></div>
+            <p class="card-description">Selecciona una capa para inspeccionarla o activa y desactiva su interruptor.</p>
+            <div class="layer-list" id="layerList"></div>
+            <div class="educational-note"><span>✦</span><p><b>¿Sabías que?</b><br />Cada capa retiene o transforma distintos tipos de impurezas.</p></div>
+          </aside>
+
+          <div class="scene-card">
+            <div class="scene-toolbar">
+              <div class="scene-title">
+                <span class="status-pip"></span>
+                <span id="sceneStatus">Agua sin tratar</span>
+              </div>
+              <div class="scene-tools">
+                <button class="tool-button" id="resetViewButton" type="button"><span class="tool-icon">⌖</span> Centrar</button>
+                <button class="tool-button" id="zoomOutButton" type="button" aria-label="Alejar vista"><span class="tool-icon">−</span> Alejar</button>
+                <button class="tool-button" id="zoomInButton" type="button" aria-label="Acercar vista"><span class="tool-icon">+</span> Acercar</button>
+                <button class="tool-button" id="lockViewButton" type="button" aria-pressed="false"><span class="tool-icon">◇</span> Fijar vista</button>
+                <button class="tool-button" id="xrayButton" type="button"><span class="tool-icon">◉</span> Radiografía</button>
+              </div>
+            </div>
+            <div class="scene-viewport" id="sceneViewport">
+              <canvas id="sceneCanvas" aria-label="Escena 3D del filtro de agua"></canvas>
+              <div class="scene-hint"><span>↗</span> Arrastra para rotar · rueda para acercar</div>
+              <div class="scene-label label-inlet"><span class="label-dot"></span> Entrada</div>
+              <div class="scene-label label-output"><span class="label-dot"></span> Agua filtrada</div>
+              <div class="scene-legend">
+                <div><span class="legend-swatch dirty"></span> Sin tratar</div>
+                <div><span class="legend-swatch clean"></span> Filtrada</div>
+              </div>
+            </div>
+            <div class="scene-footer">
+              <div class="scene-footer-item"><span class="footer-icon">◌</span><span><b id="activeLayerName">Entrada</b><small id="activeLayerHint">Selecciona una capa para inspeccionarla</small></span></div>
+              <div class="scene-footer-item"><span class="footer-icon">◷</span><span><b id="sceneTime">00:00</b><small>tiempo simulado</small></span></div>
+            </div>
+          </div>
+
+          <aside class="inspector" aria-label="Panel de inspección">
+            <div class="inspector-heading">
+              <div>
+                <p class="eyebrow">LECTURA EN VIVO</p>
+                <h2 id="inspectorTitle">Agua de entrada</h2>
+              </div>
+              <span class="quality-badge medium" id="qualityBadge">Turbia</span>
+            </div>
+            <p class="inspector-description" id="inspectorDescription">Este es el punto de partida. El agua contiene partículas, color y microorganismos antes de atravesar el sistema.</p>
+
+            <div class="quality-overview">
+              <div class="quality-ring" id="qualityRing"><div><strong id="qualityScore">18</strong><span>calidad</span></div></div>
+              <div class="quality-copy"><span>Índice de calidad</span><b id="qualityState">Requiere filtración</b><small id="qualityDelta">Punto de partida</small></div>
+            </div>
+
+            <div class="metrics-grid" id="metricsGrid"></div>
+
+            <div class="inspector-divider"></div>
+            <div class="detail-heading"><span>Comparación de la etapa</span><span id="selectedStageNumber">Entrada</span></div>
+            <div class="before-after">
+              <div class="comparison before"><span class="comparison-label">Antes de la etapa</span><strong id="beforeScore">12</strong><small id="beforeLabel">Agua de entrada</small></div>
+              <div class="comparison-arrow">→</div>
+              <div class="comparison after"><span class="comparison-label">Después de la etapa</span><strong id="afterScore">12</strong><small id="afterLabel">Sin cambios</small></div>
+            </div>
+            <p class="selection-tip"><span>i</span> El índice va de 0 a 100: cuanto mayor es, mejor es la calidad estimada.</p>
+          </aside>
+        </section>
+
+        <section class="controls-section section-wrap" aria-label="Controles de la simulación">
+          <div class="timeline-header">
+            <div class="timeline-title"><span class="eyebrow">RECORRIDO DEL AGUA</span><h2>Secuencia de purificación</h2></div>
+            <div class="timeline-times"><span id="currentTime">00:00</span><span class="time-slash">/</span><span id="totalTime">00:48</span></div>
+          </div>
+          <div class="timeline-wrap">
+            <div class="timeline-track"><div class="timeline-fill" id="timelineFill"></div><div class="timeline-thumb" id="timelineThumb"></div></div>
+            <input class="timeline-input" id="timelineInput" type="range" min="0" max="1000" value="0" step="1" aria-label="Progreso de purificación" />
+            <div class="timeline-markers" id="timelineMarkers"></div>
+          </div>
+          <div class="control-row">
+            <div class="transport-controls">
+              <button class="play-button" id="playButton" type="button"><span class="play-icon">▶</span><span id="playLabel">Reproducir</span></button>
+              <button class="secondary-button" id="restartButton" type="button">↺ <span>Reiniciar</span></button>
+            </div>
+            <div class="control-meta"><div class="real-time"><span>Tiempo real</span><b id="realTime">00:00</b></div><div class="speed-control"><span>Velocidad</span><div class="speed-options" id="speedOptions"><button type="button" data-speed="0.5">0.5×</button><button type="button" data-speed="1" class="active">1×</button><button type="button" data-speed="2">2×</button><button type="button" data-speed="4">4×</button></div></div></div>
+          </div>
+        </section>
+
+        <section class="lower-grid section-wrap">
+          <div class="evolution-card">
+            <div class="card-heading"><div><p class="eyebrow">EVOLUCIÓN</p><h2>Antes y después</h2></div><span class="trend-pill" id="trendPill">+0% claridad</span></div>
+            <div class="evolution-chart" id="evolutionChart"></div>
+            <div class="chart-legend"><span><i class="dot dot-before"></i> Antes de cada etapa</span><span><i class="dot dot-after"></i> Después de cada etapa</span><span class="chart-unit">Índice de calidad · 0–100</span></div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer section-wrap"><span>AquaLab / Simulador de purificación</span><span>Modelo educativo parametrizado · Los valores son ilustrativos</span></footer>
+    </div>
+
+    <div class="modal-backdrop" id="helpModal" hidden>
+      <div class="help-modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+        <button class="modal-close" id="closeHelpButton" type="button" aria-label="Cerrar ayuda">×</button>
+        <p class="eyebrow">CÓMO EXPLORAR</p><h2 id="helpTitle">Sigue el viaje de cada gota</h2>
+        <p>Usa <b>Reproducir</b> para iniciar el recorrido. Puedes pausar la simulación y arrastrar el timeline en cualquier dirección para ver cómo cambia la calidad.</p>
+        <p>Haz clic en una capa o en el balde para consultar su efecto. Activa <b>Radiografía</b> para ver el interior del sistema.</p>
+      </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
