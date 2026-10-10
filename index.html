@@ -10,13 +10,13 @@
     <div class="app-shell">
       <header class="topbar">
         <a class="brand" href="/" aria-label="AquaLab inicio">
-          <span class="brand-mark"><span></span><span></span><span></span></span>
+          <span class="brand__mark"><span></span><span></span><span></span></span>
           <span>Aqua<span>Lab</span></span>
         </a>
-        <div class="topbar-meta">
-          <span class="live-dot"></span>
+        <div class="topbar__meta">
+          <span class="topbar__live-dot"></span>
           <span>Simulación interactiva</span>
-          <span class="meta-divider"></span>
+          <span class="topbar__divider"></span>
           <span>Modo educativo</span>
         </div>
         <button class="icon-button" id="helpButton" type="button" aria-label="Abrir ayuda">?</button>
@@ -28,10 +28,10 @@
             <p class="eyebrow">LABORATORIO VIRTUAL · 01</p>
             <h1>Observa cómo el agua<br /><em>recupera su claridad.</em></h1>
             <p class="intro-copy">Controla el tiempo, inspecciona cada capa y descubre qué sucede con la calidad del agua durante el recorrido.</p>
-            <div class="intro-tags" aria-label="Características del simulador"><span>4 etapas</span><span>Escena 3D</span><span>Datos ilustrativos</span></div>
+            <div class="intro__tags" aria-label="Características del simulador"><span>4 etapas</span><span>Escena 3D</span><span>Datos ilustrativos</span></div>
           </div>
-          <div class="intro-note">
-            <span class="note-line"></span>
+          <div class="intro__note">
+            <span class="intro__note-line"></span>
             <div><b>Explora el proceso</b><p>Arrastra la línea de tiempo<br />o selecciona una capa</p></div>
           </div>
         </section>
@@ -47,25 +47,25 @@
           <div class="scene-card">
             <div class="scene-toolbar">
               <div class="scene-title">
-                <span class="status-pip"></span>
+                <span class="scene-title__status"></span>
                 <span id="sceneStatus">Agua sin tratar</span>
               </div>
               <div class="scene-tools">
-                <button class="tool-button" id="resetViewButton" type="button"><span class="tool-icon">⌖</span> Centrar</button>
-                <button class="tool-button" id="zoomOutButton" type="button" aria-label="Alejar vista"><span class="tool-icon">−</span> Alejar</button>
-                <button class="tool-button" id="zoomInButton" type="button" aria-label="Acercar vista"><span class="tool-icon">+</span> Acercar</button>
-                <button class="tool-button" id="lockViewButton" type="button" aria-pressed="false"><span class="tool-icon">◇</span> Fijar vista</button>
-                <button class="tool-button" id="xrayButton" type="button"><span class="tool-icon">◉</span> Radiografía</button>
+                <button class="tool-button" id="resetViewButton" type="button"><span class="tool-button__icon">⌖</span> Centrar</button>
+                <button class="tool-button" id="zoomOutButton" type="button" aria-label="Alejar vista"><span class="tool-button__icon">−</span> Alejar</button>
+                <button class="tool-button" id="zoomInButton" type="button" aria-label="Acercar vista"><span class="tool-button__icon">+</span> Acercar</button>
+                <button class="tool-button" id="lockViewButton" type="button" aria-pressed="false"><span class="tool-button__icon">◇</span> Fijar vista</button>
+                <button class="tool-button" id="xrayButton" type="button"><span class="tool-button__icon">◉</span> Radiografía</button>
               </div>
             </div>
             <div class="scene-viewport" id="sceneViewport">
               <canvas id="sceneCanvas" aria-label="Escena 3D del filtro de agua"></canvas>
               <div class="scene-hint"><span>↗</span> Arrastra para rotar · rueda para acercar</div>
-              <div class="scene-label label-inlet"><span class="label-dot"></span> Entrada</div>
-              <div class="scene-label label-output"><span class="label-dot"></span> Agua filtrada</div>
+              <div class="scene-label scene-label--inlet"><span class="scene-label__dot"></span> Entrada</div>
+              <div class="scene-label scene-label--output"><span class="scene-label__dot"></span> Agua filtrada</div>
               <div class="scene-legend">
-                <div><span class="legend-swatch dirty"></span> Sin tratar</div>
-                <div><span class="legend-swatch clean"></span> Filtrada</div>
+                <div><span class="scene-legend__swatch scene-legend__swatch--dirty"></span> Sin tratar</div>
+                <div><span class="scene-legend__swatch scene-legend__swatch--clean"></span> Filtrada</div>
               </div>
             </div>
             <div class="scene-footer">
@@ -94,9 +94,9 @@
             <div class="inspector-divider"></div>
             <div class="detail-heading"><span>Comparación de la etapa</span><span id="selectedStageNumber">Entrada</span></div>
             <div class="before-after">
-              <div class="comparison before"><span class="comparison-label">Antes de la etapa</span><strong id="beforeScore">12</strong><small id="beforeLabel">Agua de entrada</small></div>
-              <div class="comparison-arrow">→</div>
-              <div class="comparison after"><span class="comparison-label">Después de la etapa</span><strong id="afterScore">12</strong><small id="afterLabel">Sin cambios</small></div>
+              <div class="comparison comparison--before"><span class="comparison__label">Antes de la etapa</span><strong id="beforeScore">12</strong><small id="beforeLabel">Agua de entrada</small></div>
+              <div class="comparison__arrow">→</div>
+              <div class="comparison comparison--after"><span class="comparison__label">Después de la etapa</span><strong id="afterScore">12</strong><small id="afterLabel">Sin cambios</small></div>
             </div>
             <p class="selection-tip"><span>i</span> El índice va de 0 a 100: cuanto mayor es, mejor es la calidad estimada.</p>
           </aside>
@@ -114,10 +114,10 @@
           </div>
           <div class="control-row">
             <div class="transport-controls">
-              <button class="play-button" id="playButton" type="button"><span class="play-icon">▶</span><span id="playLabel">Reproducir</span></button>
+              <button class="play-button" id="playButton" type="button"><span class="play-button__icon">▶</span><span id="playLabel">Reproducir</span></button>
               <button class="secondary-button" id="restartButton" type="button">↺ <span>Reiniciar</span></button>
             </div>
-            <div class="control-meta"><div class="real-time"><span>Tiempo real</span><b id="realTime">00:00</b></div><div class="speed-control"><span>Velocidad</span><div class="speed-options" id="speedOptions"><button type="button" data-speed="0.5">0.5×</button><button type="button" data-speed="1" class="active">1×</button><button type="button" data-speed="2">2×</button><button type="button" data-speed="4">4×</button></div></div></div>
+            <div class="control-meta"><div class="real-time"><span>Tiempo real</span><b id="realTime">00:00</b></div><div class="speed-control"><span>Velocidad</span><div class="speed-options" id="speedOptions"><button type="button" data-speed="0.5">0.5×</button><button type="button" data-speed="1" class="speed-options__button is-active">1×</button><button type="button" data-speed="2">2×</button><button type="button" data-speed="4">4×</button></div></div></div>
           </div>
         </section>
 
@@ -125,7 +125,7 @@
           <div class="evolution-card">
             <div class="card-heading"><div><p class="eyebrow">EVOLUCIÓN</p><h2>Antes y después</h2></div><span class="trend-pill" id="trendPill">+0% claridad</span></div>
             <div class="evolution-chart" id="evolutionChart"></div>
-            <div class="chart-legend"><span><i class="dot dot-before"></i> Antes de cada etapa</span><span><i class="dot dot-after"></i> Después de cada etapa</span><span class="chart-unit">Índice de calidad · 0–100</span></div>
+            <div class="chart-legend"><span><i class="dot dot--before"></i> Antes de cada etapa</span><span><i class="dot dot--after"></i> Después de cada etapa</span><span class="chart-legend__unit">Índice de calidad · 0–100</span></div>
           </div>
         </section>
       </main>
