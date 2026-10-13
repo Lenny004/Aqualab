@@ -1,6 +1,6 @@
 import { computeSimulation, formatNumber, qualityScore } from './metrics.js';
 import { formatTime, normalizeProgress, renderTimelineMarkers } from './timeline.js';
-import { renderUsage } from './tools/usage.js';
+import { renderUsage, USAGES } from './tools/usage.js';
 import { renderCalculator } from './tools/calculator.js';
 import { createBudgetState, renderBudget } from './tools/budget.js';
 import { createMaintenanceState, renderMaintenance } from './tools/maintenance.js';
@@ -16,6 +16,7 @@ const ids = [
   'timelineInput', 'timelineMarkers', 'playButton', 'playLabel', 'restartButton',
   'speedOptions', 'layerCount', 'layerList', 'evolutionChart', 'trendPill', 'helpButton',
   'helpModal', 'closeHelpButton', 'scenarioDescription',
+  'activeStagesChip',
   'scenarioControls',
   'usageTool', 'calculatorTool', 'budgetTool', 'maintenanceTool', 'samplingTool', 'safetyTool', 'toolsTabs',
 ];
@@ -33,6 +34,7 @@ export function createUI(scenario, scene) {
   const maintenanceState = createMaintenanceState();
   let currentQuality = initial;
   let lastHeavyRender = 0;
+  let samplingSignature = '';
   const controller = new AbortController();
   let animationFrame;
 
@@ -133,25 +135,24 @@ export function createUI(scenario, scene) {
   }
 
   function renderTools() {
-    renderUsage(dom.usageTool, { value: state.finalUse, onChange: (value) => {
+    const handleUsageChange = (value) => {
       state.finalUse = value;
       scenario.onUsageChange?.(value, { scene });
-      renderTools();
+      renderUsage(dom.usageTool, { value, onChange: handleUsageChange });
       render();
-    } });
-    renderCalculator(dom.calculatorTool, calculatorState, (key, value) => { calculatorState[key] = value; renderTools(); });
+    };
+    renderUsage(dom.usageTool, { value: state.finalUse, onChange: handleUsageChange });
+    renderCalculator(dom.calculatorTool, calculatorState, (values) => Object.assign(calculatorState, values));
     renderBudget(dom.budgetTool, budgetState, (change) => {
-      if ('contingency' in change) budgetState.contingency = change.contingency;
-      else budgetState.items[change.index][change.key] = change.value;
-      renderTools();
+      Object.assign(budgetState, change);
     });
-    renderMaintenance(dom.maintenanceTool, maintenanceState, (task, value) => { maintenanceState[task] = value; renderTools(); });
-    renderSampling(dom.samplingTool, { metrics: scenario.metrics, getValue: (key) => formatNumber(currentQuality[key]) });
+    renderMaintenance(dom.maintenanceTool, maintenanceState, (values) => Object.assign(maintenanceState, values));
     renderSafety(dom.safetyTool);
   }
 
   function renderMetrics(quality) {
-    dom.metricsGrid.innerHTML = scenario.metrics.map((metric) => `<div class="metric"><div class="metric-label"><span>${metric.label}</span><span>${metric.unit}</span></div><strong class="metric-value">${formatNumber(quality[metric.key])} <small>${metric.unit}</small></strong><div class="metric-bar"><span style="width:${clamp(quality[metric.key] / metric.max) * 100}%"></span></div></div>`).join('');
+    const usage = USAGES[state.finalUse] || USAGES.tomar;
+    dom.metricsGrid.innerHTML = scenario.metrics.map((metric) => `<div class="metric ${usage.metricKeys.includes(metric.key) ? 'is-relevant' : 'is-muted'} ${usage.highlighted.includes(metric.key) ? 'is-highlighted' : ''}"><div class="metric-label"><span>${metric.label}</span><span>${metric.unit}</span></div><strong class="metric-value">${formatNumber(quality[metric.key])} <small>${metric.unit}</small></strong><div class="metric-bar"><span style="width:${clamp(quality[metric.key] / metric.max) * 100}%"></span></div></div>`).join('');
   }
 
   function getDetails(simulation) {
@@ -179,7 +180,11 @@ export function createUI(scenario, scene) {
     const renderHeavyBlocks = !state.playing || now - lastHeavyRender >= 100;
     if (renderHeavyBlocks) {
       lastHeavyRender = now;
-      renderSampling(dom.samplingTool, { metrics: scenario.metrics, getValue: (key) => formatNumber(currentQuality[key]) });
+      const samplingSimulation = computeSimulation(1, { initial, layers });
+      const usage = USAGES[state.finalUse] || USAGES.tomar;
+      const samplingData = { metrics: scenario.metrics, initial, stages: samplingSimulation.stages, samplingStages: scenario.samplingStages, usage };
+      const signature = JSON.stringify({ stages: samplingSimulation.stages.map((stage) => stage.quality), samplingStages: scenario.samplingStages, usage: state.finalUse });
+      if (signature !== samplingSignature) { samplingSignature = signature; renderSampling(dom.samplingTool, samplingData); }
       renderMetrics(simulation.current);
       renderLayerList();
       renderTimelineMarkers(dom.timelineMarkers, simulation, state.progress);
@@ -223,6 +228,7 @@ export function createUI(scenario, scene) {
     dom.playLabel.textContent = state.playing ? 'Pausar' : 'Reproducir';
     dom.playButton.querySelector('.play-button__icon').textContent = state.playing ? 'Ⅱ' : '▶';
     dom.layerCount.textContent = `${simulation.filters.length} / ${layers.length}`;
+    dom.activeStagesChip.textContent = `${simulation.filters.length} ${simulation.filters.length === 1 ? 'etapa' : 'etapas'}`;
     dom.trendPill.textContent = `+${Math.max(0, score - qualityScore(initial, initial))} calidad`;
     const renderState = { ...state, ...scenarioState };
     scene.setState(renderState);

@@ -8,6 +8,7 @@ export default {
   initial: INITIAL,
   layers: LAYERS,
   metrics: METRICS,
+  samplingStages: { filter: 'carbon', disinfection: null },
   text: {
     description: 'Ilustración conceptual: orden, espesor y granulometría provienen de un diseño hidráulico.',
     inputDescription: 'El agua contiene partículas, color, olor y microorganismos antes de atravesar el sistema.',

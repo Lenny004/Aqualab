@@ -1,19 +1,7 @@
 export const USAGES = {
-  tomar: {
-    label: 'Tomar',
-    indicators: ['Microbiológicos: E. coli y coliformes', 'Físicos: turbidez, color y olor'],
-    note: 'Exige una etapa de desinfección validada y análisis de laboratorio.',
-  },
-  cultivar: {
-    label: 'Cultivar',
-    indicators: ['pH', 'Conductividad (EC)', 'Turbidez'],
-    note: 'Considerar EC/TDS/SAR/cloruros/boro/nitratos. Sin valores límite en esta propuesta. Usar riego por goteo.',
-  },
-  'no-potable': {
-    label: 'Usos no potables',
-    indicators: ['Turbidez', 'Color', 'Olor'],
-    note: 'Para riego ornamental, limpieza exterior o descarga sanitaria, según el diseño del sistema.',
-  },
+  tomar: { label: 'Tomar', metricKeys: ['turbidity', 'color', 'odor', 'ph', 'conductivity', 'ecoli', 'coliforms'], highlighted: ['ecoli', 'coliforms'], indicators: ['Todas las métricas', 'E. coli y coliformes destacados'], note: 'Requiere desinfección validada y laboratorio.' },
+  cultivar: { label: 'Cultivar', metricKeys: ['ph', 'conductivity', 'turbidity'], highlighted: ['ph', 'conductivity', 'turbidity'], indicators: ['pH', 'Conductividad', 'Turbidez'], note: 'Considerar EC/TDS/SAR/cloruros/boro/nitratos. Sin valores límite en esta propuesta.' },
+  'no-potable': { label: 'Usos no potables', metricKeys: ['turbidity', 'color', 'odor'], highlighted: ['turbidity', 'color', 'odor'], indicators: ['Turbidez', 'Color', 'Olor'], note: 'Para riego ornamental, limpieza exterior o descarga sanitaria, según el diseño del sistema.' },
 };
 
 export function renderUsage(container, { value, onChange }) {
