@@ -3,21 +3,31 @@ import { createParticles } from '../../core/particles.js';
 import { lerp, qualityScore } from '../../core/metrics.js';
 import { INITIAL } from './layers.js';
 
+export function getLabelScale(canvasWidth, canvasHeight, height = 0.45) {
+  return new THREE.Vector3(height * (canvasWidth / canvasHeight), height, 1);
+}
+
 function makeLabel(text, color = '#b8eee0') {
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('2d');
-  const lines = text.split('\n');
-  const lineHeight = 32;
-  context.font = '28px monospace';
-  canvas.width = Math.ceil(Math.max(...lines.map((line) => context.measureText(line).width)) + 24);
-  canvas.height = lineHeight * lines.length + 24;
+  const lines = text.split('\n').flatMap((line) => {
+    const chunks = line.match(/.{1,22}(?:\s+|$)/g);
+    return chunks ? chunks.map((chunk) => chunk.trim()) : [line];
+  });
+  const fontSize = 48;
+  const lineHeight = 56;
+  const padding = 16;
+  context.font = `${fontSize}px monospace`;
+  canvas.width = Math.ceil(Math.max(...lines.map((line) => context.measureText(line).width)) + padding * 2);
+  canvas.height = lineHeight * lines.length + padding * 2;
+  context.font = `${fontSize}px monospace`;
   context.fillStyle = color;
-  lines.forEach((line, index) => context.fillText(line, 12, 32 + index * lineHeight));
+  lines.forEach((line, index) => context.fillText(line, padding, padding + fontSize + index * lineHeight));
   const texture = new THREE.CanvasTexture(canvas);
   const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
   const sprite = new THREE.Sprite(material);
-  sprite.scale.set(canvas.width / 160, canvas.height / 160, 1);
-  sprite.userData = { isLabel: true, baseScale: sprite.scale.clone() };
+  sprite.scale.copy(getLabelScale(canvas.width, canvas.height));
+  sprite.userData = { isLabel: true };
   return sprite;
 }
 
@@ -116,12 +126,8 @@ export function createCaptacionLluviaObjects({ scene, layers, addInteractive }) 
   addInteractive(control);
   root.add(makeLabel('muestreo', '#d7f7eb')).position.set(9.15, 3.35, 0);
 
-  root.updateMatrixWorld(true);
-  const contentSize = new THREE.Box3().setFromObject(root).getSize(new THREE.Vector3());
-  const labelScale = THREE.MathUtils.clamp(Math.max(contentSize.x, contentSize.y, contentSize.z) / 12, 1, 2.2);
   root.traverse((object) => {
     if (!object.userData.isLabel) return;
-    object.scale.copy(object.userData.baseScale).multiplyScalar(labelScale);
     if (window.innerWidth < 500) object.visible = false;
   });
 
