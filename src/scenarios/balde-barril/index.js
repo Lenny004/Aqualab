@@ -23,5 +23,15 @@ export default {
     help: 'Usa Reproducir para seguir el agua por la grava, la arena, el carbón activado y la etapa avanzada opcional. Puedes seleccionar una capa o el balde y activar Radiografía para inspeccionar su interior.',
   },
   onUsageChange: (usage, { scene }) => scene.setUsage?.(usage),
+  applyPreset: (presetId, { layers, setFinalUse }) => {
+    const layerIds = {
+      'method-a': ['gravel', 'sand', 'carbon'],
+      'method-b': ['gravel', 'sand'],
+      'method-c': ['gravel', 'sand', 'carbon'],
+    }[presetId] || [];
+    layers.forEach((layer) => { layer.enabled = layerIds.includes(layer.id); });
+    setFinalUse(presetId === 'method-b' ? 'cultivar' : 'tomar');
+    return { message: 'En balde-barril se aplicaron las capas disponibles; el escenario 2 representa mejor los métodos de cultivo de la fuente.' };
+  },
   buildScene: (context) => new PurificationScene({ ...context, createObjects: createBaldeBarrilObjects }),
 };

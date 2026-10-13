@@ -8,7 +8,7 @@ export function renderEconomics(container, { calculatorState, budgetState }) {
   const fields = Object.fromEntries([...container.querySelectorAll('[data-economics]')].map((field) => [field.dataset.economics, field]));
   const results = Object.fromEntries([...container.querySelectorAll('[data-economics-result]')].map((node) => [node.dataset.economicsResult, node]));
   const number = (field) => field.value.trim() === '' ? null : Number(field.value);
-  const format = (value, suffix = '') => Number.isFinite(value) ? `${value.toFixed(2)}${suffix}` : DASH;
+  const format = (value, suffix = '', decimals = 2) => Number.isFinite(value) ? `${value.toFixed(decimals)}${suffix}` : DASH;
   const update = () => {
     const annualCost = number(fields.annualCost);
     const lifeYears = number(fields.lifeYears);
@@ -25,7 +25,7 @@ export function renderEconomics(container, { calculatorState, budgetState }) {
     results.initialCost.textContent = format(initialCost, ' USD');
     results.annualCost.textContent = format(annualCost, ' USD/año');
     results.annualVolume.textContent = format(annualVolume, ' L/año');
-    results.costPerLiter.textContent = format(costPerLiter, ' USD/L');
+    results.costPerLiter.textContent = format(costPerLiter, ' USD/L', 4);
     results.useRate.textContent = format(useRate, ' %');
     results.formula.textContent = `Costo por litro = (costo inicial / años de vida útil + costo anual) / volumen anual. Volumen anual = volumen por evento × eventos/año. % aprovechamiento = volumen usado / volumen captado.`;
   };

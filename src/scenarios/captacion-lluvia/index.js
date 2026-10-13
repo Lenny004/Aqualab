@@ -54,5 +54,15 @@ export default {
       : 'Cloración controlada validada. Mostrar tiempo de contacto y medir cloro residual libre.';
   },
   onUsageChange: (usage, { scene }) => scene.setUsage?.(usage),
+  applyPreset: (presetId, { layers, setFinalUse }) => {
+    const layerIds = {
+      'method-a': ['captacion', 'malla', 'primeras-aguas', 'deposito-crudo', 'sedimentacion', 'filtro-granular', 'disinfection', 'deposito-limpio', 'control'],
+      'method-b': ['malla', 'primeras-aguas', 'sedimentacion', 'filtro-granular', 'deposito-limpio'],
+      'method-c': ['captacion', 'malla', 'primeras-aguas', 'deposito-crudo', 'sedimentacion', 'filtro-granular', 'disinfection', 'deposito-limpio', 'control'],
+    }[presetId] || [];
+    layers.forEach((layer) => { layer.enabled = layerIds.includes(layer.id); });
+    setFinalUse(presetId === 'method-b' ? 'cultivar' : 'tomar');
+    return { message: presetId === 'method-c' ? 'Diseño 3 aplicado: sistema comunitario con vigilancia y responsable operativo.' : 'Preset aplicado: revisa la secuencia y valida el diseño para el uso elegido.' };
+  },
   buildScene: (context) => new PurificationScene({ ...context, createObjects: createCaptacionLluviaObjects }),
 };

@@ -9,6 +9,8 @@ import { renderSafety } from './tools/safety.js';
 import { renderRisks } from './tools/risks.js';
 import { renderSchedule } from './tools/schedule.js';
 import { renderEconomics } from './tools/economics.js';
+import { renderPresets } from './tools/presets.js';
+import { renderAgronomy } from './tools/agronomy.js';
 
 const ids = [
   'sceneStatus', 'activeLayerName', 'activeLayerHint', 'sceneTime', 'realTime', 'xrayButton',
@@ -21,8 +23,9 @@ const ids = [
   'helpModal', 'closeHelpButton', 'helpDescription', 'scenarioDescription',
   'activeStagesChip',
   'scenarioControls',
+  'presetTool',
   'qualitySelect', 'qualityStatus',
-  'usageTool', 'calculatorTool', 'budgetTool', 'maintenanceTool', 'samplingTool', 'safetyTool', 'risksTool', 'scheduleTool', 'economicsTool', 'toolsTabs',
+  'usageTool', 'calculatorTool', 'budgetTool', 'maintenanceTool', 'samplingTool', 'safetyTool', 'risksTool', 'scheduleTool', 'economicsTool', 'agronomyTool', 'toolsTabs',
 ];
 
 const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
@@ -189,6 +192,24 @@ export function createUI(scenario, scene) {
   }
 
   function renderTools() {
+    renderPresets(dom.presetTool, {
+      scenario,
+      onApply: (preset) => {
+        const result = scenario.applyPreset?.(preset.id, {
+          layers,
+          state: scenarioState,
+          setFinalUse: (value) => {
+            state.finalUse = value;
+            scenario.onUsageChange?.(value, { scene });
+          },
+        });
+        renderUsage(dom.usageTool, { value: state.finalUse, onChange: handleUsageChange });
+        risksUpdater?.(state.finalUse);
+        render();
+        return result;
+      },
+    });
+    renderAgronomy(dom.agronomyTool);
     const handleUsageChange = (value) => {
       state.finalUse = value;
       scenario.onUsageChange?.(value, { scene });
@@ -357,6 +378,9 @@ export function createUI(scenario, scene) {
     dom.layerCount.textContent = `${simulation.filters.length} / ${layers.length}`;
     dom.activeStagesChip.textContent = `${simulation.filters.length} ${simulation.filters.length === 1 ? 'etapa' : 'etapas'}`;
     dom.trendPill.textContent = `+${Math.max(0, score - qualityScore(initial, initial))} calidad`;
+    const agronomyTab = dom.toolsTabs?.querySelector('[data-tool-tab="agronomyTool"]');
+    agronomyTab?.classList.toggle('is-recommended', state.finalUse === 'cultivar');
+    agronomyTab?.setAttribute('aria-label', state.finalUse === 'cultivar' ? 'Agronomía: recomendada para Cultivar' : 'Agronomía');
     renderingUi = false;
   }
 

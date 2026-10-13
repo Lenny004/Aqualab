@@ -1,10 +1,10 @@
 const PHASES = [
-  ['1', 'Inspección del sitio y definición de uso', `1\u20142 días`, 'Ficha de sitio y riesgos'],
-  ['2', 'Medición de techo, demanda y cálculo de captación', `1\u20142 días`, 'Memoria de cálculo'],
-  ['3', 'Diseño final y cotizaciones', `2\u20144 días`, 'Plano, lista de materiales y presupuesto'],
-  ['4', 'Compra y preparación de componentes', `2\u20145 días`, 'Inventario recibido'],
-  ['5', 'Montaje hidráulico y mecánico', `1\u20143 días`, 'Prototipo instalado'],
-  ['6', 'Pruebas de fugas, caudal y operación', `1\u20142 días`, 'Acta de prueba'],
+  ['1', 'Inspección del sitio y definición de uso', `1\u20132 días`, 'Ficha de sitio y riesgos'],
+  ['2', 'Medición de techo, demanda y cálculo de captación', `1\u20132 días`, 'Memoria de cálculo'],
+  ['3', 'Diseño final y cotizaciones', `2\u20134 días`, 'Plano, lista de materiales y presupuesto'],
+  ['4', 'Compra y preparación de componentes', `2\u20135 días`, 'Inventario recibido'],
+  ['5', 'Montaje hidráulico y mecánico', `1\u20133 días`, 'Prototipo instalado'],
+  ['6', 'Pruebas de fugas, caudal y operación', `1\u20132 días`, 'Acta de prueba'],
   ['7', 'Análisis de calidad y correcciones', 'Según laboratorio', 'Informe de resultados'],
   ['8', 'Capacitación y entrega', '1 día', 'Manual y registros'],
 ];
