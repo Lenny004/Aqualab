@@ -15,6 +15,7 @@ export class PurificationScene {
     this.needsRender = true;
     this.animationFrame = 0;
     this.frameSamples = [];
+    this.controlValues = {};
     this.lastFrameTime = performance.now();
     this.scene = new THREE.Scene();
     this.scene.fog = new THREE.Fog('#0a1b1c', 12, 28);
@@ -101,9 +102,16 @@ export class PurificationScene {
   }
 
   select(id) {
-    if (id === this.selectedId) return;
     this.selectedId = id;
     this.objects.select?.(id);
+    this.invalidate();
+  }
+
+  setControl(key, value) {
+    this.controlValues[key] = value;
+    if (this.objects.setControl) this.objects.setControl(key, value);
+    else if (key === 'roofType') this.objects.setRoofType?.(value);
+    this.invalidate();
   }
 
   setXray(enabled) {
@@ -181,6 +189,10 @@ export class PurificationScene {
     this.qualityMode = mode;
     this.renderer.setPixelRatio(mode === 'light' ? 1 : Math.min(window.devicePixelRatio, 2));
     this.objects.setQuality?.(mode);
+    Object.entries(this.controlValues).forEach(([key, value]) => {
+      if (this.objects.setControl) this.objects.setControl(key, value);
+      else if (key === 'roofType') this.objects.setRoofType?.(value);
+    });
     this.invalidate();
   }
 
@@ -225,6 +237,10 @@ export class PurificationScene {
       this.qualityMode = 'light';
       this.renderer.setPixelRatio(1);
       this.objects.setQuality?.('light');
+      Object.entries(this.controlValues).forEach(([key, value]) => {
+        if (this.objects.setControl) this.objects.setControl(key, value);
+        else if (key === 'roofType') this.objects.setRoofType?.(value);
+      });
       this.onQualityChange?.('light', average);
       this.invalidate();
     }

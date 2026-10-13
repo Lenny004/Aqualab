@@ -97,6 +97,9 @@ export function createUI(scenario, scene) {
     if (dom.qualityStatus) dom.qualityStatus.textContent = 'Ligera por rendimiento';
   };
   renderScenarioControls();
+  scenario.controls?.forEach((control) => {
+    scenario.onControlChange?.(control.key, scenarioState[control.key], { layers, state: scenarioState, scene });
+  });
   renderTools();
   const listen = (element, event, handler) => element.addEventListener(event, handler, { signal: controller.signal });
   listen(window, 'error', handleUiError);

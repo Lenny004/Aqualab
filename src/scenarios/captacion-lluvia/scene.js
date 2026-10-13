@@ -157,7 +157,14 @@ export function createCaptacionLluviaObjects({ scene, layers, addInteractive, in
   addInteractive(control);
   addLabel('control', 'Muestreo', '#d7f7eb', 9.8, 3.35, 0);
 
-  labels.forEach((label) => { label.visible = window.innerWidth >= 500; });
+  function updateLabelVisibility() {
+    labels.forEach((label, id) => {
+      label.visible = viewport.width >= 500 && this.qualityMode !== 'light'
+        ? true
+        : id === this.selectedLabel;
+    });
+  }
+
   layers.forEach((layer) => {
     const object = layer.id === 'primeras-aguas' ? firstFlush : layer.id === 'deposito-crudo' ? rawTank : layer.id === 'disinfection' ? disinfection : layer.id === 'deposito-limpio' ? cleanTank : layer.id === 'filtro-granular' ? filter : null;
     if (object) stageObjects.set(layer.id, object);
@@ -203,11 +210,12 @@ export function createCaptacionLluviaObjects({ scene, layers, addInteractive, in
     },
     select(id) {
       this.selectedLabel = id;
-      labels.forEach((label, labelId) => { label.visible = window.innerWidth >= 500 || labelId === id; });
+      updateLabelVisibility.call(this);
       stageObjects.forEach((object, objectId) => {
         const selected = objectId === id;
         object.traverse((child) => { if (child.material?.emissive) child.material.emissive.set(selected ? 0x72d6b5 : 0x000000); });
       });
+      invalidate();
     },
     setXray(enabled) {
       root.traverse((object) => { if (object.material?.transparent && object.material.opacity !== undefined) object.material.opacity = enabled ? 0.32 : 0.7; });
@@ -221,15 +229,16 @@ export function createCaptacionLluviaObjects({ scene, layers, addInteractive, in
       const light = mode === 'light';
       particles.visible = !light;
       particles.geometry.setDrawRange(0, light ? particles.userData.offsets.length / 2 : particles.userData.offsets.length);
-      labels.forEach((label, id) => { label.visible = !light && (window.innerWidth >= 500 || id === this.selectedLabel); });
+      updateLabelVisibility.call(this);
+      invalidate();
     },
     setViewport(width, height, fov = 30) {
       const pixelHeight = width >= 500 ? LABEL_DESKTOP_HEIGHT : LABEL_MOBILE_HEIGHT;
       Object.assign(viewport, { width, height, fov, pixelHeight });
       labels.forEach((label, id) => {
         label.scale.copy(getLabelScale(width, height, label.userData.textureWidth, label.userData.textureHeight, fov, pixelHeight));
-        label.visible = this.qualityMode !== 'light' && (width >= 500 || id === this.selectedLabel);
       });
+      updateLabelVisibility.call(this);
     },
   };
 }

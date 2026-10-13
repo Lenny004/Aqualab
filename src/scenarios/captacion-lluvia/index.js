@@ -64,7 +64,7 @@ export default {
     mosquitoes: ['primeras-aguas', 'deposito-crudo'],
   },
   onControlChange: (key, value, { layers, scene }) => {
-    if (key === 'roofType') scene.setRoofType?.(value);
+    if (key === 'roofType') scene.setControl?.(key, value);
     if (key !== 'disinfection') return;
     const disinfection = layers.find((layer) => layer.id === 'disinfection');
     if (!disinfection) return;
