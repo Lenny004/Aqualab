@@ -49,11 +49,18 @@ export function createCaptacionLluviaObjects({ scene, layers, addInteractive }) 
   root.position.x = -1.3;
   root.add(flowGroup);
 
+  function addLabel(text, color, x, y, z) {
+    const sprite = makeLabel(text, color);
+    sprite.position.set(x, y, z);
+    root.add(sprite);
+    return sprite;
+  }
+
   const roof = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.18, 2.8), new THREE.MeshStandardMaterial({ color: 0x788f89, roughness: 0.75 }));
   roof.position.set(-2.7, 5.8, 0);
   roof.rotation.z = -0.22;
   root.add(roof);
-  root.add(makeLabel('techo inclinado', '#d7f7eb')).position.set(-4.3, 6.35, 0);
+  addLabel('techo inclinado', '#d7f7eb', -4.3, 6.35, 0);
 
   const gutter = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 3.9, 16), new THREE.MeshStandardMaterial({ color: 0x9fc9bd }));
   gutter.rotation.z = Math.PI / 2;
@@ -72,16 +79,16 @@ export function createCaptacionLluviaObjects({ scene, layers, addInteractive }) 
   const firstFlush = makeTank(root, [0.5, 2.15, 1.1], 0xb58b55, 1.8);
   firstFlush.userData = { type: 'filter', id: 'primeras-aguas' };
   addInteractive(firstFlush);
-  root.add(makeLabel('25 L · drenaje', '#f6d8a8')).position.set(-0.1, 3.45, 1.1);
+  addLabel('25 L · drenaje', '#f6d8a8', -0.1, 3.45, 1.1);
   const rawTank = makeTank(root, [2.4, 2.1, 0], 0x8caa9c, 2.5);
   rawTank.userData = { type: 'filter', id: 'deposito-crudo' };
   addInteractive(rawTank);
-  root.add(makeLabel('depósito crudo · 200 L', '#d7f7eb')).position.set(1.55, 3.85, 0);
+  addLabel('depósito crudo · 200 L', '#d7f7eb', 1.55, 3.85, 0);
   const overflow = new THREE.Mesh(new THREE.TorusGeometry(0.86, 0.05, 8, 32), new THREE.MeshBasicMaterial({ color: 0xe6c36a }));
   overflow.position.set(2.4, 3.38, 0);
   overflow.rotation.x = Math.PI / 2;
   root.add(overflow);
-  root.add(makeLabel('rebose con malla · riesgo de erosión/cimientos', '#f6d8a8')).position.set(0.7, 4.55, 0);
+  addLabel('rebose con malla · riesgo de erosión/cimientos', '#f6d8a8', 0.7, 4.55, 0);
 
   const filter = new THREE.Group();
   filter.position.set(4.2, 1.9, 0);
@@ -98,33 +105,33 @@ export function createCaptacionLluviaObjects({ scene, layers, addInteractive }) 
   }
   filter.userData = { type: 'filter', id: 'filtro-granular' };
   addInteractive(filter);
-  root.add(makeLabel('grava · arena · carbón', '#d7f7eb')).position.set(3.35, 3.65, 0);
-  root.add(makeLabel('orden y diseño hidráulico', '#f6d8a8')).position.set(3.35, 3.15, 0);
+  addLabel('grava · arena · carbón', '#d7f7eb', 3.35, 3.65, 0);
+  addLabel('orden y diseño hidráulico', '#f6d8a8', 3.35, 3.15, 0);
 
   const disinfection = makeTank(root, [6.15, 2.1, 0], 0x9276b8, 2.2);
   disinfection.userData = { type: 'filter', id: 'disinfection' };
   addInteractive(disinfection);
-  root.add(makeLabel('tiempo de contacto', '#d7f7eb')).position.set(5.25, 3.75, 0);
-  root.add(makeLabel('cloro residual libre: medir', '#f6d8a8')).position.set(5.25, 3.25, 0);
-  root.add(makeLabel('turbidez alta ↓ eficacia', '#f6d8a8')).position.set(5.25, 2.75, 0);
-  root.add(makeLabel('ebullición: solo emergencia', '#f6d8a8')).position.set(5.25, 2.25, 0);
+  addLabel('tiempo de contacto', '#d7f7eb', 5.25, 3.75, 0);
+  addLabel('cloro residual libre: medir', '#f6d8a8', 5.25, 3.25, 0);
+  addLabel('turbidez alta ↓ eficacia', '#f6d8a8', 5.25, 2.75, 0);
+  addLabel('ebullición: solo emergencia', '#f6d8a8', 5.25, 2.25, 0);
 
   const cleanTank = makeTank(root, [8.05, 2.1, 0], 0x5ea99f, 2.5);
   cleanTank.userData = { type: 'filter', id: 'deposito-limpio' };
   addInteractive(cleanTank);
-  root.add(makeLabel('depósito limpio · tapa', '#d7f7eb')).position.set(7.25, 3.9, 0);
+  addLabel('depósito limpio · tapa', '#d7f7eb', 7.25, 3.9, 0);
   const tap = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.65, 16), new THREE.MeshStandardMaterial({ color: 0xbbeee2 }));
   tap.rotation.z = Math.PI / 2;
   tap.position.set(8.95, 1.8, 0);
   root.add(tap);
-  root.add(makeLabel('grifo higiénico', '#d7f7eb')).position.set(7.8, 1.35, 0);
+  addLabel('grifo higiénico', '#d7f7eb', 7.8, 1.35, 0);
 
   const control = new THREE.Mesh(new THREE.SphereGeometry(0.45, 24, 16), new THREE.MeshStandardMaterial({ color: 0xe4c466 }));
   control.position.set(9.8, 2.1, 0);
   control.userData = { type: 'filter', id: 'control' };
   root.add(control);
   addInteractive(control);
-  root.add(makeLabel('muestreo', '#d7f7eb')).position.set(9.15, 3.35, 0);
+  addLabel('muestreo', '#d7f7eb', 9.15, 3.35, 0);
 
   root.traverse((object) => {
     if (!object.userData.isLabel) return;
