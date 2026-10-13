@@ -1,5 +1,5 @@
 import { computeSimulation, formatNumber, qualityScore } from './metrics.js';
-import { formatTime, normalizeProgress, renderTimelineMarkers } from './timeline.js';
+import { formatTime, normalizeProgress, renderTimelineMarkers, updateTimelineMarkers } from './timeline.js';
 import { renderUsage, USAGES } from './tools/usage.js';
 import { renderCalculator } from './tools/calculator.js';
 import { createBudgetState, renderBudget } from './tools/budget.js';
@@ -39,14 +39,21 @@ export function createUI(scenario, scene) {
   const budgetState = createBudgetState();
   const maintenanceState = createMaintenanceState();
   let currentQuality = initial;
-  let lastHeavyRender = 0;
+  let qualityMode = 'auto';
+  let lastUiUpdate = 0;
+  let lastStageIndex = -1;
+  let staticSignature = '';
   let samplingSignature = '';
+  let samplingUpdater;
+  const metricNodes = new Map();
+  const chartNodes = [];
   const controller = new AbortController();
   let animationFrame;
 
   dom.scenarioDescription.textContent = scenario.text.description;
   dom.helpDescription.textContent = scenario.text.help;
   scene.onQualityChange = (mode) => {
+    qualityMode = mode;
     if (dom.qualitySelect) dom.qualitySelect.value = mode;
     if (dom.qualityStatus) dom.qualityStatus.textContent = 'Ligera por rendimiento';
   };
@@ -112,6 +119,7 @@ export function createUI(scenario, scene) {
   listen(dom.scenarioControls, 'input', handleScenarioControl);
   listen(dom.scenarioControls, 'change', handleScenarioControl);
   listen(dom.qualitySelect, 'change', (event) => {
+    qualityMode = event.target.value;
     scene.setQuality(event.target.value);
     dom.qualityStatus.textContent = event.target.value === 'auto' ? 'Auto' : event.target.value === 'light' ? 'Ligera' : 'Alta';
   });
@@ -126,7 +134,21 @@ export function createUI(scenario, scene) {
   listen(dom.helpModal, 'click', (event) => { if (event.target === dom.helpModal) dom.helpModal.hidden = true; });
 
   function renderLayerList() {
-    dom.layerList.innerHTML = layers.map((layer) => `<div class="layer-row ${layer.enabled ? '' : 'is-disabled'} ${state.selected === layer.id ? 'is-selected' : ''}" data-filter="${layer.id}"><span class="layer-row__swatch layer-row__swatch--${layer.id}"></span><span class="layer-row__main"><b>${layer.name}</b><small>${layer.short}</small></span><label class="layer-row__toggle" aria-label="Activar ${layer.name}"><input type="checkbox" ${layer.enabled ? 'checked' : ''} /><span class="layer-row__track"></span></label></div>`).join('');
+    if (!dom.layerList.children.length) {
+      dom.layerList.replaceChildren(...layers.map((layer) => {
+        const row = document.createElement('div');
+        row.className = 'layer-row';
+        row.dataset.filter = layer.id;
+        row.innerHTML = `<span class="layer-row__swatch layer-row__swatch--${layer.id}"></span><span class="layer-row__main"><b>${layer.name}</b><small>${layer.short}</small></span><label class="layer-row__toggle" aria-label="Activar ${layer.name}"><input type="checkbox" /><span class="layer-row__track"></span></label>`;
+        return row;
+      }));
+    }
+    layers.forEach((layer, index) => {
+      const row = dom.layerList.children[index];
+      row.classList.toggle('is-disabled', layer.enabled === false);
+      row.classList.toggle('is-selected', state.selected === layer.id);
+      row.querySelector('input').checked = layer.enabled !== false;
+    });
   }
 
   function renderScenarioControls() {
@@ -167,7 +189,59 @@ export function createUI(scenario, scene) {
 
   function renderMetrics(quality) {
     const usage = USAGES[state.finalUse] || USAGES.tomar;
-    dom.metricsGrid.innerHTML = scenario.metrics.map((metric) => `<div class="metric ${usage.metricKeys.includes(metric.key) ? 'is-relevant' : 'is-muted'} ${usage.highlighted.includes(metric.key) ? 'is-highlighted' : ''}"><div class="metric-label"><span>${metric.label}</span><span>${metric.unit}</span></div><strong class="metric-value">${formatNumber(quality[metric.key])}${metric.unit ? ` <small>${metric.unit}</small>` : ''}</strong><div class="metric-bar"><span style="width:${clamp(quality[metric.key] / metric.max) * 100}%"></span></div></div>`).join('');
+    scenario.metrics.forEach((metric) => {
+      const item = metricNodes.get(metric.key);
+      if (!item) return;
+      const value = quality[metric.key];
+      item.value.textContent = formatNumber(value);
+      item.bar.style.transform = `scaleX(${clamp(value / metric.max)})`;
+      item.root.classList.toggle('is-relevant', usage.metricKeys.includes(metric.key));
+      item.root.classList.toggle('is-muted', !usage.metricKeys.includes(metric.key));
+      item.root.classList.toggle('is-highlighted', usage.highlighted.includes(metric.key));
+    });
+  }
+
+  function mountMetrics() {
+    metricNodes.clear();
+    dom.metricsGrid.replaceChildren(...scenario.metrics.map((metric) => {
+      const root = document.createElement('div');
+      root.className = 'metric';
+      root.innerHTML = `<div class="metric-label"><span>${metric.label}</span><span>${metric.unit}</span></div><strong class="metric-value"><span></span>${metric.unit ? ` <small>${metric.unit}</small>` : ''}</strong><div class="metric-bar"><span></span></div>`;
+      metricNodes.set(metric.key, { root, value: root.querySelector('.metric-value span'), bar: root.querySelector('.metric-bar span') });
+      return root;
+    }));
+  }
+
+  function mountEvolutionChart(simulation) {
+    const chartPoints = [
+      { label: 'Entrada', before: qualityScore(initial, initial), after: qualityScore(initial, initial) },
+      ...simulation.filters.map((layer, index) => ({
+        label: layer.name.split(' ')[0],
+        before: qualityScore(simulation.stages[index].quality, initial),
+        after: qualityScore(simulation.stages[index + 1].quality, initial),
+      })),
+    ];
+    chartNodes.length = 0;
+    dom.evolutionChart.replaceChildren(...chartPoints.map((point) => {
+      const column = document.createElement('div');
+      column.className = 'chart-column';
+      column.innerHTML = `<span class="chart-bar before"></span><span class="chart-bar after"></span><span class="chart-label"></span>`;
+      column.querySelector('.chart-label').textContent = point.label;
+      chartNodes.push({ column, before: column.querySelector('.before'), after: column.querySelector('.after'), point });
+      return column;
+    }));
+  }
+
+  function updateEvolutionChart(simulation) {
+    chartNodes.forEach(({ column, before, after, point }, index) => {
+      const stage = simulation.stages[index];
+      const next = simulation.stages[index + 1];
+      if (stage) point.before = qualityScore(stage.quality, initial);
+      if (next) point.after = qualityScore(next.quality, initial);
+      before.style.transform = `scaleY(${Math.max(4, point.before) / 100})`;
+      after.style.transform = `scaleY(${Math.max(4, point.after) / 100})`;
+      column.classList.toggle('current', index === simulation.currentIndex);
+    });
   }
 
   function getDetails(simulation) {
@@ -192,26 +266,36 @@ export function createUI(scenario, scene) {
     const simulation = computeSimulation(state.progress, { initial, layers });
     currentQuality = simulation.current;
     const now = performance.now();
-    const renderHeavyBlocks = !state.playing || now - lastHeavyRender >= 100;
-    if (renderHeavyBlocks) {
-      lastHeavyRender = now;
+    document.documentElement.classList.toggle('is-playing', state.playing);
+    const updateUi = !state.playing || qualityMode !== 'light' || now - lastUiUpdate >= 250;
+    const structureSignature = `${layers.map((layer) => `${layer.id}:${layer.enabled !== false}`).join('|')}`;
+    if (staticSignature !== structureSignature) {
+      staticSignature = structureSignature;
+      renderLayerList();
+      renderTimelineMarkers(dom.timelineMarkers, simulation);
+      mountEvolutionChart(simulation);
+    }
+    if (updateUi) {
+      lastUiUpdate = now;
       const samplingSimulation = computeSimulation(1, { initial, layers });
       const usage = USAGES[state.finalUse] || USAGES.tomar;
       const samplingData = { metrics: scenario.metrics, initial, stages: samplingSimulation.stages, samplingStages: scenario.samplingStages, usage };
       const signature = JSON.stringify({ stages: samplingSimulation.stages.map((stage) => stage.quality), samplingStages: scenario.samplingStages, usage: state.finalUse });
-      if (signature !== samplingSignature) { samplingSignature = signature; renderSampling(dom.samplingTool, samplingData); }
+      if (signature !== samplingSignature) {
+        samplingSignature = signature;
+        samplingUpdater = renderSampling(dom.samplingTool, samplingData);
+      } else if (samplingUpdater && simulation.currentIndex !== lastStageIndex) {
+        samplingUpdater(samplingData);
+      }
       renderMetrics(simulation.current);
-      renderLayerList();
-      renderTimelineMarkers(dom.timelineMarkers, simulation, state.progress);
-      const chartPoints = [
-        { label: 'Entrada', before: qualityScore(initial, initial), after: qualityScore(initial, initial) },
-        ...simulation.filters.map((layer, index) => ({
-          label: layer.name.split(' ')[0],
-          before: qualityScore(simulation.stages[index].quality, initial),
-          after: qualityScore(simulation.stages[index + 1].quality, initial),
-        })),
-      ];
-      dom.evolutionChart.innerHTML = chartPoints.map((point, index) => `<div class="chart-column ${index === simulation.currentIndex ? 'current' : ''}"><span class="chart-bar before" style="height:${Math.max(4, point.before)}%"></span><span class="chart-bar after" style="height:${Math.max(4, point.after)}%"></span><span class="chart-label">${point.label}</span></div>`).join('');
+      updateEvolutionChart(simulation);
+      updateTimelineMarkers(dom.timelineMarkers, state.progress);
+    }
+    lastStageIndex = simulation.currentIndex;
+    if (!updateUi) {
+      scene.setState({ ...state, ...scenarioState });
+      scene.update(simulation, { ...state, ...scenarioState });
+      return;
     }
     const detail = getDetails(simulation);
     const score = qualityScore(simulation.current, initial);
@@ -225,7 +309,7 @@ export function createUI(scenario, scene) {
     dom.currentTime.textContent = formatTime(time);
     dom.totalTime.textContent = formatTime(simulation.totalDuration);
     dom.timelineInput.value = Math.round(state.progress * 1000);
-    dom.timelineFill.style.width = `${state.progress * 100}%`;
+    dom.timelineFill.style.transform = `scaleX(${state.progress})`;
     dom.timelineThumb.style.left = `${state.progress * 100}%`;
     dom.inspectorTitle.textContent = detail.title;
     dom.inspectorDescription.textContent = detail.description;
@@ -267,6 +351,7 @@ export function createUI(scenario, scene) {
     animationFrame = requestAnimationFrame(tick);
   }
 
+  mountMetrics();
   render();
   tick();
 

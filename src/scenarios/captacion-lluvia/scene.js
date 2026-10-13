@@ -3,6 +3,8 @@ import { createParticles } from '../../core/particles.js';
 import { qualityScore } from '../../core/metrics.js';
 import { INITIAL } from './layers.js';
 
+const LABEL_FONT = '24px monospace';
+
 export function getLabelScale(canvasWidth, canvasHeight, height = 0.45) {
   return new THREE.Vector3(height * (canvasWidth / canvasHeight), height, 1);
 }
@@ -10,9 +12,10 @@ export function getLabelScale(canvasWidth, canvasHeight, height = 0.45) {
 function makeLabel(text, color = '#b8eee0') {
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('2d');
-  canvas.width = 512;
+  context.font = LABEL_FONT;
+  canvas.width = Math.ceil(context.measureText(text).width) + 24;
   canvas.height = 64;
-  context.font = '24px monospace';
+  context.font = LABEL_FONT;
   context.fillStyle = color;
   context.textBaseline = 'middle';
   context.fillText(text, 12, 32);
@@ -28,12 +31,16 @@ function makeLabel(text, color = '#b8eee0') {
 function setLabelText(sprite, text) {
   const canvas = sprite.material.map.image;
   const context = canvas.getContext('2d');
+  context.font = LABEL_FONT;
+  canvas.width = Math.ceil(context.measureText(text).width) + 24;
+  canvas.height = 64;
   context.clearRect(0, 0, canvas.width, canvas.height);
-  context.font = '24px monospace';
+  context.font = LABEL_FONT;
   context.fillStyle = sprite.userData.labelColor;
   context.textBaseline = 'middle';
   context.fillText(text, 12, 32);
   sprite.userData.labelText = text;
+  sprite.scale.copy(getLabelScale(canvas.width, canvas.height));
   sprite.material.map.needsUpdate = true;
 }
 
@@ -100,7 +107,7 @@ export function createCaptacionLluviaObjects({ scene, layers, addInteractive }) 
   overflow.rotation.x = Math.PI / 2;
   overflow.userData = { type: 'filter', id: 'deposito-crudo' };
   root.add(overflow);
-  addLabel('rebose', 'Rebose', '#f6d8a8', 2.4, 4.0, 0);
+  addLabel('rebose', 'Rebose', '#f6d8a8', 3.45, 3.45, 0);
 
   const filter = new THREE.Group();
   filter.position.set(4.2, 1.9, 0);
@@ -117,7 +124,7 @@ export function createCaptacionLluviaObjects({ scene, layers, addInteractive }) 
   }
   filter.userData = { type: 'filter', id: 'filtro-granular' };
   addInteractive(filter);
-  addLabel('filtro-granular', 'Filtro', '#d7f7eb', 4.2, 3.65, 0);
+  addLabel('filtro-granular', 'Filtro', '#d7f7eb', 4.2, 4.15, 0);
 
   const disinfection = makeTank(root, [6.15, 2.1, 0], 0x9276b8, 2.2);
   disinfection.userData = { type: 'filter', id: 'disinfection' };
