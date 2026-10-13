@@ -26,4 +26,4 @@ function totals(state) {
   return { rows, subtotal, contingency, total: subtotal + contingency, invalid: false };
 }
 
-function money(value) { return Number.isFinite(value) ? value.toFixed(2) : '?'; }
+function money(value) { return Number.isFinite(value) ? value.toFixed(2) : '—'; }

@@ -26,7 +26,7 @@ function input(label, key, value, min, max, step) {
 function calculate(values) {
   const parsed = Object.fromEntries(Object.entries(values).map(([key, value]) => [key, Number(value)]));
   const invalid = Object.values(parsed).some((value) => !Number.isFinite(value) || value <= 0);
-  if (invalid) return { volume: '?', barrels: '?', days: '?', invalid: true };
+  if (invalid) return { volume: '—', barrels: '—', days: '—', invalid: true };
   const coefficient = Math.min(1, parsed.coefficient);
   const volume = parsed.p * parsed.area * coefficient;
   const barrels = Math.ceil(volume / parsed.capacity);

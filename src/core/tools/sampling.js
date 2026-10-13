@@ -35,7 +35,7 @@ export function renderSampling(container, { metrics = [], stages = [], initial, 
         return id ? nextStages.find((stage) => stage.filter?.id === id)?.quality || null : null;
       })()?.[row.metric.key];
       const unavailable = value === undefined || value === null;
-      row.value.textContent = unavailable && row.pointIndex === 2 ? '? (sin etapa de desinfección)' : unavailable ? '?' : `${format(value)} ${row.metric.unit || ''}`;
+      row.value.textContent = unavailable && row.pointIndex === 2 ? '— (sin etapa de desinfección)' : unavailable ? '—' : `${format(value)} ${row.metric.unit || ''}`;
       row.detail.textContent = unavailable && row.pointIndex === 2 ? 'Sin etapa de desinfección' : 'ilustrativo · pendiente de laboratorio';
       const relevant = nextUsage.metricKeys?.includes(row.metric.key);
       row.row.classList.toggle('is-relevant', relevant);
@@ -47,4 +47,7 @@ export function renderSampling(container, { metrics = [], stages = [], initial, 
   return update;
 }
 
-function format(value) { return Number.isInteger(value) ? value : value.toFixed(1); }
+function format(value) {
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? (Number.isInteger(numericValue) ? numericValue : numericValue.toFixed(1)) : '—';
+}

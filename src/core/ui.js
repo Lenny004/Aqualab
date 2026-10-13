@@ -43,12 +43,21 @@ export function createUI(scenario, scene) {
   let lastUiUpdate = 0;
   let lastStageIndex = -1;
   let staticSignature = '';
+  let layerListSignature = '';
   let samplingSignature = '';
   let samplingUpdater;
   const metricNodes = new Map();
   const chartNodes = [];
   const controller = new AbortController();
   let animationFrame;
+  let renderingUi = false;
+  let uiErrorLogged = false;
+
+  const handleUiError = (event) => {
+    if (!renderingUi || uiErrorLogged) return;
+    uiErrorLogged = true;
+    console.error('Error de UI; la escena continuará reproduciéndose.', event.error || event.message);
+  };
 
   dom.scenarioDescription.textContent = scenario.text.description;
   dom.helpDescription.textContent = scenario.text.help;
@@ -60,6 +69,7 @@ export function createUI(scenario, scene) {
   renderScenarioControls();
   renderTools();
   const listen = (element, event, handler) => element.addEventListener(event, handler, { signal: controller.signal });
+  listen(window, 'error', handleUiError);
 
   listen(document, 'scene-select', (event) => {
     state.selected = event.detail;
@@ -134,7 +144,9 @@ export function createUI(scenario, scene) {
   listen(dom.helpModal, 'click', (event) => { if (event.target === dom.helpModal) dom.helpModal.hidden = true; });
 
   function renderLayerList() {
-    if (!dom.layerList.children.length) {
+    const signature = layers.map((layer) => layer.id).join('|');
+    if (layerListSignature !== signature) {
+      layerListSignature = signature;
       dom.layerList.replaceChildren(...layers.map((layer) => {
         const row = document.createElement('div');
         row.className = 'layer-row';
@@ -260,11 +272,15 @@ export function createUI(scenario, scene) {
   }
 
   function render() {
+    renderingUi = true;
     const carbon = layers.find((layer) => layer.id === 'carbon');
     const totalDuration = computeSimulation(0, { initial, layers }).totalDuration;
     if (carbon) carbon.saturation = totalDuration ? clamp(state.playedTime / totalDuration) : 0;
     const simulation = computeSimulation(state.progress, { initial, layers });
     currentQuality = simulation.current;
+    const renderState = { ...state, ...scenarioState };
+    scene.setState(renderState);
+    scene.update(simulation, renderState);
     const now = performance.now();
     document.documentElement.classList.toggle('is-playing', state.playing);
     const updateUi = !state.playing || qualityMode !== 'light' || now - lastUiUpdate >= 250;
@@ -293,8 +309,7 @@ export function createUI(scenario, scene) {
     }
     lastStageIndex = simulation.currentIndex;
     if (!updateUi) {
-      scene.setState({ ...state, ...scenarioState });
-      scene.update(simulation, { ...state, ...scenarioState });
+      renderingUi = false;
       return;
     }
     const detail = getDetails(simulation);
@@ -329,12 +344,11 @@ export function createUI(scenario, scene) {
     dom.layerCount.textContent = `${simulation.filters.length} / ${layers.length}`;
     dom.activeStagesChip.textContent = `${simulation.filters.length} ${simulation.filters.length === 1 ? 'etapa' : 'etapas'}`;
     dom.trendPill.textContent = `+${Math.max(0, score - qualityScore(initial, initial))} calidad`;
-    const renderState = { ...state, ...scenarioState };
-    scene.setState(renderState);
-    scene.update(simulation, renderState);
+    renderingUi = false;
   }
 
   function tick() {
+    animationFrame = requestAnimationFrame(tick);
     const now = performance.now();
     const delta = Math.min((now - state.lastFrame) / 1000, 0.1);
     state.lastFrame = now;
@@ -348,7 +362,6 @@ export function createUI(scenario, scene) {
       render();
     }
 
-    animationFrame = requestAnimationFrame(tick);
   }
 
   mountMetrics();
@@ -359,6 +372,15 @@ export function createUI(scenario, scene) {
     dispose() {
       controller.abort();
       cancelAnimationFrame(animationFrame);
+      dom.layerList.replaceChildren();
+      dom.metricsGrid.replaceChildren();
+      dom.evolutionChart.replaceChildren();
+      dom.timelineMarkers.replaceChildren();
+      dom.timelineMarkers._timelineMarkers = [];
+      dom.samplingTool.replaceChildren();
+      metricNodes.clear();
+      chartNodes.length = 0;
+      samplingUpdater = undefined;
     },
   };
 }
