@@ -54,6 +54,7 @@ export class PurificationScene {
       interactives: this.interactives,
       layers: this.layers,
       addInteractive: (object) => this.interactives.push(object),
+      invalidate: () => this.invalidate(),
     };
   }
 
@@ -190,6 +191,7 @@ export class PurificationScene {
 
   setUsage(usage) {
     this.state = { ...this.state, finalUse: usage };
+    this.invalidate();
   }
 
   animate() {

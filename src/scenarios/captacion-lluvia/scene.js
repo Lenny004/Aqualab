@@ -61,7 +61,7 @@ function makeTank(group, position, color, height = 2.1) {
   return tank;
 }
 
-export function createCaptacionLluviaObjects({ scene, layers, addInteractive }) {
+export function createCaptacionLluviaObjects({ scene, layers, addInteractive, invalidate }) {
   const root = new THREE.Group();
   const flowGroup = new THREE.Group();
   const stageObjects = new Map();
@@ -119,7 +119,7 @@ export function createCaptacionLluviaObjects({ scene, layers, addInteractive }) 
   overflow.rotation.x = Math.PI / 2;
   overflow.userData = { type: 'filter', id: 'deposito-crudo' };
   root.add(overflow);
-  addLabel('rebose', 'Rebose', '#f6d8a8', 3.45, 2.85, 0.75);
+  addLabel('rebose', 'Rebose', '#f6d8a8', 1.55, 3.0, 0.9);
 
   const filter = new THREE.Group();
   filter.position.set(4.2, 1.9, 0);
@@ -214,6 +214,7 @@ export function createCaptacionLluviaObjects({ scene, layers, addInteractive }) 
     },
     setRoofType(type) {
       roofMaterial.color.set(type === 'compatible' ? 0x788f89 : 0x9a5f58);
+      invalidate();
     },
     setQuality(mode) {
       this.qualityMode = mode;

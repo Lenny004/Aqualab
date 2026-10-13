@@ -175,13 +175,17 @@ export function createUI(scenario, scene) {
 
   function renderScenarioControls() {
     if (!dom.scenarioControls || !scenario.controls?.length) return;
-    dom.scenarioControls.innerHTML = scenario.controls.map((control) => {
+    const roofBlocked = scenarioState.roofType && scenarioState.roofType !== 'compatible';
+    const warning = roofBlocked
+      ? '<p class="scenario-controls__warning" role="alert">\u26a0 Techo no compatible: excluido para agua de beber. Selecciona un uso no potable.</p>'
+      : '';
+    dom.scenarioControls.innerHTML = `${warning}${scenario.controls.map((control) => {
       if (control.type === 'select') {
         const options = control.options.map((option) => `<option value="${option.value}" ${scenarioState[control.key] === option.value ? 'selected' : ''}>${option.label}</option>`).join('');
         return `<label class="scenario-controls__field"><span>${control.label}</span><select class="scenario-controls__select" data-scenario-control="${control.key}">${options}</select><small>${control.help}</small></label>`;
       }
       return `<label class="scenario-controls__field"><span>${control.label}</span><input class="scenario-controls__input" data-scenario-control="${control.key}" type="${control.type}" value="${scenarioState[control.key]}" min="${control.min}" max="${control.max}" step="${control.step}" /><small>${control.help}</small></label>`;
-    }).join('');
+    }).join('')}`;
   }
 
   function handleScenarioControl(event) {
@@ -194,6 +198,10 @@ export function createUI(scenario, scene) {
       scenario.onUsageChange?.('no-potable', { scene });
     }
     scenario.onControlChange?.(definition.key, scenarioState[definition.key], { layers, state: scenarioState, scene });
+    if (definition.key === 'roofType') {
+      renderScenarioControls();
+      renderUsage(dom.usageTool, { value: state.finalUse, blocked: scenarioState.roofType && scenarioState.roofType !== 'compatible', onChange: handleUsageChange });
+    }
     render();
   }
 

@@ -337,6 +337,7 @@ h1, h2, p { margin-block-start: 0; }
 .scenario-controls { display: grid; gap: .8rem; margin-block-end: 1.3rem; }
 .scenario-controls__field { display: grid; gap: .35rem; color: var(--color-text-muted); font: 1rem var(--font-mono); }
 .scenario-controls__input, .scenario-controls__select { width: 100%; padding: .65rem .75rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); color: var(--color-text); background: var(--color-surface-raised); }
+.scenario-controls__warning { margin-block-end: .2rem; padding: .8rem 1rem; border-inline-start: .2rem solid var(--color-warning); color: var(--color-warning); background: rgba(246, 206, 121, .08); line-height: 1.45; }
 .scenario-controls__field small { color: var(--color-text-faint); font-size: .85rem; line-height: 1.35; }
 
 /* Shared tools: one panel with independent, reusable tool blocks. */
