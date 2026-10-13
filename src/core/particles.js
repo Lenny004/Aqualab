@@ -5,6 +5,7 @@ export function createParticles(parent, options = {}) {
   const height = options.height || 5.7;
   const radius = options.radius || 1.55;
   const positions = new Float32Array(count * 3);
+  const basePositions = new Float32Array(count * 3);
   const offsets = [];
 
   for (let index = 0; index < count; index += 1) {
@@ -16,6 +17,7 @@ export function createParticles(parent, options = {}) {
     positions[index * 3 + 2] = Math.sin(angle) * particleRadius;
     offsets.push(Math.random() * height);
   }
+  basePositions.set(positions);
 
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -32,6 +34,7 @@ export function createParticles(parent, options = {}) {
   );
 
   points.userData.offsets = offsets;
+  points.userData.basePositions = basePositions;
   points.userData.height = height;
   parent.add(points);
 
@@ -44,15 +47,13 @@ export function updateParticles(points, time, progress) {
   }
 
   const positions = points.geometry.attributes.position.array;
+  const basePositions = points.userData.basePositions;
   const height = points.userData.height;
 
   points.userData.offsets.forEach((offset, index) => {
-    const x = positions[index * 3];
-    const z = positions[index * 3 + 2];
-
     positions[index * 3 + 1] = 0.5 + ((offset + time * 0.35 + progress * height) % height);
-    positions[index * 3] = x + Math.sin(time * 0.7 + index) * 0.012;
-    positions[index * 3 + 2] = z + Math.cos(time * 0.6 + index) * 0.012;
+    positions[index * 3] = basePositions[index * 3] + Math.sin(time * 0.7 + index) * 0.012;
+    positions[index * 3 + 2] = basePositions[index * 3 + 2] + Math.cos(time * 0.6 + index) * 0.012;
   });
 
   points.geometry.attributes.position.needsUpdate = true;

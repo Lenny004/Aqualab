@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { createParticles } from '../../core/particles.js';
 import { lerp, qualityScore } from '../../core/metrics.js';
-import { INITIAL, LAYERS } from './layers.js';
+import { INITIAL } from './layers.js';
 
 function makeLabel(text, color = '#b8eee0') {
   const canvas = document.createElement('canvas');
@@ -25,7 +25,7 @@ function makeTank(group, position, color, height = 2.1) {
   return tank;
 }
 
-export function createCaptacionLluviaObjects({ scene, addInteractive }) {
+export function createCaptacionLluviaObjects({ scene, layers, addInteractive }) {
   const root = new THREE.Group();
   const flowGroup = new THREE.Group();
   const stageObjects = new Map();
@@ -115,7 +115,7 @@ export function createCaptacionLluviaObjects({ scene, addInteractive }) {
   root.add(makeLabel('NO POTABLE hasta análisis de laboratorio', '#ffca8a')).position.set(4.2, 0.1, 0);
   root.add(makeLabel('RTS 13.02.01:14', '#ffca8a')).position.set(6.8, -0.45, 0);
 
-  LAYERS.forEach((layer) => {
+  layers.forEach((layer) => {
     const object = layer.id === 'primeras-aguas' ? firstFlush : layer.id === 'deposito-crudo' ? rawTank : layer.id === 'disinfection' ? disinfection : layer.id === 'deposito-limpio' ? cleanTank : layer.id === 'filtro-granular' ? filter : null;
     if (object) stageObjects.set(layer.id, object);
   });
@@ -143,18 +143,30 @@ export function createCaptacionLluviaObjects({ scene, addInteractive }) {
       const segment = Math.min(path.length - 1, Math.floor(state.progress * (path.length - 1)));
       const local = state.progress * (path.length - 1) - segment;
       water.position.lerpVectors(path[segment], path[Math.min(segment + 1, path.length - 1)], local);
-      water.material = score > 0.62 ? clean : dirty;
-      flowGroup.position.set(0, 0, 0);
-      firstFlush.scale.y = 0.8 + (state.firstFlushVolume || 25) / 100;
+      const waterMaterial = score > 0.62 ? clean : dirty;
+      if (water.material !== waterMaterial) water.material = waterMaterial;
+      const volume = state.firstFlushVolume || 25;
+      if (firstFlush.userData.volume !== volume) {
+        firstFlush.scale.y = 0.8 + volume / 100;
+        firstFlush.userData.volume = volume;
+      }
       const divertedProgress = (state.progress - 0.08) / 0.16;
       divertedWater.position.lerpVectors(path[1], path[2], Math.min(1, Math.max(0, divertedProgress)));
-      divertedWater.material.opacity = divertedProgress >= 0 && divertedProgress <= 1 ? 0.9 : 0;
-      stageObjects.forEach((object, id) => {
-        const layer = LAYERS.find((item) => item.id === id);
-        object.visible = layer?.enabled !== false;
-      });
+      const divertedOpacity = divertedProgress >= 0 && divertedProgress <= 1 ? 0.9 : 0;
+      if (divertedWater.material.opacity !== divertedOpacity) divertedWater.material.opacity = divertedOpacity;
+      const layerState = layers.map((layer) => `${layer.id}:${layer.enabled !== false}`).join('|');
+      if (layerState !== this.layerState) {
+        stageObjects.forEach((object, id) => {
+          const layer = layers.find((item) => item.id === id);
+          object.visible = layer?.enabled !== false;
+        });
+        this.layerState = layerState;
+      }
       const dirtyWater = state.progress < 0.2;
-      particles.material.color.set(dirtyWater ? 0xe9bd78 : 0x9be4c7);
+      if (this.dirtyWater !== dirtyWater) {
+        particles.material.color.set(dirtyWater ? 0xe9bd78 : 0x9be4c7);
+        this.dirtyWater = dirtyWater;
+      }
     },
     select(id) {
       stageObjects.forEach((object, objectId) => {

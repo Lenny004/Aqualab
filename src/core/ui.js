@@ -26,12 +26,13 @@ export function createUI(scenario, scene) {
   const layers = scenario.layers;
   const initial = scenario.initial;
   const dom = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
-  const state = { progress: 0, playing: false, speed: 1, xray: false, selected: 'bucket', finalUse: 'tomar', realElapsed: 0, lastFrame: performance.now() };
+  const state = { progress: 0, playing: false, speed: 1, xray: false, selected: 'input', finalUse: 'tomar', realElapsed: 0, playedTime: 0, lastFrame: performance.now() };
   const scenarioState = Object.fromEntries((scenario.controls || []).map((control) => [control.key, control.value]));
   const calculatorState = { p: 20, area: 40, coefficient: 0.8, capacity: 200, demand: 40 };
   const budgetState = createBudgetState();
   const maintenanceState = createMaintenanceState();
   let currentQuality = initial;
+  let lastHeavyRender = 0;
   const controller = new AbortController();
   let animationFrame;
 
@@ -53,7 +54,8 @@ export function createUI(scenario, scene) {
     state.playing = false;
     state.progress = 0;
     state.realElapsed = 0;
-    state.selected = 'bucket';
+    state.selected = 'input';
+    state.playedTime = 0;
     render();
   });
   listen(dom.timelineInput, 'input', (event) => {
@@ -153,7 +155,7 @@ export function createUI(scenario, scene) {
   }
 
   function getDetails(simulation) {
-    if (state.selected === 'bucket') {
+    if (state.selected === 'input') {
       return { title: 'Agua de entrada', description: scenario.text.inputDescription, before: initial, after: simulation.stages[1]?.quality || initial, beforeLabel: 'Agua sin tratar', afterLabel: simulation.filters[0]?.name || 'Sin etapas activas', stage: 'Entrada' };
     }
 
@@ -169,11 +171,28 @@ export function createUI(scenario, scene) {
 
   function render() {
     const carbon = layers.find((layer) => layer.id === 'carbon');
-    if (carbon) carbon.saturation = Math.max(carbon.saturation || 0, state.progress);
-
+    const totalDuration = computeSimulation(0, { initial, layers }).totalDuration;
+    if (carbon) carbon.saturation = totalDuration ? clamp(state.playedTime / totalDuration) : 0;
     const simulation = computeSimulation(state.progress, { initial, layers });
     currentQuality = simulation.current;
-    renderSampling(dom.samplingTool, { metrics: scenario.metrics, getValue: (key) => formatNumber(currentQuality[key]) });
+    const now = performance.now();
+    const renderHeavyBlocks = !state.playing || now - lastHeavyRender >= 100;
+    if (renderHeavyBlocks) {
+      lastHeavyRender = now;
+      renderSampling(dom.samplingTool, { metrics: scenario.metrics, getValue: (key) => formatNumber(currentQuality[key]) });
+      renderMetrics(simulation.current);
+      renderLayerList();
+      renderTimelineMarkers(dom.timelineMarkers, simulation, state.progress);
+      const chartPoints = [
+        { label: 'Entrada', before: qualityScore(initial, initial), after: qualityScore(initial, initial) },
+        ...simulation.filters.map((layer, index) => ({
+          label: layer.name.split(' ')[0],
+          before: qualityScore(simulation.stages[index].quality, initial),
+          after: qualityScore(simulation.stages[index + 1].quality, initial),
+        })),
+      ];
+      dom.evolutionChart.innerHTML = chartPoints.map((point, index) => `<div class="chart-column ${index === simulation.currentIndex ? 'current' : ''}"><span class="chart-bar before" style="height:${Math.max(4, point.before)}%"></span><span class="chart-bar after" style="height:${Math.max(4, point.after)}%"></span><span class="chart-label">${point.label}</span></div>`).join('');
+    }
     const detail = getDetails(simulation);
     const score = qualityScore(simulation.current, initial);
     const time = simulation.totalDuration * state.progress;
@@ -196,7 +215,6 @@ export function createUI(scenario, scene) {
     dom.qualityRing.style.setProperty('--ring', `${Math.max(5, score)}%`);
     dom.qualityState.textContent = 'NO POTABLE';
     dom.qualityDelta.textContent = 'Filtrar no es potabilizar';
-    renderMetrics(simulation.current);
     dom.selectedStageNumber.textContent = detail.stage;
     dom.beforeScore.textContent = qualityScore(detail.before, initial);
     dom.afterScore.textContent = qualityScore(detail.after, initial);
@@ -205,17 +223,6 @@ export function createUI(scenario, scene) {
     dom.playLabel.textContent = state.playing ? 'Pausar' : 'Reproducir';
     dom.playButton.querySelector('.play-button__icon').textContent = state.playing ? 'Ⅱ' : '▶';
     dom.layerCount.textContent = `${simulation.filters.length} / ${layers.length}`;
-    renderLayerList();
-    renderTimelineMarkers(dom.timelineMarkers, simulation, state.progress);
-    const chartPoints = [
-      { label: 'Entrada', before: qualityScore(initial, initial), after: qualityScore(initial, initial) },
-      ...simulation.filters.map((layer, index) => ({
-        label: layer.name.split(' ')[0],
-        before: qualityScore(simulation.stages[index].quality, initial),
-        after: qualityScore(simulation.stages[index + 1].quality, initial),
-      })),
-    ];
-    dom.evolutionChart.innerHTML = chartPoints.map((point, index) => `<div class="chart-column ${index === simulation.currentIndex ? 'current' : ''}"><span class="chart-bar before" style="height:${Math.max(4, point.before)}%"></span><span class="chart-bar after" style="height:${Math.max(4, point.after)}%"></span><span class="chart-label">${point.label}</span></div>`).join('');
     dom.trendPill.textContent = `+${Math.max(0, score - qualityScore(initial, initial))} calidad`;
     const renderState = { ...state, ...scenarioState };
     scene.setState(renderState);
@@ -230,6 +237,7 @@ export function createUI(scenario, scene) {
     if (state.playing) {
       const totalDuration = computeSimulation(0, { initial, layers }).totalDuration;
       state.progress += delta * state.speed / Math.max(totalDuration, 1);
+      state.playedTime += delta * state.speed;
       state.realElapsed += delta;
       if (state.progress >= 1) { state.progress = 1; state.playing = false; }
       render();

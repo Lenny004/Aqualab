@@ -12,7 +12,7 @@ export function renderTimelineMarkers(element, simulation, progress) {
     }),
   ];
 
-  element.innerHTML = markers.map((marker, index) => `<span class="timeline-marker ${progress * simulation.filters.length >= index ? 'is-active' : ''}" style="--marker-position:${marker.position * 100}%">${marker.label}</span>`).join('');
+  element.innerHTML = markers.map((marker) => `<span class="timeline-marker ${marker.position <= progress ? 'is-active' : ''}" style="--marker-position:${marker.position * 100}%">${marker.label}</span>`).join('');
 }
 
 export const normalizeProgress = (value) => clamp(Number(value) / 1000);

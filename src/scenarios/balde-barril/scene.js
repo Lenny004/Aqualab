@@ -1,11 +1,15 @@
 import * as THREE from 'three';
 import { createParticles } from '../../core/particles.js';
 import { lerp, qualityScore } from '../../core/metrics.js';
-import { INITIAL, LAYERS } from './layers.js';
+import { INITIAL } from './layers.js';
 
-export function createBaldeBarrilObjects({ scene, addInteractive }) {
+export function createBaldeBarrilObjects({ scene, layers, addInteractive }) {
   const glassMaterial = new THREE.MeshPhysicalMaterial({ color: 0x9ad6ce, transparent: true, opacity: 0.17, roughness: 0.08, metalness: 0.05, transmission: 0.15, side: THREE.DoubleSide, depthWrite: false });
   const layerObjects = new Map();
+  const dirtyColor = new THREE.Color(0xe9bd78);
+  const cleanColor = new THREE.Color(0x9be4c7);
+  const waterDirtyColor = new THREE.Color(0xb58b55);
+  const waterCleanColor = new THREE.Color(0x64d6d1);
   const barrel = new THREE.Group();
   const profile = [new THREE.Vector2(2.03, 0), new THREE.Vector2(2.16, 0.1), new THREE.Vector2(2.23, 0.35), new THREE.Vector2(2.23, 6.12), new THREE.Vector2(2.18, 6.38), new THREE.Vector2(2.04, 6.5)];
 
@@ -16,7 +20,7 @@ export function createBaldeBarrilObjects({ scene, addInteractive }) {
   barrel.add(body);
   addInteractive(body);
 
-  LAYERS.forEach((layer, index) => {
+  layers.forEach((layer, index) => {
     const mesh = new THREE.Mesh(new THREE.CylinderGeometry(2.02, 2.02, 0.72, 64), new THREE.MeshStandardMaterial({ color: layer.color, roughness: 0.78, transparent: true, opacity: 0.94 }));
     mesh.position.y = 0.85 + index * 0.88;
     mesh.userData = { type: 'filter', id: layer.id };
@@ -24,7 +28,7 @@ export function createBaldeBarrilObjects({ scene, addInteractive }) {
     layerObjects.set(layer.id, { mesh, baseY: mesh.position.y });
     addInteractive(mesh);
 
-    if (index < LAYERS.length - 1) {
+    if (index < layers.length - 1) {
       const separator = new THREE.Mesh(new THREE.CylinderGeometry(2.03, 2.03, 0.025, 64), new THREE.MeshBasicMaterial({ color: 0xc7eeee, transparent: true, opacity: 0.5 }));
       separator.position.y = mesh.position.y + 0.38;
       barrel.add(separator);
@@ -50,17 +54,20 @@ export function createBaldeBarrilObjects({ scene, addInteractive }) {
   return {
     particles,
     update(simulation, state) {
-      water.material.color.copy(new THREE.Color(0xb58b55).lerp(new THREE.Color(0x64d6d1), qualityScore(simulation.current, INITIAL) / 100));
+      water.material.color.copy(waterDirtyColor).lerp(waterCleanColor, qualityScore(simulation.current, INITIAL) / 100);
       water.position.y = lerp(5.55, 2.3, state.progress);
-      particles.material.color.copy(new THREE.Color(0xe9bd78).lerp(new THREE.Color(0x9be4c7), state.progress));
-      layerObjects.forEach(({ mesh, baseY }, id) => {
-        const index = LAYERS.findIndex((layer) => layer.id === id);
-        const layer = LAYERS[index];
-        mesh.visible = layer?.enabled !== false;
-        mesh.position.y = baseY + (state.xray ? index * 0.08 : 0);
-        mesh.material.opacity = state.xray ? 0.75 : 0.94;
-      });
-      this.select(state.selected);
+      particles.material.color.copy(dirtyColor).lerp(cleanColor, state.progress);
+      if (this.lastXray !== state.xray || this.lastLayerState !== layers.map((layer) => `${layer.id}:${layer.enabled !== false}`).join('|')) {
+        layerObjects.forEach(({ mesh, baseY }, id) => {
+          const index = layers.findIndex((layer) => layer.id === id);
+          const layer = layers[index];
+          mesh.visible = layer?.enabled !== false;
+          mesh.position.y = baseY + (state.xray ? index * 0.08 : 0);
+          mesh.material.opacity = state.xray ? 0.75 : 0.94;
+        });
+        this.lastXray = state.xray;
+        this.lastLayerState = layers.map((layer) => `${layer.id}:${layer.enabled !== false}`).join('|');
+      }
     },
     select(id) {
       layerObjects.forEach(({ mesh }, layerId) => {
