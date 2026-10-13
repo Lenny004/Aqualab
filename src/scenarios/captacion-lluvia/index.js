@@ -17,6 +17,19 @@ export default {
   samplingStages: { filter: 'filtro-granular', disinfection: 'disinfection' },
   controls: [
     {
+      key: 'roofType',
+      type: 'select',
+      label: 'Tipo de techo',
+      value: 'compatible',
+      options: [
+        { value: 'compatible', label: 'Compatible (limpio, material apto)' },
+        { value: 'coated', label: 'Con pinturas/recubrimientos' },
+        { value: 'metals', label: 'Con plomo/metales' },
+        { value: 'asbestos', label: 'Con asbesto/amianto' },
+      ],
+      help: 'Si no es compatible, queda excluido para agua de beber.',
+    },
+    {
       key: 'firstFlushVolume',
       type: 'number',
       label: 'Desviador de primeras aguas (L)',
@@ -44,7 +57,14 @@ export default {
     disabledDescription: 'Esta etapa está desactivada. Actívala para incluirla en el recorrido.',
     help: 'Usa Reproducir para seguir las ocho etapas desde el techo hasta el muestreo. Puedes pausar, seleccionar una etapa y activar Radiografía para inspeccionar el sistema de captación.',
   },
-  onControlChange: (key, value, { layers }) => {
+  deteriorationMap: {
+    carbon: ['filtro-granular'],
+    clogging: ['filtro-granular', 'sedimentacion'],
+    biofilm: ['deposito-crudo', 'deposito-limpio'],
+    mosquitoes: ['primeras-aguas', 'deposito-crudo'],
+  },
+  onControlChange: (key, value, { layers, scene }) => {
+    if (key === 'roofType') scene.setControl?.(key, value);
     if (key !== 'disinfection') return;
     const disinfection = layers.find((layer) => layer.id === 'disinfection');
     if (!disinfection) return;
@@ -54,5 +74,15 @@ export default {
       : 'Cloración controlada validada. Mostrar tiempo de contacto y medir cloro residual libre.';
   },
   onUsageChange: (usage, { scene }) => scene.setUsage?.(usage),
+  applyPreset: (presetId, { layers, setFinalUse }) => {
+    const layerIds = {
+      'method-a': ['captacion', 'malla', 'primeras-aguas', 'deposito-crudo', 'sedimentacion', 'filtro-granular', 'disinfection', 'deposito-limpio', 'control'],
+      'method-b': ['captacion', 'malla', 'primeras-aguas', 'sedimentacion', 'filtro-granular', 'deposito-limpio', 'control'],
+      'method-c': ['captacion', 'malla', 'primeras-aguas', 'deposito-crudo', 'sedimentacion', 'filtro-granular', 'disinfection', 'deposito-limpio', 'control'],
+    }[presetId] || [];
+    layers.forEach((layer) => { layer.enabled = layerIds.includes(layer.id); });
+    setFinalUse(presetId === 'method-b' ? 'cultivar' : 'tomar');
+    return { message: presetId === 'method-c' ? 'Diseño 3 aplicado: sistema comunitario con vigilancia y responsable operativo.' : 'Preset aplicado: revisa la secuencia y valida el diseño para el uso elegido.' };
+  },
   buildScene: (context) => new PurificationScene({ ...context, createObjects: createCaptacionLluviaObjects }),
 };

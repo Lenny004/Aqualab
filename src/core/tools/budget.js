@@ -4,6 +4,8 @@ const DASH = '\u2014';
 
 export function createBudgetState() { return { items: DEFAULT_ITEMS.map(([name, price]) => ({ name, quantity: 1, price })), contingency: 10 }; }
 
+export function getBudgetTotal(state) { return totals(state).total; }
+
 export function renderBudget(container, state, onChange) {
   container.innerHTML = `<p class="tool-note">Precios ilustrativos, no son cotizaciones.</p><div class="budget-table" role="table"><div class="budget-row budget-row--head"><span>Material</span><span>Cantidad</span><span>USD/u</span><span>Total</span></div>${state.items.map((item, index) => `<div class="budget-row"><span>MAT-${String(index + 1).padStart(2, '0')} · ${item.name}</span><input data-budget="quantity" data-index="${index}" type="number" min="0" step="1" value="${item.quantity}" aria-label="Cantidad de ${item.name}" /><input data-budget="price" data-index="${index}" type="number" min="0" step="0.01" value="${item.price}" aria-label="Precio de ${item.name}" /><strong data-budget-total="${index}"></strong></div>`).join('')}</div><label class="tool-field tool-field--inline"><span class="tool-field__label">Contingencia (%)</span><input class="tool-field__control" data-budget="contingency" type="number" min="0" max="100" step="1" value="${state.contingency}" /></label><div class="tool-results tool-results--budget"><div><span>Subtotal</span><strong data-budget-result="subtotal"></strong></div><div><span>Contingencia</span><strong data-budget-result="contingency"></strong></div><div><span>Total</span><strong data-budget-result="total"></strong></div></div><p class="tool-note" data-budget-warning hidden></p>`;
   const update = () => {

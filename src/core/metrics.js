@@ -3,17 +3,21 @@ import { getEnabledLayers } from './layers.js';
 export const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
 export const lerp = (a, b, t) => a + (b - a) * t;
 
-export function qualityAfter(quality, layer, initial) {
+export function qualityAfter(quality, layer, initial, effects = {}) {
   const saturationFactor = layer.saturation === undefined
-    ? 1
+    ? (layer.id === 'filtro-granular' ? 1 - (effects.carbon || 0) * 0.7 : 1)
     : 1 - layer.saturation * 0.7;
 
   return Object.fromEntries(
     Object.keys(initial).map((key) => {
       const reduction = (layer.reductions[key] || 0) * saturationFactor;
-      const value = key === 'ph'
+      let value = key === 'ph'
         ? quality[key] + (7 - quality[key]) * reduction
         : quality[key] * (1 - reduction);
+
+      if (effects.biofilm && ['deposito-crudo', 'deposito-limpio', 'carbon'].includes(layer.id) && ['ecoli', 'coliforms'].includes(key)) {
+        value += initial[key] * 0.2 * effects.biofilm;
+      }
 
       return [key, value];
     }),
@@ -33,19 +37,21 @@ export function qualityScore(quality, initial) {
 }
 
 export function computeSimulation(progress = 0, config) {
-  const { initial, layers } = config;
+  const { initial, layers, deterioration = {} } = config;
+  const effects = deterioration.effects || {};
   const filters = getEnabledLayers(layers);
+  const durationFor = (filter) => filter.duration * (filter.id === 'filtro-granular' || ['gravel', 'sand', 'carbon'].includes(filter.id) ? 1 + 0.25 * (effects.clogging || 0) : 1);
   const stages = [{ filter: null, quality: { ...initial }, label: 'Entrada' }];
 
   filters.forEach((filter) => {
     stages.push({
       filter,
-      quality: qualityAfter(stages.at(-1).quality, filter, initial),
+      quality: qualityAfter(stages.at(-1).quality, filter, initial, effects),
       label: filter.name,
     });
   });
 
-  const totalDuration = filters.reduce((sum, filter) => sum + filter.duration, 0);
+  const totalDuration = filters.reduce((sum, filter) => sum + durationFor(filter), 0);
 
   if (!filters.length || !totalDuration) {
     return {
@@ -65,15 +71,15 @@ export function computeSimulation(progress = 0, config) {
 
   if (progress < 1) {
     for (let candidate = 0; candidate < filters.length; candidate += 1) {
-      if (elapsed < accumulated + filters[candidate].duration) {
+      if (elapsed < accumulated + durationFor(filters[candidate])) {
         index = candidate;
         break;
       }
 
-      accumulated += filters[candidate].duration;
+      accumulated += durationFor(filters[candidate]);
     }
 
-    local = (elapsed - accumulated) / filters[index].duration;
+    local = (elapsed - accumulated) / durationFor(filters[index]);
   }
 
   const current = Object.fromEntries(

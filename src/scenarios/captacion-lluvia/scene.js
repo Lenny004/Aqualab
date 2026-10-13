@@ -61,7 +61,7 @@ function makeTank(group, position, color, height = 2.1) {
   return tank;
 }
 
-export function createCaptacionLluviaObjects({ scene, layers, addInteractive }) {
+export function createCaptacionLluviaObjects({ scene, layers, addInteractive, invalidate }) {
   const root = new THREE.Group();
   const flowGroup = new THREE.Group();
   const stageObjects = new Map();
@@ -82,7 +82,8 @@ export function createCaptacionLluviaObjects({ scene, layers, addInteractive }) 
     return sprite;
   }
 
-  const roof = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.18, 2.8), new THREE.MeshStandardMaterial({ color: 0x788f89, roughness: 0.75 }));
+  const roofMaterial = new THREE.MeshStandardMaterial({ color: 0x788f89, roughness: 0.75 });
+  const roof = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.18, 2.8), roofMaterial);
   roof.position.set(-2.7, 5.8, 0);
   roof.rotation.z = -0.22;
   roof.userData = { type: 'filter', id: 'captacion' };
@@ -118,7 +119,7 @@ export function createCaptacionLluviaObjects({ scene, layers, addInteractive }) 
   overflow.rotation.x = Math.PI / 2;
   overflow.userData = { type: 'filter', id: 'deposito-crudo' };
   root.add(overflow);
-  addLabel('rebose', 'Rebose', '#f6d8a8', 3.45, 3.45, 0);
+  addLabel('rebose', 'Rebose', '#f6d8a8', 1.55, 3.0, 0.9);
 
   const filter = new THREE.Group();
   filter.position.set(4.2, 1.9, 0);
@@ -156,7 +157,14 @@ export function createCaptacionLluviaObjects({ scene, layers, addInteractive }) 
   addInteractive(control);
   addLabel('control', 'Muestreo', '#d7f7eb', 9.8, 3.35, 0);
 
-  labels.forEach((label) => { label.visible = window.innerWidth >= 500; });
+  function updateLabelVisibility() {
+    labels.forEach((label, id) => {
+      label.visible = viewport.width >= 500 && this.qualityMode !== 'light'
+        ? true
+        : id === this.selectedLabel;
+    });
+  }
+
   layers.forEach((layer) => {
     const object = layer.id === 'primeras-aguas' ? firstFlush : layer.id === 'deposito-crudo' ? rawTank : layer.id === 'disinfection' ? disinfection : layer.id === 'deposito-limpio' ? cleanTank : layer.id === 'filtro-granular' ? filter : null;
     if (object) stageObjects.set(layer.id, object);
@@ -202,29 +210,35 @@ export function createCaptacionLluviaObjects({ scene, layers, addInteractive }) 
     },
     select(id) {
       this.selectedLabel = id;
-      labels.forEach((label, labelId) => { label.visible = window.innerWidth >= 500 || labelId === id; });
+      updateLabelVisibility.call(this);
       stageObjects.forEach((object, objectId) => {
         const selected = objectId === id;
         object.traverse((child) => { if (child.material?.emissive) child.material.emissive.set(selected ? 0x72d6b5 : 0x000000); });
       });
+      invalidate();
     },
     setXray(enabled) {
       root.traverse((object) => { if (object.material?.transparent && object.material.opacity !== undefined) object.material.opacity = enabled ? 0.32 : 0.7; });
+    },
+    setRoofType(type) {
+      roofMaterial.color.set(type === 'compatible' ? 0x788f89 : 0x9a5f58);
+      invalidate();
     },
     setQuality(mode) {
       this.qualityMode = mode;
       const light = mode === 'light';
       particles.visible = !light;
       particles.geometry.setDrawRange(0, light ? particles.userData.offsets.length / 2 : particles.userData.offsets.length);
-      labels.forEach((label, id) => { label.visible = !light && (window.innerWidth >= 500 || id === this.selectedLabel); });
+      updateLabelVisibility.call(this);
+      invalidate();
     },
     setViewport(width, height, fov = 30) {
       const pixelHeight = width >= 500 ? LABEL_DESKTOP_HEIGHT : LABEL_MOBILE_HEIGHT;
       Object.assign(viewport, { width, height, fov, pixelHeight });
       labels.forEach((label, id) => {
         label.scale.copy(getLabelScale(width, height, label.userData.textureWidth, label.userData.textureHeight, fov, pixelHeight));
-        label.visible = this.qualityMode !== 'light' && (width >= 500 || id === this.selectedLabel);
       });
+      updateLabelVisibility.call(this);
     },
   };
 }
