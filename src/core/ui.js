@@ -63,6 +63,26 @@ export function createUI(scenario, scene) {
   let economicsUpdater;
   let risksUpdater;
 
+  function renderUsageTool() {
+    const blocked = Boolean(scenarioState.roofType && scenarioState.roofType !== 'compatible');
+    renderUsage(dom.usageTool, { value: state.finalUse, blocked, onChange: handleUsageChange });
+  }
+
+  function handleUsageChange(value) {
+    if (value === 'tomar' && scenarioState.roofType && scenarioState.roofType !== 'compatible') {
+      state.finalUse = 'no-potable';
+      scenario.onUsageChange?.('no-potable', { scene });
+      renderUsageTool();
+      render();
+      return;
+    }
+    state.finalUse = value;
+    scenario.onUsageChange?.(value, { scene });
+    risksUpdater?.(value);
+    renderUsageTool();
+    render();
+  }
+
   const handleUiError = (event) => {
     if (!renderingUi || uiErrorLogged) return;
     uiErrorLogged = true;
@@ -200,7 +220,7 @@ export function createUI(scenario, scene) {
     scenario.onControlChange?.(definition.key, scenarioState[definition.key], { layers, state: scenarioState, scene });
     if (definition.key === 'roofType') {
       renderScenarioControls();
-      renderUsage(dom.usageTool, { value: state.finalUse, blocked: scenarioState.roofType && scenarioState.roofType !== 'compatible', onChange: handleUsageChange });
+      renderUsageTool();
     }
     render();
   }
@@ -218,26 +238,14 @@ export function createUI(scenario, scene) {
             scenario.onUsageChange?.(safeValue, { scene });
           },
         });
-        renderUsage(dom.usageTool, { value: state.finalUse, blocked: scenarioState.roofType && scenarioState.roofType !== 'compatible', onChange: handleUsageChange });
+        renderUsageTool();
         risksUpdater?.(state.finalUse);
         render();
         return result;
       },
     });
     renderAgronomy(dom.agronomyTool);
-    const handleUsageChange = (value) => {
-      if (value === 'tomar' && scenarioState.roofType && scenarioState.roofType !== 'compatible') {
-        state.finalUse = 'no-potable';
-        renderUsage(dom.usageTool, { value: state.finalUse, blocked: true, onChange: handleUsageChange });
-        return;
-      }
-      state.finalUse = value;
-      scenario.onUsageChange?.(value, { scene });
-      risksUpdater?.(value);
-      renderUsage(dom.usageTool, { value, blocked: scenarioState.roofType && scenarioState.roofType !== 'compatible', onChange: handleUsageChange });
-      render();
-    };
-    renderUsage(dom.usageTool, { value: state.finalUse, blocked: scenarioState.roofType && scenarioState.roofType !== 'compatible', onChange: handleUsageChange });
+    renderUsageTool();
     renderCalculator(dom.calculatorTool, calculatorState, (values) => {
       Object.assign(calculatorState, values);
       economicsUpdater?.();
