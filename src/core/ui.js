@@ -11,6 +11,7 @@ import { renderSchedule } from './tools/schedule.js';
 import { renderEconomics } from './tools/economics.js';
 import { renderPresets } from './tools/presets.js';
 import { renderAgronomy } from './tools/agronomy.js';
+import { createDeteriorationState, getDeteriorationEffects, renderDeterioration, updateDeterioration } from './tools/deterioration.js';
 
 const ids = [
   'sceneStatus', 'activeLayerName', 'activeLayerHint', 'sceneTime', 'realTime', 'xrayButton',
@@ -25,7 +26,7 @@ const ids = [
   'scenarioControls',
   'presetTool',
   'qualitySelect', 'qualityStatus',
-  'usageTool', 'calculatorTool', 'budgetTool', 'maintenanceTool', 'samplingTool', 'safetyTool', 'risksTool', 'scheduleTool', 'economicsTool', 'agronomyTool', 'toolsTabs',
+  'usageTool', 'calculatorTool', 'budgetTool', 'maintenanceTool', 'deteriorationTool', 'samplingTool', 'safetyTool', 'risksTool', 'scheduleTool', 'economicsTool', 'agronomyTool', 'toolsTabs',
 ];
 
 const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
@@ -44,6 +45,7 @@ export function createUI(scenario, scene) {
   const calculatorState = { p: 20, area: 40, coefficient: 0.8, capacity: 200, demand: 40 };
   const budgetState = createBudgetState();
   const maintenanceState = createMaintenanceState();
+  const deteriorationState = createDeteriorationState();
   let currentQuality = initial;
   let qualityMode = 'auto';
   let lastUiUpdate = 0;
@@ -187,7 +189,11 @@ export function createUI(scenario, scene) {
     if (!control) return;
     const definition = scenario.controls.find((item) => item.key === control.dataset.scenarioControl);
     scenarioState[definition.key] = definition.type === 'number' ? Number(control.value) : control.value;
-    scenario.onControlChange?.(definition.key, scenarioState[definition.key], { layers, state: scenarioState });
+    if (definition.key === 'roofType' && scenarioState.roofType !== 'compatible' && state.finalUse === 'tomar') {
+      state.finalUse = 'no-potable';
+      scenario.onUsageChange?.('no-potable', { scene });
+    }
+    scenario.onControlChange?.(definition.key, scenarioState[definition.key], { layers, state: scenarioState, scene });
     render();
   }
 
@@ -199,11 +205,12 @@ export function createUI(scenario, scene) {
           layers,
           state: scenarioState,
           setFinalUse: (value) => {
-            state.finalUse = value;
-            scenario.onUsageChange?.(value, { scene });
+            const safeValue = value === 'tomar' && scenarioState.roofType && scenarioState.roofType !== 'compatible' ? 'no-potable' : value;
+            state.finalUse = safeValue;
+            scenario.onUsageChange?.(safeValue, { scene });
           },
         });
-        renderUsage(dom.usageTool, { value: state.finalUse, onChange: handleUsageChange });
+        renderUsage(dom.usageTool, { value: state.finalUse, blocked: scenarioState.roofType && scenarioState.roofType !== 'compatible', onChange: handleUsageChange });
         risksUpdater?.(state.finalUse);
         render();
         return result;
@@ -211,13 +218,18 @@ export function createUI(scenario, scene) {
     });
     renderAgronomy(dom.agronomyTool);
     const handleUsageChange = (value) => {
+      if (value === 'tomar' && scenarioState.roofType && scenarioState.roofType !== 'compatible') {
+        state.finalUse = 'no-potable';
+        renderUsage(dom.usageTool, { value: state.finalUse, blocked: true, onChange: handleUsageChange });
+        return;
+      }
       state.finalUse = value;
       scenario.onUsageChange?.(value, { scene });
       risksUpdater?.(value);
-      renderUsage(dom.usageTool, { value, onChange: handleUsageChange });
+      renderUsage(dom.usageTool, { value, blocked: scenarioState.roofType && scenarioState.roofType !== 'compatible', onChange: handleUsageChange });
       render();
     };
-    renderUsage(dom.usageTool, { value: state.finalUse, onChange: handleUsageChange });
+    renderUsage(dom.usageTool, { value: state.finalUse, blocked: scenarioState.roofType && scenarioState.roofType !== 'compatible', onChange: handleUsageChange });
     renderCalculator(dom.calculatorTool, calculatorState, (values) => {
       Object.assign(calculatorState, values);
       economicsUpdater?.();
@@ -226,7 +238,14 @@ export function createUI(scenario, scene) {
       Object.assign(budgetState, change);
       economicsUpdater?.();
     });
-    renderMaintenance(dom.maintenanceTool, maintenanceState, (values) => Object.assign(maintenanceState, values));
+    renderMaintenance(dom.maintenanceTool, maintenanceState, (values) => { Object.assign(maintenanceState, values); updateDeterioration(deteriorationState, scenarioState.simulatedWeeks || 0, scenario, maintenanceState); renderDeterioration(dom.deteriorationTool, deteriorationState, (weeks) => { scenarioState.simulatedWeeks = weeks; render(); }); render(); });
+    updateDeterioration(deteriorationState, scenarioState.simulatedWeeks || 0, scenario, maintenanceState);
+    renderDeterioration(dom.deteriorationTool, deteriorationState, (weeks) => {
+      scenarioState.simulatedWeeks = weeks;
+      updateDeterioration(deteriorationState, weeks, scenario, maintenanceState);
+      renderDeterioration(dom.deteriorationTool, deteriorationState, (nextWeeks) => { scenarioState.simulatedWeeks = nextWeeks; render(); });
+      render();
+    });
     renderSafety(dom.safetyTool);
     risksUpdater = renderRisks(dom.risksTool, state.finalUse);
     renderSchedule(dom.scheduleTool);
@@ -307,13 +326,14 @@ export function createUI(scenario, scene) {
 
   function render() {
     renderingUi = true;
+    updateDeterioration(deteriorationState, scenarioState.simulatedWeeks || 0, scenario, maintenanceState);
+    const effects = getDeteriorationEffects(deteriorationState);
     const carbon = layers.find((layer) => layer.id === 'carbon');
-    const totalDuration = computeSimulation(0, { initial, layers }).totalDuration;
-    if (carbon) carbon.saturation = totalDuration ? clamp(state.playedTime / totalDuration) : 0;
-    const simulation = computeSimulation(state.progress, { initial, layers });
+    if (carbon) carbon.saturation = effects.carbon || 0;
+    const simulation = computeSimulation(state.progress, { initial, layers, deterioration: { effects } });
     currentQuality = simulation.current;
     const renderState = { ...state, ...scenarioState };
-    scene.setState(renderState);
+    scene.setState({ ...renderState, deterioration: deteriorationState });
     scene.update(simulation, renderState);
     const now = performance.now();
     document.documentElement.classList.toggle('is-playing', state.playing);
@@ -327,7 +347,7 @@ export function createUI(scenario, scene) {
     }
     if (updateUi) {
       lastUiUpdate = now;
-      const samplingSimulation = computeSimulation(1, { initial, layers });
+      const samplingSimulation = computeSimulation(1, { initial, layers, deterioration: { effects } });
       const usage = USAGES[state.finalUse] || USAGES.tomar;
       const samplingData = { metrics: scenario.metrics, initial, stages: samplingSimulation.stages, samplingStages: scenario.samplingStages, usage };
       const signature = JSON.stringify({ stages: samplingSimulation.stages.map((stage) => stage.quality), samplingStages: scenario.samplingStages, usage: state.finalUse });
@@ -347,6 +367,9 @@ export function createUI(scenario, scene) {
       return;
     }
     const detail = getDetails(simulation);
+    if (scenarioState.roofType && scenarioState.roofType !== 'compatible' && (state.selected === 'input' || state.selected === 'captacion')) {
+      detail.description = `${detail.description} Excluido para agua de beber; sugiere usos no potables.`;
+    }
     const score = qualityScore(simulation.current, initial);
     const time = simulation.totalDuration * state.progress;
 
@@ -391,7 +414,8 @@ export function createUI(scenario, scene) {
     state.lastFrame = now;
 
     if (state.playing) {
-      const totalDuration = computeSimulation(0, { initial, layers }).totalDuration;
+      updateDeterioration(deteriorationState, scenarioState.simulatedWeeks || 0, scenario, maintenanceState);
+      const totalDuration = computeSimulation(0, { initial, layers, deterioration: { effects: getDeteriorationEffects(deteriorationState) } }).totalDuration;
       state.progress += delta * state.speed / Math.max(totalDuration, 1);
       state.playedTime += delta * state.speed;
       state.realElapsed += delta;

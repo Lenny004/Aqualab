@@ -16,6 +16,10 @@ export default {
     fitMargin: 1.16,
   },
   samplingStages: { filter: 'carbon', disinfection: null },
+  deteriorationMap: {
+    carbon: ['carbon'],
+    clogging: ['gravel', 'sand', 'carbon'],
+  },
   text: {
     description: 'Ilustración conceptual: orden, espesor y granulometría provienen de un diseño hidráulico.',
     inputDescription: 'El agua contiene partículas, color, olor y microorganismos antes de atravesar el sistema.',

@@ -384,6 +384,14 @@ h1, h2, p { margin-block-start: 0; }
 .maintenance-task input { accent-color: var(--color-primary); }
 .maintenance-progress { display: flex; justify-content: space-between; margin-block-start: 1.5rem; padding-block-start: 1rem; border-block-start: 1px solid var(--color-border); color: var(--color-text-faint); font: 1rem var(--font-mono); }
 .maintenance-progress strong { color: var(--color-primary); }
+.deterioration-list { display: grid; gap: .8rem; margin-block-start: 1.4rem; }
+.deterioration-card { padding: 1rem; border-inline-start: .25rem solid var(--color-primary); background: var(--color-surface-raised); }
+.deterioration-card--attention { border-color: var(--color-warning); }
+.deterioration-card--critical { border-color: #e47a6c; }
+.deterioration-card div { display: flex; justify-content: space-between; gap: 1rem; color: var(--color-text); }
+.deterioration-card div span { color: var(--color-primary); font: .9rem var(--font-mono); }
+.deterioration-card p { margin-block-start: .6rem; color: var(--color-text-muted); font-size: 1rem; line-height: 1.45; }
+.usage-warning { margin-block-start: 1rem; padding: .8rem 1rem; border-inline-start: .2rem solid var(--color-warning); color: var(--color-warning); background: rgba(246, 206, 121, .08); line-height: 1.45; }
 .sampling-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 1rem; }
 .sampling-card { padding: 1.1rem; border: 1px solid var(--color-border); background: var(--color-surface-raised); }
 .sampling-card h3 { margin-block-end: 1rem; color: var(--color-text); font: 500 1.2rem var(--font-display); }

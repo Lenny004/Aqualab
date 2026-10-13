@@ -82,7 +82,8 @@ export function createCaptacionLluviaObjects({ scene, layers, addInteractive }) 
     return sprite;
   }
 
-  const roof = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.18, 2.8), new THREE.MeshStandardMaterial({ color: 0x788f89, roughness: 0.75 }));
+  const roofMaterial = new THREE.MeshStandardMaterial({ color: 0x788f89, roughness: 0.75 });
+  const roof = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.18, 2.8), roofMaterial);
   roof.position.set(-2.7, 5.8, 0);
   roof.rotation.z = -0.22;
   roof.userData = { type: 'filter', id: 'captacion' };
@@ -118,7 +119,7 @@ export function createCaptacionLluviaObjects({ scene, layers, addInteractive }) 
   overflow.rotation.x = Math.PI / 2;
   overflow.userData = { type: 'filter', id: 'deposito-crudo' };
   root.add(overflow);
-  addLabel('rebose', 'Rebose', '#f6d8a8', 3.45, 3.45, 0);
+  addLabel('rebose', 'Rebose', '#f6d8a8', 3.45, 2.85, 0.75);
 
   const filter = new THREE.Group();
   filter.position.set(4.2, 1.9, 0);
@@ -210,6 +211,9 @@ export function createCaptacionLluviaObjects({ scene, layers, addInteractive }) 
     },
     setXray(enabled) {
       root.traverse((object) => { if (object.material?.transparent && object.material.opacity !== undefined) object.material.opacity = enabled ? 0.32 : 0.7; });
+    },
+    setRoofType(type) {
+      roofMaterial.color.set(type === 'compatible' ? 0x788f89 : 0x9a5f58);
     },
     setQuality(mode) {
       this.qualityMode = mode;
