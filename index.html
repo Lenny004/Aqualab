@@ -19,6 +19,7 @@
           <span class="topbar__divider"></span>
           <span>Modo educativo</span>
         </div>
+        <label class="scenario-picker"><span>Escenario</span><select id="scenarioSelect" aria-label="Seleccionar escenario"></select></label>
         <button class="icon-button" id="helpButton" type="button" aria-label="Abrir ayuda">?</button>
       </header>
 
@@ -40,6 +41,7 @@
           <aside class="layers-card floating-layers-panel" aria-label="Configuración de capas">
             <div class="card-heading"><div><p class="eyebrow">CONFIGURACIÓN</p><h2>Capas activas</h2></div><span class="layer-count" id="layerCount">3 / 4</span></div>
             <p class="card-description">Selecciona una capa para inspeccionarla o activa y desactiva su interruptor.</p>
+            <p class="scenario-note" id="scenarioDescription"></p>
             <div class="layer-list" id="layerList"></div>
             <div class="educational-note"><span>✦</span><p><b>¿Sabías que?</b><br />Cada capa retiene o transforma distintos tipos de impurezas.</p></div>
           </aside>
@@ -98,7 +100,7 @@
               <div class="comparison__arrow">→</div>
               <div class="comparison comparison--after"><span class="comparison__label">Después de la etapa</span><strong id="afterScore">12</strong><small id="afterLabel">Sin cambios</small></div>
             </div>
-            <p class="selection-tip"><span>i</span> El índice va de 0 a 100: cuanto mayor es, mejor es la calidad estimada.</p>
+            <p class="selection-tip"><span>i</span> Filtrar no es potabilizar. La filtración no lleva E. coli ni coliformes a un nivel seguro.</p>
           </aside>
         </section>
 

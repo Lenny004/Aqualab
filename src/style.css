@@ -323,3 +323,8 @@ h1, h2, p { margin-block-start: 0; }
   .scene-tools, .transport-controls, .control-meta, .modal-backdrop { display: none; }
   body { color: #000; background: #fff; }
 }
+
+/* Selector and safety notes. */
+.scenario-picker { display: flex; align-items: center; gap: .7rem; color: var(--color-text-muted); font: 1rem var(--font-mono); }
+.scenario-picker select { max-width: 22rem; padding: .6rem .8rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); color: var(--color-text); background: var(--color-surface-raised); }
+.scenario-note { margin-block: 1rem 1.4rem; padding: .9rem 1rem; border-inline-start: .2rem solid var(--color-warning); color: var(--color-warning); background: rgba(246, 206, 121, .08); font-size: 1.1rem; }
