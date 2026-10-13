@@ -10,6 +10,7 @@ const ids = [
   'timelineInput', 'timelineMarkers', 'playButton', 'playLabel', 'restartButton',
   'speedOptions', 'layerCount', 'layerList', 'evolutionChart', 'trendPill', 'helpButton',
   'helpModal', 'closeHelpButton', 'scenarioDescription',
+  'scenarioControls',
 ];
 
 const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
@@ -19,10 +20,12 @@ export function createUI(scenario, scene) {
   const initial = scenario.initial;
   const dom = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
   const state = { progress: 0, playing: false, speed: 1, xray: false, selected: 'bucket', realElapsed: 0, lastFrame: performance.now() };
+  const scenarioState = Object.fromEntries((scenario.controls || []).map((control) => [control.key, control.value]));
   const controller = new AbortController();
   let animationFrame;
 
   dom.scenarioDescription.textContent = scenario.text.description;
+  renderScenarioControls();
   const listen = (element, event, handler) => element.addEventListener(event, handler, { signal: controller.signal });
 
   listen(document, 'scene-select', (event) => {
@@ -79,12 +82,34 @@ export function createUI(scenario, scene) {
     state.selected = layer.id;
     render();
   });
+  listen(dom.scenarioControls, 'input', handleScenarioControl);
+  listen(dom.scenarioControls, 'change', handleScenarioControl);
   listen(dom.helpButton, 'click', () => { dom.helpModal.hidden = false; });
   listen(dom.closeHelpButton, 'click', () => { dom.helpModal.hidden = true; });
   listen(dom.helpModal, 'click', (event) => { if (event.target === dom.helpModal) dom.helpModal.hidden = true; });
 
   function renderLayerList() {
     dom.layerList.innerHTML = layers.map((layer) => `<div class="layer-row ${layer.enabled ? '' : 'is-disabled'} ${state.selected === layer.id ? 'is-selected' : ''}" data-filter="${layer.id}"><span class="layer-row__swatch layer-row__swatch--${layer.id}"></span><span class="layer-row__main"><b>${layer.name}</b><small>${layer.short}</small></span><label class="layer-row__toggle" aria-label="Activar ${layer.name}"><input type="checkbox" ${layer.enabled ? 'checked' : ''} /><span class="layer-row__track"></span></label></div>`).join('');
+  }
+
+  function renderScenarioControls() {
+    if (!dom.scenarioControls || !scenario.controls?.length) return;
+    dom.scenarioControls.innerHTML = scenario.controls.map((control) => {
+      if (control.type === 'select') {
+        const options = control.options.map((option) => `<option value="${option.value}" ${scenarioState[control.key] === option.value ? 'selected' : ''}>${option.label}</option>`).join('');
+        return `<label class="scenario-controls__field"><span>${control.label}</span><select class="scenario-controls__select" data-scenario-control="${control.key}">${options}</select><small>${control.help}</small></label>`;
+      }
+      return `<label class="scenario-controls__field"><span>${control.label}</span><input class="scenario-controls__input" data-scenario-control="${control.key}" type="${control.type}" value="${scenarioState[control.key]}" min="${control.min}" max="${control.max}" step="${control.step}" /><small>${control.help}</small></label>`;
+    }).join('');
+  }
+
+  function handleScenarioControl(event) {
+    const control = event.target.closest('[data-scenario-control]');
+    if (!control) return;
+    const definition = scenario.controls.find((item) => item.key === control.dataset.scenarioControl);
+    scenarioState[definition.key] = definition.type === 'number' ? Number(control.value) : control.value;
+    scenario.onControlChange?.(definition.key, scenarioState[definition.key], { layers, state: scenarioState });
+    render();
   }
 
   function renderMetrics(quality) {
@@ -154,8 +179,9 @@ export function createUI(scenario, scene) {
     ];
     dom.evolutionChart.innerHTML = chartPoints.map((point, index) => `<div class="chart-column ${index === simulation.currentIndex ? 'current' : ''}"><span class="chart-bar before" style="height:${Math.max(4, point.before)}%"></span><span class="chart-bar after" style="height:${Math.max(4, point.after)}%"></span><span class="chart-label">${point.label}</span></div>`).join('');
     dom.trendPill.textContent = `+${Math.max(0, score - qualityScore(initial, initial))} calidad`;
-    scene.setState(state);
-    scene.update(simulation, state);
+    const renderState = { ...state, ...scenarioState };
+    scene.setState(renderState);
+    scene.update(simulation, renderState);
   }
 
   function tick() {
