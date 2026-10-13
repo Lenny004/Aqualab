@@ -137,6 +137,7 @@ export function createCaptacionLluviaObjects({ scene, layers, addInteractive }) 
   root.add(divertedWater);
 
   return {
+    boundsObject: root,
     particles,
     update(simulation, state) {
       const score = qualityScore(simulation.current, INITIAL) / 100;

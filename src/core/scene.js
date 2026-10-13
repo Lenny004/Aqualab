@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { updateParticles } from './particles.js';
 
 export class PurificationScene {
-  constructor({ canvas, renderer, layers, onSelect, createObjects }) {
+  constructor({ canvas, renderer, layers, onSelect, createObjects, camera = {} }) {
     this.canvas = canvas;
     this.onSelect = onSelect;
     this.layers = layers;
@@ -13,15 +13,20 @@ export class PurificationScene {
     this.disposed = false;
     this.scene = new THREE.Scene();
     this.scene.fog = new THREE.Fog('#0a1b1c', 12, 28);
+    this.cameraConfig = {
+      position: camera.position || [8.4, 5.5, 11.5],
+      target: camera.target || [0, 3.5, 0],
+      minDistance: camera.minDistance || 7,
+      maxDistance: camera.maxDistance || 17,
+    };
     this.camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
-    this.camera.position.set(8.4, 5.5, 11.5);
     this.renderer = renderer;
     this.controls = new OrbitControls(this.camera, canvas);
     this.controls.enableDamping = true;
     this.controls.enablePan = false;
-    this.controls.minDistance = 7;
-    this.controls.maxDistance = 17;
-    this.controls.target.set(0, 3.5, 0);
+    this.controls.minDistance = this.cameraConfig.minDistance;
+    this.controls.maxDistance = this.cameraConfig.maxDistance;
+    this.controls.target.fromArray(this.cameraConfig.target);
     this.controls.update();
     this.clock = new THREE.Clock();
     this.viewLocked = false;
@@ -97,7 +102,7 @@ export class PurificationScene {
 
   zoom(factor) {
     const offset = this.camera.position.clone().sub(this.controls.target);
-    const distance = Math.min(17, Math.max(7, offset.length() * factor));
+    const distance = Math.min(this.cameraConfig.maxDistance, Math.max(this.cameraConfig.minDistance, offset.length() * factor));
 
     this.camera.position.copy(this.controls.target).add(offset.normalize().multiplyScalar(distance));
     this.controls.update();
@@ -111,9 +116,7 @@ export class PurificationScene {
   }
 
   resetCamera() {
-    this.camera.position.set(8.4, 5.5, 11.5);
-    this.controls.target.set(0, 3.5, 0);
-    this.controls.update();
+    this.fitCameraToContent();
   }
 
   resize() {
@@ -123,6 +126,25 @@ export class PurificationScene {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height, false);
+    this.fitCameraToContent();
+  }
+
+  fitCameraToContent() {
+    const content = this.objects?.boundsObject;
+    if (!content) return;
+
+    const bounds = new THREE.Box3().setFromObject(content);
+    const sphere = bounds.getBoundingSphere(new THREE.Sphere());
+    const verticalFov = THREE.MathUtils.degToRad(this.camera.fov);
+    const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * this.camera.aspect);
+    const distance = (sphere.radius / Math.min(Math.tan(verticalFov / 2), Math.tan(horizontalFov / 2))) * 1.18;
+    const configuredOffset = new THREE.Vector3().fromArray(this.cameraConfig.position).sub(new THREE.Vector3().fromArray(this.cameraConfig.target));
+    const direction = configuredOffset.normalize();
+    const fittedDistance = Math.min(this.cameraConfig.maxDistance, Math.max(this.cameraConfig.minDistance, distance));
+
+    this.controls.target.fromArray(this.cameraConfig.target);
+    this.camera.position.copy(this.controls.target).add(direction.multiplyScalar(fittedDistance));
+    this.controls.update();
   }
 
   setState(state) {

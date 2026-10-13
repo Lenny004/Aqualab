@@ -27,6 +27,7 @@ function mountScenario(id) {
     canvas,
     renderer,
     layers,
+    camera: scenario.camera,
     onSelect: (selected) => document.dispatchEvent(new CustomEvent('scene-select', { detail: selected })),
   });
   activeUI = createUI(mountedScenario, activeScene);

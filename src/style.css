@@ -163,6 +163,7 @@ h1, h2, p { margin-block-start: 0; }
 .metric-bar span { display: block; height: 100%; border-radius: inherit; background: var(--color-primary); }
 .metric.is-muted { opacity: .42; }
 .metric.is-highlighted { outline: 1px solid var(--color-warning); outline-offset: -1px; }
+.metrics-note { margin-block: -1rem 1.8rem; color: var(--color-text-faint); font: .9rem var(--font-mono); }
 .inspector-divider { height: 1px; background: var(--color-border); }
 .detail-heading { display: flex; justify-content: space-between; gap: 1rem; margin-block: 1.6rem 1rem; color: var(--color-text-muted); font: 1rem var(--font-mono); }
 .detail-heading span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

@@ -15,7 +15,7 @@ const ids = [
   'afterScore', 'afterLabel', 'currentTime', 'totalTime', 'timelineFill', 'timelineThumb',
   'timelineInput', 'timelineMarkers', 'playButton', 'playLabel', 'restartButton',
   'speedOptions', 'layerCount', 'layerList', 'evolutionChart', 'trendPill', 'helpButton',
-  'helpModal', 'closeHelpButton', 'scenarioDescription',
+  'helpModal', 'closeHelpButton', 'helpDescription', 'scenarioDescription',
   'activeStagesChip',
   'scenarioControls',
   'usageTool', 'calculatorTool', 'budgetTool', 'maintenanceTool', 'samplingTool', 'safetyTool', 'toolsTabs',
@@ -39,6 +39,7 @@ export function createUI(scenario, scene) {
   let animationFrame;
 
   dom.scenarioDescription.textContent = scenario.text.description;
+  dom.helpDescription.textContent = scenario.text.help;
   renderScenarioControls();
   renderTools();
   const listen = (element, event, handler) => element.addEventListener(event, handler, { signal: controller.signal });
@@ -152,7 +153,7 @@ export function createUI(scenario, scene) {
 
   function renderMetrics(quality) {
     const usage = USAGES[state.finalUse] || USAGES.tomar;
-    dom.metricsGrid.innerHTML = scenario.metrics.map((metric) => `<div class="metric ${usage.metricKeys.includes(metric.key) ? 'is-relevant' : 'is-muted'} ${usage.highlighted.includes(metric.key) ? 'is-highlighted' : ''}"><div class="metric-label"><span>${metric.label}</span><span>${metric.unit}</span></div><strong class="metric-value">${formatNumber(quality[metric.key])} <small>${metric.unit}</small></strong><div class="metric-bar"><span style="width:${clamp(quality[metric.key] / metric.max) * 100}%"></span></div></div>`).join('');
+    dom.metricsGrid.innerHTML = scenario.metrics.map((metric) => `<div class="metric ${usage.metricKeys.includes(metric.key) ? 'is-relevant' : 'is-muted'} ${usage.highlighted.includes(metric.key) ? 'is-highlighted' : ''}"><div class="metric-label"><span>${metric.label}</span><span>${metric.unit}</span></div><strong class="metric-value">${formatNumber(quality[metric.key])}${metric.unit ? ` <small>${metric.unit}</small>` : ''}</strong><div class="metric-bar"><span style="width:${clamp(quality[metric.key] / metric.max) * 100}%"></span></div></div>`).join('');
   }
 
   function getDetails(simulation) {

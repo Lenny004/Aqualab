@@ -11,9 +11,11 @@ export function createBaldeBarrilObjects({ scene, layers, addInteractive }) {
   const waterDirtyColor = new THREE.Color(0xb58b55);
   const waterCleanColor = new THREE.Color(0x64d6d1);
   const barrel = new THREE.Group();
+  const content = new THREE.Group();
   const profile = [new THREE.Vector2(2.03, 0), new THREE.Vector2(2.16, 0.1), new THREE.Vector2(2.23, 0.35), new THREE.Vector2(2.23, 6.12), new THREE.Vector2(2.18, 6.38), new THREE.Vector2(2.04, 6.5)];
 
-  scene.add(barrel);
+  scene.add(content);
+  content.add(barrel);
   const body = new THREE.Mesh(new THREE.LatheGeometry(profile, 64), glassMaterial);
   body.position.y = 0.3;
   body.userData = { type: 'bucket' };
@@ -48,10 +50,11 @@ export function createBaldeBarrilObjects({ scene, layers, addInteractive }) {
   const rim = new THREE.Mesh(new THREE.TorusGeometry(0.58, 0.055, 10, 32), new THREE.MeshStandardMaterial({ color: 0xb3ead7 }));
   rim.position.y = 0.53;
   bucket.add(rim);
-  scene.add(bucket);
+  content.add(bucket);
   addInteractive(bucketBody);
 
   return {
+    boundsObject: content,
     particles,
     update(simulation, state) {
       water.material.color.copy(waterDirtyColor).lerp(waterCleanColor, qualityScore(simulation.current, INITIAL) / 100);
