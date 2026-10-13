@@ -18,10 +18,16 @@ const ids = [
   'helpModal', 'closeHelpButton', 'helpDescription', 'scenarioDescription',
   'activeStagesChip',
   'scenarioControls',
+  'qualitySelect', 'qualityStatus',
   'usageTool', 'calculatorTool', 'budgetTool', 'maintenanceTool', 'samplingTool', 'safetyTool', 'toolsTabs',
 ];
 
 const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
+const inspectorNotes = {
+  'deposito-crudo': 'Rebose protegido: considerar el riesgo de erosión y cimentaciones.',
+  'filtro-granular': 'Orden por diseño hidráulico: grava, arena y carbón.',
+  disinfection: 'Tiempo de contacto; cloro residual libre: medir. Turbidez alta reduce eficacia; ebullición solo emergencia.',
+};
 
 export function createUI(scenario, scene) {
   const layers = scenario.layers;
@@ -40,6 +46,10 @@ export function createUI(scenario, scene) {
 
   dom.scenarioDescription.textContent = scenario.text.description;
   dom.helpDescription.textContent = scenario.text.help;
+  scene.onQualityChange = (mode) => {
+    if (dom.qualitySelect) dom.qualitySelect.value = mode;
+    if (dom.qualityStatus) dom.qualityStatus.textContent = 'Ligera por rendimiento';
+  };
   renderScenarioControls();
   renderTools();
   const listen = (element, event, handler) => element.addEventListener(event, handler, { signal: controller.signal });
@@ -101,6 +111,10 @@ export function createUI(scenario, scene) {
   });
   listen(dom.scenarioControls, 'input', handleScenarioControl);
   listen(dom.scenarioControls, 'change', handleScenarioControl);
+  listen(dom.qualitySelect, 'change', (event) => {
+    scene.setQuality(event.target.value);
+    dom.qualityStatus.textContent = event.target.value === 'auto' ? 'Auto' : event.target.value === 'light' ? 'Ligera' : 'Alta';
+  });
   listen(dom.toolsTabs, 'click', (event) => {
     const button = event.target.closest('[data-tool-tab]');
     if (!button) return;
@@ -168,7 +182,7 @@ export function createUI(scenario, scene) {
       return { title: layer.name, description: scenario.text.disabledDescription, before: initial, after: initial, beforeLabel: 'Sin etapa', afterLabel: 'No participa', stage: 'Desactivada' };
     }
 
-    return { title: layer.name, description: layer.description, before: simulation.stages[index].quality, after: simulation.stages[index + 1].quality, beforeLabel: index ? simulation.filters[index - 1].name : 'Agua sin tratar', afterLabel: index === simulation.filters.length - 1 ? 'Resultado actual' : simulation.filters[index + 1].name, stage: `Etapa ${index + 1}` };
+    return { title: layer.name, description: [layer.description, inspectorNotes[layer.id]].filter(Boolean).join(' '), before: simulation.stages[index].quality, after: simulation.stages[index + 1].quality, beforeLabel: index ? simulation.filters[index - 1].name : 'Agua sin tratar', afterLabel: index === simulation.filters.length - 1 ? 'Resultado actual' : simulation.filters[index + 1].name, stage: `Etapa ${index + 1}` };
   }
 
   function render() {

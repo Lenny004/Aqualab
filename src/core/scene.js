@@ -11,6 +11,11 @@ export class PurificationScene {
     this.pointer = new THREE.Vector2();
     this.interactives = [];
     this.disposed = false;
+    this.qualityMode = 'auto';
+    this.needsRender = true;
+    this.animationFrame = 0;
+    this.frameSamples = [];
+    this.lastFrameTime = performance.now();
     this.scene = new THREE.Scene();
     this.scene.fog = new THREE.Fog('#0a1b1c', 12, 28);
     this.cameraConfig = {
@@ -29,6 +34,7 @@ export class PurificationScene {
     this.controls.maxDistance = this.cameraConfig.maxDistance;
     this.controls.target.fromArray(this.cameraConfig.target);
     this.controls.update();
+    this.controls.addEventListener('change', () => this.invalidate());
     this.clock = new THREE.Clock();
     this.viewLocked = false;
     this.createLights();
@@ -90,6 +96,7 @@ export class PurificationScene {
   update(simulation, state) {
     this.objects.update?.(simulation, state);
     this.select(state.selected);
+    this.invalidate();
   }
 
   select(id) {
@@ -129,6 +136,7 @@ export class PurificationScene {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height, false);
+    this.objects.setViewport?.(width);
     this.fitCameraToContent();
   }
 
@@ -165,6 +173,19 @@ export class PurificationScene {
 
   setState(state) {
     this.state = state;
+    if (state.playing) this.invalidate();
+  }
+
+  setQuality(mode) {
+    this.qualityMode = mode;
+    this.renderer.setPixelRatio(mode === 'light' ? 1 : Math.min(window.devicePixelRatio, 2));
+    this.objects.setQuality?.(mode);
+    this.invalidate();
+  }
+
+  invalidate() {
+    this.needsRender = true;
+    if (!this.animationFrame && !this.disposed) this.animate();
   }
 
   setUsage(usage) {
@@ -176,10 +197,35 @@ export class PurificationScene {
       return;
     }
 
-    requestAnimationFrame(() => this.animate());
-    updateParticles(this.objects.particles, this.clock.getElapsedTime(), this.state?.progress || 0);
-    this.controls.update();
-    this.renderer.render(this.scene, this.camera);
+    this.animationFrame = requestAnimationFrame(() => {
+      this.animationFrame = 0;
+      const now = performance.now();
+      const frameDelta = now - this.lastFrameTime;
+      this.lastFrameTime = now;
+      if (frameDelta > 0 && frameDelta < 1000) this.frameSamples.push({ time: now, delta: frameDelta });
+      while (this.frameSamples.length && now - this.frameSamples[0].time > 2000) this.frameSamples.shift();
+      if (this.state?.playing) updateParticles(this.objects.particles, this.clock.getElapsedTime(), this.state.progress || 0);
+      this.controls.update();
+      if (this.needsRender || this.state?.playing) {
+        this.renderer.render(this.scene, this.camera);
+        this.needsRender = false;
+      }
+      this.checkAutoQuality(now);
+      if (this.needsRender || this.state?.playing) this.animate();
+    });
+  }
+
+  checkAutoQuality(now) {
+    if (this.qualityMode !== 'auto' || this.frameSamples.length < 10) return;
+    if (now - this.frameSamples[0].time < 1900) return;
+    const average = this.frameSamples.reduce((sum, sample) => sum + sample.delta, 0) / this.frameSamples.length;
+    if (average > 1000 / 30) {
+      this.qualityMode = 'light';
+      this.renderer.setPixelRatio(1);
+      this.objects.setQuality?.('light');
+      this.onQualityChange?.('light', average);
+      this.invalidate();
+    }
   }
 
   dispose() {
@@ -207,5 +253,6 @@ export class PurificationScene {
     textures.forEach((texture) => texture.dispose());
     this.controls.dispose();
     this.renderer.renderLists.dispose();
+    cancelAnimationFrame(this.animationFrame);
   }
 }

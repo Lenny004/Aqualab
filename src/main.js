@@ -7,7 +7,7 @@ const canvas = document.getElementById('sceneCanvas');
 const selector = document.getElementById('scenarioSelect');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.shadowMap.enabled = true;
+renderer.shadowMap.enabled = false;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 let activeScene;
 let activeUI;

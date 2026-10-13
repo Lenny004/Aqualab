@@ -37,7 +37,7 @@ export function createBaldeBarrilObjects({ scene, layers, addInteractive }) {
     }
   });
 
-  const water = new THREE.Mesh(new THREE.CylinderGeometry(1.85, 1.85, 1.8, 48), new THREE.MeshPhysicalMaterial({ color: 0xb8915c, transparent: true, opacity: 0.57, roughness: 0.16, transmission: 0.22, side: THREE.DoubleSide }));
+  const water = new THREE.Mesh(new THREE.CylinderGeometry(1.85, 1.85, 1.8, 48), new THREE.MeshStandardMaterial({ color: 0xb8915c, transparent: true, opacity: 0.57, roughness: 0.3, side: THREE.DoubleSide }));
   water.position.y = 5.5;
   barrel.add(water);
   const particles = createParticles(barrel, { height: 5.7, radius: 1.55 });
@@ -60,7 +60,9 @@ export function createBaldeBarrilObjects({ scene, layers, addInteractive }) {
       water.material.color.copy(waterDirtyColor).lerp(waterCleanColor, qualityScore(simulation.current, INITIAL) / 100);
       water.position.y = lerp(5.55, 2.3, state.progress);
       particles.material.color.copy(dirtyColor).lerp(cleanColor, state.progress);
-      if (this.lastXray !== state.xray || this.lastLayerState !== layers.map((layer) => `${layer.id}:${layer.enabled !== false}`).join('|')) {
+      let layerState = 0;
+      for (let index = 0; index < layers.length; index += 1) if (layers[index].enabled !== false) layerState |= 1 << index;
+      if (this.lastXray !== state.xray || this.lastLayerState !== layerState) {
         layerObjects.forEach(({ mesh, baseY }, id) => {
           const index = layers.findIndex((layer) => layer.id === id);
           const layer = layers[index];
@@ -69,7 +71,7 @@ export function createBaldeBarrilObjects({ scene, layers, addInteractive }) {
           mesh.material.opacity = state.xray ? 0.75 : 0.94;
         });
         this.lastXray = state.xray;
-        this.lastLayerState = layers.map((layer) => `${layer.id}:${layer.enabled !== false}`).join('|');
+        this.lastLayerState = layerState;
       }
     },
     select(id) {
@@ -82,6 +84,9 @@ export function createBaldeBarrilObjects({ scene, layers, addInteractive }) {
     setXray(enabled) {
       glassMaterial.opacity = enabled ? 0.045 : 0.17;
       glassMaterial.transmission = enabled ? 0.35 : 0.15;
+    },
+    setQuality(mode) {
+      particles.geometry.setDrawRange(0, mode === 'light' ? particles.userData.offsets.length / 2 : particles.userData.offsets.length);
     },
   };
 }
