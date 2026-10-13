@@ -15,6 +15,7 @@ function makeLabel(text, color = '#b8eee0') {
   const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
   const sprite = new THREE.Sprite(material);
   sprite.scale.set(3.2, 0.6, 1);
+  sprite.userData.isLabel = true;
   return sprite;
 }
 
@@ -114,6 +115,15 @@ export function createCaptacionLluviaObjects({ scene, layers, addInteractive }) 
   root.add(makeLabel('muestreo', '#d7f7eb')).position.set(9.15, 3, 0);
   root.add(makeLabel('NO POTABLE hasta análisis de laboratorio', '#ffca8a')).position.set(4.2, 0.1, 0);
   root.add(makeLabel('RTS 13.02.01:14', '#ffca8a')).position.set(6.8, -0.45, 0);
+
+  root.updateMatrixWorld(true);
+  const contentSize = new THREE.Box3().setFromObject(root).getSize(new THREE.Vector3());
+  const labelScale = THREE.MathUtils.clamp(Math.max(contentSize.x, contentSize.y, contentSize.z) / 12, 1, 2.2);
+  root.traverse((object) => {
+    if (!object.userData.isLabel) return;
+    object.scale.set(3.2 * labelScale, 0.6 * labelScale, 1);
+    if (window.innerWidth < 500) object.visible = false;
+  });
 
   layers.forEach((layer) => {
     const object = layer.id === 'primeras-aguas' ? firstFlush : layer.id === 'deposito-crudo' ? rawTank : layer.id === 'disinfection' ? disinfection : layer.id === 'deposito-limpio' ? cleanTank : layer.id === 'filtro-granular' ? filter : null;

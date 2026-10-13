@@ -68,6 +68,7 @@ export class PurificationScene {
 
     floor.rotation.x = -Math.PI / 2;
     floor.position.y = 0.02;
+    this.floor = floor;
     this.scene.add(floor);
   }
 
@@ -106,6 +107,7 @@ export class PurificationScene {
 
     this.camera.position.copy(this.controls.target).add(offset.normalize().multiplyScalar(distance));
     this.controls.update();
+    this.updateFog(distance);
   }
 
   toggleViewLock() {
@@ -134,17 +136,30 @@ export class PurificationScene {
     if (!content) return;
 
     const bounds = new THREE.Box3().setFromObject(content);
-    const sphere = bounds.getBoundingSphere(new THREE.Sphere());
+    const size = bounds.getSize(new THREE.Vector3());
+    const center = bounds.getCenter(new THREE.Vector3());
     const verticalFov = THREE.MathUtils.degToRad(this.camera.fov);
     const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * this.camera.aspect);
-    const distance = (sphere.radius / Math.min(Math.tan(verticalFov / 2), Math.tan(horizontalFov / 2))) * 1.18;
+    const verticalDistance = (size.y / 2) / Math.tan(verticalFov / 2);
+    const horizontalDistance = (size.x / 2) / Math.tan(horizontalFov / 2);
+    const distance = Math.max(verticalDistance, horizontalDistance) * 1.1;
     const configuredOffset = new THREE.Vector3().fromArray(this.cameraConfig.position).sub(new THREE.Vector3().fromArray(this.cameraConfig.target));
     const direction = configuredOffset.normalize();
     const fittedDistance = Math.min(this.cameraConfig.maxDistance, Math.max(this.cameraConfig.minDistance, distance));
 
-    this.controls.target.fromArray(this.cameraConfig.target);
+    this.controls.target.copy(center);
     this.camera.position.copy(this.controls.target).add(direction.multiplyScalar(fittedDistance));
     this.controls.update();
+    this.updateFog(fittedDistance);
+
+    const floorRadius = Math.max(size.x, size.z) * 0.6;
+    this.floor.position.set(center.x, 0.02, center.z);
+    this.floor.scale.setScalar(Math.max(0.5, floorRadius / 8));
+  }
+
+  updateFog(distance) {
+    this.scene.fog.near = distance * 0.9;
+    this.scene.fog.far = distance * 2.5;
   }
 
   setState(state) {
