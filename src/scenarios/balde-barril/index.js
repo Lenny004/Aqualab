@@ -13,5 +13,6 @@ export default {
     inputDescription: 'El agua contiene partículas, color, olor y microorganismos antes de atravesar el sistema.',
     disabledDescription: 'Esta capa está desactivada. Actívala para incluirla en el recorrido.',
   },
+  onUsageChange: (usage, { scene }) => scene.setUsage?.(usage),
   buildScene: (context) => new PurificationScene({ ...context, createObjects: createBaldeBarrilObjects }),
 };

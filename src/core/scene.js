@@ -127,6 +127,10 @@ export class PurificationScene {
     this.state = state;
   }
 
+  setUsage(usage) {
+    this.state = { ...this.state, finalUse: usage };
+  }
+
   animate() {
     if (this.disposed) {
       return;

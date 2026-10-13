@@ -1,5 +1,11 @@
 import { computeSimulation, formatNumber, qualityScore } from './metrics.js';
 import { formatTime, normalizeProgress, renderTimelineMarkers } from './timeline.js';
+import { renderUsage } from './tools/usage.js';
+import { renderCalculator } from './tools/calculator.js';
+import { createBudgetState, renderBudget } from './tools/budget.js';
+import { createMaintenanceState, renderMaintenance } from './tools/maintenance.js';
+import { renderSampling } from './tools/sampling.js';
+import { renderSafety } from './tools/safety.js';
 
 const ids = [
   'sceneStatus', 'activeLayerName', 'activeLayerHint', 'sceneTime', 'realTime', 'xrayButton',
@@ -11,6 +17,7 @@ const ids = [
   'speedOptions', 'layerCount', 'layerList', 'evolutionChart', 'trendPill', 'helpButton',
   'helpModal', 'closeHelpButton', 'scenarioDescription',
   'scenarioControls',
+  'usageTool', 'calculatorTool', 'budgetTool', 'maintenanceTool', 'samplingTool', 'safetyTool', 'toolsTabs',
 ];
 
 const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
@@ -19,13 +26,18 @@ export function createUI(scenario, scene) {
   const layers = scenario.layers;
   const initial = scenario.initial;
   const dom = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
-  const state = { progress: 0, playing: false, speed: 1, xray: false, selected: 'bucket', realElapsed: 0, lastFrame: performance.now() };
+  const state = { progress: 0, playing: false, speed: 1, xray: false, selected: 'bucket', finalUse: 'tomar', realElapsed: 0, lastFrame: performance.now() };
   const scenarioState = Object.fromEntries((scenario.controls || []).map((control) => [control.key, control.value]));
+  const calculatorState = { p: 20, area: 40, coefficient: 0.8, capacity: 200, demand: 40 };
+  const budgetState = createBudgetState();
+  const maintenanceState = createMaintenanceState();
+  let currentQuality = initial;
   const controller = new AbortController();
   let animationFrame;
 
   dom.scenarioDescription.textContent = scenario.text.description;
   renderScenarioControls();
+  renderTools();
   const listen = (element, event, handler) => element.addEventListener(event, handler, { signal: controller.signal });
 
   listen(document, 'scene-select', (event) => {
@@ -84,6 +96,12 @@ export function createUI(scenario, scene) {
   });
   listen(dom.scenarioControls, 'input', handleScenarioControl);
   listen(dom.scenarioControls, 'change', handleScenarioControl);
+  listen(dom.toolsTabs, 'click', (event) => {
+    const button = event.target.closest('[data-tool-tab]');
+    if (!button) return;
+    dom.toolsTabs.querySelectorAll('[data-tool-tab]').forEach((item) => item.classList.toggle('is-active', item === button));
+    document.querySelectorAll('[data-tool-panel]').forEach((panel) => { panel.hidden = panel.dataset.toolPanel !== button.dataset.toolTab; });
+  });
   listen(dom.helpButton, 'click', () => { dom.helpModal.hidden = false; });
   listen(dom.closeHelpButton, 'click', () => { dom.helpModal.hidden = true; });
   listen(dom.helpModal, 'click', (event) => { if (event.target === dom.helpModal) dom.helpModal.hidden = true; });
@@ -112,6 +130,24 @@ export function createUI(scenario, scene) {
     render();
   }
 
+  function renderTools() {
+    renderUsage(dom.usageTool, { value: state.finalUse, onChange: (value) => {
+      state.finalUse = value;
+      scenario.onUsageChange?.(value, { scene });
+      renderTools();
+      render();
+    } });
+    renderCalculator(dom.calculatorTool, calculatorState, (key, value) => { calculatorState[key] = value; renderTools(); });
+    renderBudget(dom.budgetTool, budgetState, (change) => {
+      if ('contingency' in change) budgetState.contingency = change.contingency;
+      else budgetState.items[change.index][change.key] = change.value;
+      renderTools();
+    });
+    renderMaintenance(dom.maintenanceTool, maintenanceState, (task, value) => { maintenanceState[task] = value; renderTools(); });
+    renderSampling(dom.samplingTool, { metrics: scenario.metrics, getValue: (key) => formatNumber(currentQuality[key]) });
+    renderSafety(dom.safetyTool);
+  }
+
   function renderMetrics(quality) {
     dom.metricsGrid.innerHTML = scenario.metrics.map((metric) => `<div class="metric"><div class="metric-label"><span>${metric.label}</span><span>${metric.unit}</span></div><strong class="metric-value">${formatNumber(quality[metric.key])} <small>${metric.unit}</small></strong><div class="metric-bar"><span style="width:${clamp(quality[metric.key] / metric.max) * 100}%"></span></div></div>`).join('');
   }
@@ -136,6 +172,8 @@ export function createUI(scenario, scene) {
     if (carbon) carbon.saturation = Math.max(carbon.saturation || 0, state.progress);
 
     const simulation = computeSimulation(state.progress, { initial, layers });
+    currentQuality = simulation.current;
+    renderSampling(dom.samplingTool, { metrics: scenario.metrics, getValue: (key) => formatNumber(currentQuality[key]) });
     const detail = getDetails(simulation);
     const score = qualityScore(simulation.current, initial);
     const time = simulation.totalDuration * state.progress;

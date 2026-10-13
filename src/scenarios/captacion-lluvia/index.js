@@ -45,5 +45,6 @@ export default {
       ? 'Tratamiento térmico validado. La ebullición se muestra solo como emergencia y no elimina químicos.'
       : 'Cloración controlada validada. Mostrar tiempo de contacto y medir cloro residual libre.';
   },
+  onUsageChange: (usage, { scene }) => scene.setUsage?.(usage),
   buildScene: (context) => new PurificationScene({ ...context, createObjects: createCaptacionLluviaObjects }),
 };
