@@ -1,5 +1,7 @@
 const POINTS = ['Agua captada', 'Después del filtro', 'Después de la desinfección'];
 
+const DASH = '\u2014';
+
 export function renderSampling(container, { metrics = [], stages = [], initial, samplingStages = {}, usage = {} }) {
   const rows = [];
   const note = document.createElement('p');
@@ -35,7 +37,7 @@ export function renderSampling(container, { metrics = [], stages = [], initial, 
         return id ? nextStages.find((stage) => stage.filter?.id === id)?.quality || null : null;
       })()?.[row.metric.key];
       const unavailable = value === undefined || value === null;
-      row.value.textContent = unavailable && row.pointIndex === 2 ? '— (sin etapa de desinfección)' : unavailable ? '—' : `${format(value)} ${row.metric.unit || ''}`;
+      row.value.textContent = unavailable && row.pointIndex === 2 ? `${DASH} (sin etapa de desinfección)` : unavailable ? DASH : `${format(value)} ${row.metric.unit || ''}`;
       row.detail.textContent = unavailable && row.pointIndex === 2 ? 'Sin etapa de desinfección' : 'ilustrativo · pendiente de laboratorio';
       const relevant = nextUsage.metricKeys?.includes(row.metric.key);
       row.row.classList.toggle('is-relevant', relevant);
@@ -49,5 +51,5 @@ export function renderSampling(container, { metrics = [], stages = [], initial, 
 
 function format(value) {
   const numericValue = Number(value);
-  return Number.isFinite(numericValue) ? (Number.isInteger(numericValue) ? numericValue : numericValue.toFixed(1)) : '—';
+  return Number.isFinite(numericValue) ? (Number.isInteger(numericValue) ? numericValue : numericValue.toFixed(1)) : DASH;
 }
