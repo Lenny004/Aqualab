@@ -32,9 +32,9 @@
 <!-- section:overview -->
 ## ℹ️ Descripción
 
-AquaLab ayuda a explicar cómo distintas capas pueden reducir turbidez, cloro, minerales y microorganismos en un recorrido visual. Está pensado para demostraciones y aprendizaje, no para certificar la potabilidad del agua.
+AquaLab ayuda a explicar cómo distintas etapas pueden reducir turbidez, color, olor y microorganismos en un recorrido visual. Está pensado para demostraciones y aprendizaje, no para certificar la potabilidad del agua: los valores son ilustrativos y el agua es **NO POTABLE** sin análisis de laboratorio conforme al [RTS 13.02.01:14](docs/propuestas.md).
 
-El modelo recalcula el estado desde la entrada en cada posición del timeline. Las métricas y el índice de calidad son valores ilustrativos parametrizados en `src/main.js`.
+El modelo recalcula el estado desde la entrada en cada posición del timeline. Las métricas y el índice de calidad son valores ilustrativos definidos por cada escenario.
 
 **Stack:** HTML, CSS, JavaScript moderno, [Vite](https://vite.dev/) y [Three.js](https://threejs.org/).
 
@@ -69,24 +69,37 @@ Abre la dirección indicada por Vite, normalmente `http://localhost:5173`. La ap
 .
 ├── index.html                 # Estructura principal de la aplicación
 ├── src/
-│   ├── main.js                 # Estado, cálculo de calidad y escena 3D
+│   ├── main.js                 # Arranque y selección del escenario
+│   ├── scenarios/
+│   │   ├── <id>/                # id, name, buildScene, stages y metrics
+│   │   └── registry.js          # Registro de escenarios disponibles
+│   ├── core/                    # Escena, métricas, timeline, capas y UI compartidas
+│   │   └── tools/               # Herramientas compartidas de uso, cálculo, presupuesto,
+│   │                             # mantenimiento, muestreo y seguridad
 │   └── style.css               # Estilos, paneles y diseño responsive
 ├── docs/
-│   └── estandares-aplicados.md # Documentación de estándares aplicados
+│   ├── estandares-aplicados.md # Documentación de estándares aplicados
+│   └── propuestas.md           # Propuestas y contexto técnico
 ├── dist/                       # Salida generada por Vite
 ├── package.json                # Scripts y dependencias
 └── README.md                   # Documentación inicial del proyecto
 ```
 
+Cada escenario vive en `src/scenarios/<id>/` y expone `id`, `name`, `buildScene`, sus `stages` y `metrics`. El registro central está en `src/scenarios/registry.js`. Actualmente están disponibles `balde-barril` (Balde y barril de capas) y `captacion-lluvia` (Sistema de captación de lluvia, con 8 pasos). La lógica reutilizable está en `src/core`; sus herramientas compartidas incluyen uso, calculadora, presupuesto, mantenimiento, muestreo y seguridad.
+
+Para agregar un escenario nuevo, crea `src/scenarios/<id>/` con su definición, etapas, métricas y constructor de escena; después impórtalo y añádelo al arreglo de `src/scenarios/registry.js`.
+
 <!-- section:data -->
 ## 🧾 Datos
 
-Los datos de entrada y las reducciones por etapa están declarados en `src/main.js`:
+Los datos de entrada y las reducciones por etapa están declarados en los módulos de cada escenario:
 
-- Turbidez, cloro y microorganismos: índices porcentuales ilustrativos.
-- Minerales: concentración ilustrativa en `mg/L`.
+- Turbidez, color, olor y microorganismos: índices ilustrativos.
+- pH y conductividad: valores ilustrativos con sus unidades correspondientes.
 - Índice de calidad: escala didáctica de 0 a 100; un valor mayor representa una mejor calidad estimada.
 - Duración de cada etapa: segundos simulados usados para distribuir correctamente el timeline.
+
+Todos los valores son ilustrativos. El agua debe tratarse como **NO POTABLE** hasta contar con resultados de laboratorio que verifiquen el cumplimiento del RTS 13.02.01:14. Para el contexto, alcance y propuestas del simulador, consulta [docs/propuestas.md](docs/propuestas.md).
 
 <!-- section:development -->
 ## 🛠️ Desarrollo

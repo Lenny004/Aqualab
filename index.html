@@ -19,6 +19,7 @@
           <span class="topbar__divider"></span>
           <span>Modo educativo</span>
         </div>
+        <label class="scenario-picker"><span>Escenario</span><select id="scenarioSelect" aria-label="Seleccionar escenario"></select></label>
         <button class="icon-button" id="helpButton" type="button" aria-label="Abrir ayuda">?</button>
       </header>
 
@@ -36,10 +37,16 @@
           </div>
         </section>
 
+        <section class="safety-banner safety-banner--visible section-wrap" id="safetyNotice" aria-label="Aviso de seguridad">
+          <strong>Propuesta académica</strong><span>NO POTABLE sin análisis de laboratorio conforme al RTS 13.02.01:14 (El Salvador). Filtrar no es potabilizar.</span>
+        </section>
+
         <section class="simulation-layout section-wrap" aria-label="Simulación de purificación">
           <aside class="layers-card floating-layers-panel" aria-label="Configuración de capas">
             <div class="card-heading"><div><p class="eyebrow">CONFIGURACIÓN</p><h2>Capas activas</h2></div><span class="layer-count" id="layerCount">3 / 4</span></div>
             <p class="card-description">Selecciona una capa para inspeccionarla o activa y desactiva su interruptor.</p>
+            <p class="scenario-note" id="scenarioDescription"></p>
+            <div class="scenario-controls" id="scenarioControls"></div>
             <div class="layer-list" id="layerList"></div>
             <div class="educational-note"><span>✦</span><p><b>¿Sabías que?</b><br />Cada capa retiene o transforma distintos tipos de impurezas.</p></div>
           </aside>
@@ -98,7 +105,7 @@
               <div class="comparison__arrow">→</div>
               <div class="comparison comparison--after"><span class="comparison__label">Después de la etapa</span><strong id="afterScore">12</strong><small id="afterLabel">Sin cambios</small></div>
             </div>
-            <p class="selection-tip"><span>i</span> El índice va de 0 a 100: cuanto mayor es, mejor es la calidad estimada.</p>
+            <p class="selection-tip"><span>i</span> Filtrar no es potabilizar. La filtración no lleva E. coli ni coliformes a un nivel seguro.</p>
           </aside>
         </section>
 
@@ -127,6 +134,24 @@
             <div class="evolution-chart" id="evolutionChart"></div>
             <div class="chart-legend"><span><i class="dot dot--before"></i> Antes de cada etapa</span><span><i class="dot dot--after"></i> Después de cada etapa</span><span class="chart-legend__unit">Índice de calidad · 0–100</span></div>
           </div>
+        </section>
+
+        <section class="tools-panel section-wrap" aria-label="Herramientas compartidas">
+          <div class="card-heading"><div><p class="eyebrow">HERRAMIENTAS COMUNES</p><h2>Diseña, verifica y mantiene</h2></div></div>
+          <div class="tools-tabs" id="toolsTabs" role="tablist" aria-label="Herramientas">
+            <button class="tools-tab is-active" data-tool-tab="usageTool" type="button">Uso final</button>
+            <button class="tools-tab" data-tool-tab="calculatorTool" type="button">Cálculo</button>
+            <button class="tools-tab" data-tool-tab="budgetTool" type="button">Presupuesto</button>
+            <button class="tools-tab" data-tool-tab="maintenanceTool" type="button">Mantenimiento</button>
+            <button class="tools-tab" data-tool-tab="samplingTool" type="button">Muestreo</button>
+            <button class="tools-tab" data-tool-tab="safetyTool" type="button">Seguridad</button>
+          </div>
+          <div class="tool-panel" data-tool-panel="usageTool" id="usageTool"></div>
+          <div class="tool-panel" data-tool-panel="calculatorTool" id="calculatorTool" hidden></div>
+          <div class="tool-panel" data-tool-panel="budgetTool" id="budgetTool" hidden></div>
+          <div class="tool-panel" data-tool-panel="maintenanceTool" id="maintenanceTool" hidden></div>
+          <div class="tool-panel" data-tool-panel="samplingTool" id="samplingTool" hidden></div>
+          <div class="tool-panel" data-tool-panel="safetyTool" id="safetyTool" hidden></div>
         </section>
       </main>
 
