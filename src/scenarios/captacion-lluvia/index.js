@@ -8,6 +8,7 @@ export default {
   initial: INITIAL,
   layers: LAYERS,
   metrics: METRICS,
+  samplingStages: { filter: 'filtro-granular', disinfection: 'disinfection' },
   controls: [
     {
       key: 'firstFlushVolume',

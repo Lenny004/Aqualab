@@ -1,6 +1,6 @@
 import { computeSimulation, formatNumber, qualityScore } from './metrics.js';
 import { formatTime, normalizeProgress, renderTimelineMarkers } from './timeline.js';
-import { renderUsage } from './tools/usage.js';
+import { renderUsage, USAGES } from './tools/usage.js';
 import { renderCalculator } from './tools/calculator.js';
 import { createBudgetState, renderBudget } from './tools/budget.js';
 import { createMaintenanceState, renderMaintenance } from './tools/maintenance.js';
@@ -16,6 +16,7 @@ const ids = [
   'timelineInput', 'timelineMarkers', 'playButton', 'playLabel', 'restartButton',
   'speedOptions', 'layerCount', 'layerList', 'evolutionChart', 'trendPill', 'helpButton',
   'helpModal', 'closeHelpButton', 'scenarioDescription',
+  'activeStagesChip',
   'scenarioControls',
   'usageTool', 'calculatorTool', 'budgetTool', 'maintenanceTool', 'samplingTool', 'safetyTool', 'toolsTabs',
 ];
@@ -26,12 +27,14 @@ export function createUI(scenario, scene) {
   const layers = scenario.layers;
   const initial = scenario.initial;
   const dom = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
-  const state = { progress: 0, playing: false, speed: 1, xray: false, selected: 'bucket', finalUse: 'tomar', realElapsed: 0, lastFrame: performance.now() };
+  const state = { progress: 0, playing: false, speed: 1, xray: false, selected: 'input', finalUse: 'tomar', realElapsed: 0, playedTime: 0, lastFrame: performance.now() };
   const scenarioState = Object.fromEntries((scenario.controls || []).map((control) => [control.key, control.value]));
   const calculatorState = { p: 20, area: 40, coefficient: 0.8, capacity: 200, demand: 40 };
   const budgetState = createBudgetState();
   const maintenanceState = createMaintenanceState();
   let currentQuality = initial;
+  let lastHeavyRender = 0;
+  let samplingSignature = '';
   const controller = new AbortController();
   let animationFrame;
 
@@ -53,7 +56,8 @@ export function createUI(scenario, scene) {
     state.playing = false;
     state.progress = 0;
     state.realElapsed = 0;
-    state.selected = 'bucket';
+    state.selected = 'input';
+    state.playedTime = 0;
     render();
   });
   listen(dom.timelineInput, 'input', (event) => {
@@ -131,29 +135,28 @@ export function createUI(scenario, scene) {
   }
 
   function renderTools() {
-    renderUsage(dom.usageTool, { value: state.finalUse, onChange: (value) => {
+    const handleUsageChange = (value) => {
       state.finalUse = value;
       scenario.onUsageChange?.(value, { scene });
-      renderTools();
+      renderUsage(dom.usageTool, { value, onChange: handleUsageChange });
       render();
-    } });
-    renderCalculator(dom.calculatorTool, calculatorState, (key, value) => { calculatorState[key] = value; renderTools(); });
+    };
+    renderUsage(dom.usageTool, { value: state.finalUse, onChange: handleUsageChange });
+    renderCalculator(dom.calculatorTool, calculatorState, (values) => Object.assign(calculatorState, values));
     renderBudget(dom.budgetTool, budgetState, (change) => {
-      if ('contingency' in change) budgetState.contingency = change.contingency;
-      else budgetState.items[change.index][change.key] = change.value;
-      renderTools();
+      Object.assign(budgetState, change);
     });
-    renderMaintenance(dom.maintenanceTool, maintenanceState, (task, value) => { maintenanceState[task] = value; renderTools(); });
-    renderSampling(dom.samplingTool, { metrics: scenario.metrics, getValue: (key) => formatNumber(currentQuality[key]) });
+    renderMaintenance(dom.maintenanceTool, maintenanceState, (values) => Object.assign(maintenanceState, values));
     renderSafety(dom.safetyTool);
   }
 
   function renderMetrics(quality) {
-    dom.metricsGrid.innerHTML = scenario.metrics.map((metric) => `<div class="metric"><div class="metric-label"><span>${metric.label}</span><span>${metric.unit}</span></div><strong class="metric-value">${formatNumber(quality[metric.key])} <small>${metric.unit}</small></strong><div class="metric-bar"><span style="width:${clamp(quality[metric.key] / metric.max) * 100}%"></span></div></div>`).join('');
+    const usage = USAGES[state.finalUse] || USAGES.tomar;
+    dom.metricsGrid.innerHTML = scenario.metrics.map((metric) => `<div class="metric ${usage.metricKeys.includes(metric.key) ? 'is-relevant' : 'is-muted'} ${usage.highlighted.includes(metric.key) ? 'is-highlighted' : ''}"><div class="metric-label"><span>${metric.label}</span><span>${metric.unit}</span></div><strong class="metric-value">${formatNumber(quality[metric.key])} <small>${metric.unit}</small></strong><div class="metric-bar"><span style="width:${clamp(quality[metric.key] / metric.max) * 100}%"></span></div></div>`).join('');
   }
 
   function getDetails(simulation) {
-    if (state.selected === 'bucket') {
+    if (state.selected === 'input') {
       return { title: 'Agua de entrada', description: scenario.text.inputDescription, before: initial, after: simulation.stages[1]?.quality || initial, beforeLabel: 'Agua sin tratar', afterLabel: simulation.filters[0]?.name || 'Sin etapas activas', stage: 'Entrada' };
     }
 
@@ -169,11 +172,32 @@ export function createUI(scenario, scene) {
 
   function render() {
     const carbon = layers.find((layer) => layer.id === 'carbon');
-    if (carbon) carbon.saturation = Math.max(carbon.saturation || 0, state.progress);
-
+    const totalDuration = computeSimulation(0, { initial, layers }).totalDuration;
+    if (carbon) carbon.saturation = totalDuration ? clamp(state.playedTime / totalDuration) : 0;
     const simulation = computeSimulation(state.progress, { initial, layers });
     currentQuality = simulation.current;
-    renderSampling(dom.samplingTool, { metrics: scenario.metrics, getValue: (key) => formatNumber(currentQuality[key]) });
+    const now = performance.now();
+    const renderHeavyBlocks = !state.playing || now - lastHeavyRender >= 100;
+    if (renderHeavyBlocks) {
+      lastHeavyRender = now;
+      const samplingSimulation = computeSimulation(1, { initial, layers });
+      const usage = USAGES[state.finalUse] || USAGES.tomar;
+      const samplingData = { metrics: scenario.metrics, initial, stages: samplingSimulation.stages, samplingStages: scenario.samplingStages, usage };
+      const signature = JSON.stringify({ stages: samplingSimulation.stages.map((stage) => stage.quality), samplingStages: scenario.samplingStages, usage: state.finalUse });
+      if (signature !== samplingSignature) { samplingSignature = signature; renderSampling(dom.samplingTool, samplingData); }
+      renderMetrics(simulation.current);
+      renderLayerList();
+      renderTimelineMarkers(dom.timelineMarkers, simulation, state.progress);
+      const chartPoints = [
+        { label: 'Entrada', before: qualityScore(initial, initial), after: qualityScore(initial, initial) },
+        ...simulation.filters.map((layer, index) => ({
+          label: layer.name.split(' ')[0],
+          before: qualityScore(simulation.stages[index].quality, initial),
+          after: qualityScore(simulation.stages[index + 1].quality, initial),
+        })),
+      ];
+      dom.evolutionChart.innerHTML = chartPoints.map((point, index) => `<div class="chart-column ${index === simulation.currentIndex ? 'current' : ''}"><span class="chart-bar before" style="height:${Math.max(4, point.before)}%"></span><span class="chart-bar after" style="height:${Math.max(4, point.after)}%"></span><span class="chart-label">${point.label}</span></div>`).join('');
+    }
     const detail = getDetails(simulation);
     const score = qualityScore(simulation.current, initial);
     const time = simulation.totalDuration * state.progress;
@@ -196,7 +220,6 @@ export function createUI(scenario, scene) {
     dom.qualityRing.style.setProperty('--ring', `${Math.max(5, score)}%`);
     dom.qualityState.textContent = 'NO POTABLE';
     dom.qualityDelta.textContent = 'Filtrar no es potabilizar';
-    renderMetrics(simulation.current);
     dom.selectedStageNumber.textContent = detail.stage;
     dom.beforeScore.textContent = qualityScore(detail.before, initial);
     dom.afterScore.textContent = qualityScore(detail.after, initial);
@@ -205,17 +228,7 @@ export function createUI(scenario, scene) {
     dom.playLabel.textContent = state.playing ? 'Pausar' : 'Reproducir';
     dom.playButton.querySelector('.play-button__icon').textContent = state.playing ? 'Ⅱ' : '▶';
     dom.layerCount.textContent = `${simulation.filters.length} / ${layers.length}`;
-    renderLayerList();
-    renderTimelineMarkers(dom.timelineMarkers, simulation, state.progress);
-    const chartPoints = [
-      { label: 'Entrada', before: qualityScore(initial, initial), after: qualityScore(initial, initial) },
-      ...simulation.filters.map((layer, index) => ({
-        label: layer.name.split(' ')[0],
-        before: qualityScore(simulation.stages[index].quality, initial),
-        after: qualityScore(simulation.stages[index + 1].quality, initial),
-      })),
-    ];
-    dom.evolutionChart.innerHTML = chartPoints.map((point, index) => `<div class="chart-column ${index === simulation.currentIndex ? 'current' : ''}"><span class="chart-bar before" style="height:${Math.max(4, point.before)}%"></span><span class="chart-bar after" style="height:${Math.max(4, point.after)}%"></span><span class="chart-label">${point.label}</span></div>`).join('');
+    dom.activeStagesChip.textContent = `${simulation.filters.length} ${simulation.filters.length === 1 ? 'etapa' : 'etapas'}`;
     dom.trendPill.textContent = `+${Math.max(0, score - qualityScore(initial, initial))} calidad`;
     const renderState = { ...state, ...scenarioState };
     scene.setState(renderState);
@@ -230,6 +243,7 @@ export function createUI(scenario, scene) {
     if (state.playing) {
       const totalDuration = computeSimulation(0, { initial, layers }).totalDuration;
       state.progress += delta * state.speed / Math.max(totalDuration, 1);
+      state.playedTime += delta * state.speed;
       state.realElapsed += delta;
       if (state.progress >= 1) { state.progress = 1; state.playing = false; }
       render();

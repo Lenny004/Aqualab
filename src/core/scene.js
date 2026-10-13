@@ -3,9 +3,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { updateParticles } from './particles.js';
 
 export class PurificationScene {
-  constructor({ canvas, onSelect, createObjects }) {
+  constructor({ canvas, renderer, layers, onSelect, createObjects }) {
     this.canvas = canvas;
     this.onSelect = onSelect;
+    this.layers = layers;
     this.raycaster = new THREE.Raycaster();
     this.pointer = new THREE.Vector2();
     this.interactives = [];
@@ -14,10 +15,7 @@ export class PurificationScene {
     this.scene.fog = new THREE.Fog('#0a1b1c', 12, 28);
     this.camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
     this.camera.position.set(8.4, 5.5, 11.5);
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    this.renderer.shadowMap.enabled = true;
-    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    this.renderer = renderer;
     this.controls = new OrbitControls(this.camera, canvas);
     this.controls.enableDamping = true;
     this.controls.enablePan = false;
@@ -42,6 +40,7 @@ export class PurificationScene {
     return {
       scene: this.scene,
       interactives: this.interactives,
+      layers: this.layers,
       addInteractive: (object) => this.interactives.push(object),
     };
   }
@@ -77,15 +76,18 @@ export class PurificationScene {
     const hit = this.raycaster.intersectObjects(this.interactives, false)[0];
 
     if (hit) {
-      this.onSelect(hit.object.userData.type === 'filter' ? hit.object.userData.id : 'bucket');
+      this.onSelect(hit.object.userData.id || 'input');
     }
   }
 
   update(simulation, state) {
     this.objects.update?.(simulation, state);
+    this.select(state.selected);
   }
 
   select(id) {
+    if (id === this.selectedId) return;
+    this.selectedId = id;
     this.objects.select?.(id);
   }
 
@@ -147,16 +149,25 @@ export class PurificationScene {
     window.removeEventListener('resize', this.handleResize);
     this.canvas.removeEventListener('pointerdown', this.handlePointer);
     this.objects.dispose?.();
+    const textures = new Set();
+    const disposeMaterial = (material) => {
+      if (!material) return;
+      Object.values(material).forEach((value) => {
+        if (value?.isTexture) textures.add(value);
+      });
+      material.dispose();
+    };
     this.scene.traverse((object) => {
       object.geometry?.dispose();
 
       if (Array.isArray(object.material)) {
-        object.material.forEach((material) => material.dispose());
+        object.material.forEach(disposeMaterial);
       } else {
-        object.material?.dispose();
+        disposeMaterial(object.material);
       }
     });
+    textures.forEach((texture) => texture.dispose());
     this.controls.dispose();
-    this.renderer.dispose();
+    this.renderer.renderLists.dispose();
   }
 }
