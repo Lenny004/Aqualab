@@ -284,7 +284,7 @@ h1, h2, p { margin-block-start: 0; }
 }
 
 /* Narrow mobile */
-@media (max-width: 40rem) {
+@media (max-width: 60rem) {
   .topbar__meta { display: none; }
   .intro h1 { font-size: clamp(3.8rem, 13vw, 5.4rem); }
   .tool-button { padding: .6rem; font-size: 0; }
@@ -302,6 +302,14 @@ h1, h2, p { margin-block-start: 0; }
   .chart-legend__unit { width: 100%; margin-inline-start: 0; }
   .footer { display: block; line-height: 1.8; }
   .footer span { display: block; }
+  .risk-table, .schedule-table, .budget-table, .agronomy-table { overflow-x: visible; }
+  .risk-row, .schedule-row, .budget-row, .agronomy-row { display: block; min-width: 0; padding: 1rem; }
+  .risk-row--head, .schedule-row--head, .budget-row--head, .agronomy-row--head { display: none; }
+  .risk-row:not(.risk-row--head), .schedule-row:not(.schedule-row--head), .budget-row:not(.budget-row--head), .agronomy-row:not(.agronomy-row--head) { border-block-end: 1px solid var(--color-border); }
+  .risk-row__cell, .schedule-row__cell, .budget-row__cell, .agronomy-row__cell { display: grid; grid-template-columns: minmax(9rem, 35%) minmax(0, 1fr); gap: .8rem; align-items: start; padding-block: .35rem; }
+  .risk-row__cell::before, .schedule-row__cell::before, .budget-row__cell::before, .agronomy-row__cell::before { content: attr(data-label); color: var(--color-text-faint); font: .9rem var(--font-mono); text-transform: uppercase; }
+  .agronomy-row__cell > span, .agronomy-row__cell > small { grid-column: 2; }
+  .budget-row__cell { width: 100%; }
 }
 
 @media (max-width: 24rem) {
