@@ -6,6 +6,9 @@ import { createBudgetState, renderBudget } from './tools/budget.js';
 import { createMaintenanceState, renderMaintenance } from './tools/maintenance.js';
 import { renderSampling } from './tools/sampling.js';
 import { renderSafety } from './tools/safety.js';
+import { renderRisks } from './tools/risks.js';
+import { renderSchedule } from './tools/schedule.js';
+import { renderEconomics } from './tools/economics.js';
 
 const ids = [
   'sceneStatus', 'activeLayerName', 'activeLayerHint', 'sceneTime', 'realTime', 'xrayButton',
@@ -19,7 +22,7 @@ const ids = [
   'activeStagesChip',
   'scenarioControls',
   'qualitySelect', 'qualityStatus',
-  'usageTool', 'calculatorTool', 'budgetTool', 'maintenanceTool', 'samplingTool', 'safetyTool', 'toolsTabs',
+  'usageTool', 'calculatorTool', 'budgetTool', 'maintenanceTool', 'samplingTool', 'safetyTool', 'risksTool', 'scheduleTool', 'economicsTool', 'toolsTabs',
 ];
 
 const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
@@ -52,6 +55,8 @@ export function createUI(scenario, scene) {
   let animationFrame;
   let renderingUi = false;
   let uiErrorLogged = false;
+  let economicsUpdater;
+  let risksUpdater;
 
   const handleUiError = (event) => {
     if (!renderingUi || uiErrorLogged) return;
@@ -187,16 +192,24 @@ export function createUI(scenario, scene) {
     const handleUsageChange = (value) => {
       state.finalUse = value;
       scenario.onUsageChange?.(value, { scene });
+      risksUpdater?.(value);
       renderUsage(dom.usageTool, { value, onChange: handleUsageChange });
       render();
     };
     renderUsage(dom.usageTool, { value: state.finalUse, onChange: handleUsageChange });
-    renderCalculator(dom.calculatorTool, calculatorState, (values) => Object.assign(calculatorState, values));
+    renderCalculator(dom.calculatorTool, calculatorState, (values) => {
+      Object.assign(calculatorState, values);
+      economicsUpdater?.();
+    });
     renderBudget(dom.budgetTool, budgetState, (change) => {
       Object.assign(budgetState, change);
+      economicsUpdater?.();
     });
     renderMaintenance(dom.maintenanceTool, maintenanceState, (values) => Object.assign(maintenanceState, values));
     renderSafety(dom.safetyTool);
+    risksUpdater = renderRisks(dom.risksTool, state.finalUse);
+    renderSchedule(dom.scheduleTool);
+    economicsUpdater = renderEconomics(dom.economicsTool, { calculatorState, budgetState });
   }
 
   function renderMetrics(quality) {

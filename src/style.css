@@ -356,6 +356,18 @@ h1, h2, p { margin-block-start: 0; }
 .tool-results div { display: grid; gap: .5rem; padding: 1.1rem; background: var(--color-surface-raised); }
 .tool-results span { color: var(--color-text-faint); font: .9rem var(--font-mono); }
 .tool-results strong { color: var(--color-primary); font: 500 1.6rem var(--font-display); }
+.tool-heading { display: flex; align-items: start; justify-content: space-between; gap: 1.5rem; }
+.tool-heading__title { margin-block-end: .4rem; color: var(--color-text); font: 500 1.5rem var(--font-display); }
+.risk-table, .schedule-table { overflow-x: auto; border: 1px solid var(--color-border); }
+.risk-row, .schedule-row { display: grid; gap: .8rem; align-items: start; min-width: 74rem; padding: .8rem 1rem; border-block-end: 1px solid var(--color-border); color: var(--color-text-muted); font-size: 1rem; }
+.risk-row { grid-template-columns: minmax(14rem, 1.1fr) minmax(14rem, 1fr) minmax(18rem, 1.4fr) minmax(18rem, 1.4fr); }
+.schedule-row { grid-template-columns: 4rem minmax(20rem, 2fr) minmax(12rem, 1fr) minmax(18rem, 1.5fr) minmax(12rem, 1fr); align-items: center; }
+.risk-row:last-child, .schedule-row:last-child { border-block-end: 0; }
+.risk-row--head, .schedule-row--head { color: var(--color-text-faint); background: var(--color-surface-raised); font: .9rem var(--font-mono); }
+.risk-row__cell, .schedule-row__cell { overflow-wrap: anywhere; }
+.schedule-row__number { color: var(--color-primary); font: 500 1.3rem var(--font-mono); }
+.schedule-row__status { padding: .5rem; }
+.economics-formula { margin-block-start: 1.2rem; }
 .usage-summary { margin-block-start: 1.5rem; padding: 1.2rem; border-inline-start: .2rem solid var(--color-primary); background: rgba(45, 168, 232, .08); }
 .usage-summary strong { color: var(--color-text); }
 .usage-summary ul { display: grid; gap: .4rem; margin-block: .8rem; padding-inline-start: 1.8rem; color: var(--color-text-muted); }
