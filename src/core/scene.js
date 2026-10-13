@@ -136,7 +136,7 @@ export class PurificationScene {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height, false);
-    this.objects.setViewport?.(width);
+    this.objects.setViewport?.(width, height, this.camera.fov);
     this.fitCameraToContent();
   }
 

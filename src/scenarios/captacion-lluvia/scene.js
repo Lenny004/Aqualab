@@ -3,44 +3,54 @@ import { createParticles } from '../../core/particles.js';
 import { qualityScore } from '../../core/metrics.js';
 import { INITIAL } from './layers.js';
 
-const LABEL_FONT = '24px monospace';
+const LABEL_FONT_SIZE = 64;
+const LABEL_PADDING = 24;
+const LABEL_HEIGHT = 80;
+const LABEL_DESKTOP_HEIGHT = 14;
+const LABEL_MOBILE_HEIGHT = 13;
 
-export function getLabelScale(canvasWidth, canvasHeight, height = 0.45) {
-  return new THREE.Vector3(height * (canvasWidth / canvasHeight), height, 1);
+export function getLabelScale(canvasWidth, canvasHeight, textureWidth, textureHeight, fov = 30, pixelHeight = LABEL_DESKTOP_HEIGHT) {
+  const screenHeight = canvasHeight || 575;
+  const worldHeight = (2 * pixelHeight * Math.tan(THREE.MathUtils.degToRad(fov) / 2)) / screenHeight;
+  return new THREE.Vector3(worldHeight * (textureWidth / textureHeight), worldHeight, 1);
+}
+
+function getDevicePixelRatio() {
+  return Math.min(window.devicePixelRatio || 1, 2);
+}
+
+function drawLabel(canvas, text, color) {
+  const devicePixelRatio = getDevicePixelRatio();
+  const context = canvas.getContext('2d');
+  context.font = `${LABEL_FONT_SIZE * devicePixelRatio}px monospace`;
+  canvas.width = Math.ceil(context.measureText(text).width) + LABEL_PADDING * devicePixelRatio;
+  canvas.height = LABEL_HEIGHT * devicePixelRatio;
+  context.font = `${LABEL_FONT_SIZE * devicePixelRatio}px monospace`;
+  context.fillStyle = color;
+  context.textBaseline = 'middle';
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.fillText(text, LABEL_PADDING * devicePixelRatio, canvas.height / 2);
 }
 
 function makeLabel(text, color = '#b8eee0') {
   const canvas = document.createElement('canvas');
-  const context = canvas.getContext('2d');
-  context.font = LABEL_FONT;
-  canvas.width = Math.ceil(context.measureText(text).width) + 24;
-  canvas.height = 64;
-  context.font = LABEL_FONT;
-  context.fillStyle = color;
-  context.textBaseline = 'middle';
-  context.fillText(text, 12, 32);
+  drawLabel(canvas, text, color);
   const texture = new THREE.CanvasTexture(canvas);
   texture.minFilter = THREE.LinearFilter;
   texture.magFilter = THREE.LinearFilter;
-  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false }));
-  sprite.scale.copy(getLabelScale(canvas.width, canvas.height));
-  sprite.userData = { isLabel: true, labelText: text, labelColor: color };
+  texture.generateMipmaps = false;
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false, sizeAttenuation: false }));
+  sprite.userData = { isLabel: true, labelText: text, labelColor: color, textureWidth: canvas.width, textureHeight: canvas.height };
   return sprite;
 }
 
-function setLabelText(sprite, text) {
+function setLabelText(sprite, text, viewport) {
   const canvas = sprite.material.map.image;
-  const context = canvas.getContext('2d');
-  context.font = LABEL_FONT;
-  canvas.width = Math.ceil(context.measureText(text).width) + 24;
-  canvas.height = 64;
-  context.clearRect(0, 0, canvas.width, canvas.height);
-  context.font = LABEL_FONT;
-  context.fillStyle = sprite.userData.labelColor;
-  context.textBaseline = 'middle';
-  context.fillText(text, 12, 32);
+  drawLabel(canvas, text, sprite.userData.labelColor);
   sprite.userData.labelText = text;
-  sprite.scale.copy(getLabelScale(canvas.width, canvas.height));
+  sprite.userData.textureWidth = canvas.width;
+  sprite.userData.textureHeight = canvas.height;
+  if (viewport) sprite.scale.copy(getLabelScale(viewport.width, viewport.height, canvas.width, canvas.height, viewport.fov, viewport.pixelHeight));
   sprite.material.map.needsUpdate = true;
 }
 
@@ -56,6 +66,7 @@ export function createCaptacionLluviaObjects({ scene, layers, addInteractive }) 
   const flowGroup = new THREE.Group();
   const stageObjects = new Map();
   const labels = new Map();
+  const viewport = { width: 700, height: 575, fov: 30, pixelHeight: LABEL_DESKTOP_HEIGHT };
   const dirty = new THREE.MeshBasicMaterial({ color: 0xa98155 });
   const clean = new THREE.MeshBasicMaterial({ color: 0x6bd5c4, transparent: true, opacity: 0.8 });
   scene.add(root);
@@ -171,7 +182,7 @@ export function createCaptacionLluviaObjects({ scene, layers, addInteractive }) 
       if (firstFlush.userData.volume !== volume) {
         firstFlush.scale.y = 0.8 + volume / 100;
         firstFlush.userData.volume = volume;
-        setLabelText(firstFlushLabel, `Primeras aguas ${volume} L`);
+        setLabelText(firstFlushLabel, `Primeras aguas ${volume} L`, viewport);
       }
       const divertedProgress = (state.progress - 0.08) / 0.16;
       divertedWater.position.lerpVectors(path[1], path[2], Math.min(1, Math.max(0, divertedProgress)));
@@ -207,8 +218,13 @@ export function createCaptacionLluviaObjects({ scene, layers, addInteractive }) 
       particles.geometry.setDrawRange(0, light ? particles.userData.offsets.length / 2 : particles.userData.offsets.length);
       labels.forEach((label, id) => { label.visible = !light && (window.innerWidth >= 500 || id === this.selectedLabel); });
     },
-    setViewport(width) {
-      labels.forEach((label, id) => { label.visible = this.qualityMode !== 'light' && (width >= 500 || id === this.selectedLabel); });
+    setViewport(width, height, fov = 30) {
+      const pixelHeight = width >= 500 ? LABEL_DESKTOP_HEIGHT : LABEL_MOBILE_HEIGHT;
+      Object.assign(viewport, { width, height, fov, pixelHeight });
+      labels.forEach((label, id) => {
+        label.scale.copy(getLabelScale(width, height, label.userData.textureWidth, label.userData.textureHeight, fov, pixelHeight));
+        label.visible = this.qualityMode !== 'light' && (width >= 500 || id === this.selectedLabel);
+      });
     },
   };
 }
