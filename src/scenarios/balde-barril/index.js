@@ -13,6 +13,7 @@ export default {
     target: [0.8, 3.4, 0],
     minDistance: 6,
     maxDistance: 24,
+    fitMargin: 1.16,
   },
   samplingStages: { filter: 'carbon', disinfection: null },
   text: {

@@ -18,6 +18,7 @@ export class PurificationScene {
       target: camera.target || [0, 3.5, 0],
       minDistance: camera.minDistance || 7,
       maxDistance: camera.maxDistance || 17,
+      fitMargin: camera.fitMargin || 1.1,
     };
     this.camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
     this.renderer = renderer;
@@ -142,7 +143,7 @@ export class PurificationScene {
     const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * this.camera.aspect);
     const verticalDistance = (size.y / 2) / Math.tan(verticalFov / 2);
     const horizontalDistance = (size.x / 2) / Math.tan(horizontalFov / 2);
-    const distance = Math.max(verticalDistance, horizontalDistance) * 1.1;
+    const distance = Math.max(verticalDistance, horizontalDistance) * this.cameraConfig.fitMargin;
     const configuredOffset = new THREE.Vector3().fromArray(this.cameraConfig.position).sub(new THREE.Vector3().fromArray(this.cameraConfig.target));
     const direction = configuredOffset.normalize();
     const fittedDistance = Math.min(this.cameraConfig.maxDistance, Math.max(this.cameraConfig.minDistance, distance));
