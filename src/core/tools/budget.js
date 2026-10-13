@@ -1,5 +1,7 @@
 const DEFAULT_ITEMS = [['Barril', 45], ['Malla', 8], ['Canaleta y bajante', 45], ['Desviador de primeras aguas', 25], ['Recipiente de prefiltro', 15], ['Grava', 10], ['Arena', 12], ['Carbón activado', 22], ['Tuberías', 30], ['Válvulas y grifos', 18], ['Depósito final', 45], ['Tapa, malla de rebose y sellos', 10], ['Herramientas', 15], ['Pruebas de calidad iniciales', 55], ['Desinfección y equipo de control', 30], ['Señalización', 5]];
 
+const DASH = '\u2014';
+
 export function createBudgetState() { return { items: DEFAULT_ITEMS.map(([name, price]) => ({ name, quantity: 1, price })), contingency: 10 }; }
 
 export function renderBudget(container, state, onChange) {
@@ -26,4 +28,4 @@ function totals(state) {
   return { rows, subtotal, contingency, total: subtotal + contingency, invalid: false };
 }
 
-function money(value) { return Number.isFinite(value) ? value.toFixed(2) : '?'; }
+function money(value) { return Number.isFinite(value) ? value.toFixed(2) : DASH; }

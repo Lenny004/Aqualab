@@ -1,13 +1,55 @@
 const POINTS = ['Agua captada', 'Después del filtro', 'Después de la desinfección'];
 
+const DASH = '\u2014';
+
 export function renderSampling(container, { metrics = [], stages = [], initial, samplingStages = {}, usage = {} }) {
-  const qualityAt = (pointIndex) => {
-    if (pointIndex === 0) return initial;
-    let id = pointIndex === 1 ? samplingStages.filter : samplingStages.disinfection;
-    if (pointIndex === 1 && !stages.some((stage) => stage.filter?.id === id)) id = [...stages].reverse().find((stage) => ['carbon', 'sand', 'gravel'].includes(stage.filter?.id))?.filter?.id;
-    return id ? stages.find((stage) => stage.filter?.id === id)?.quality || null : null;
+  const rows = [];
+  const note = document.createElement('p');
+  note.className = 'tool-note';
+  note.textContent = 'Criterio RTS 13.02.01:14: pendiente de laboratorio. Todos los valores son ilustrativos.';
+  const grid = document.createElement('div');
+  grid.className = 'sampling-grid';
+  POINTS.forEach((point, pointIndex) => {
+    const card = document.createElement('section');
+    card.className = 'sampling-card';
+    const heading = document.createElement('h3');
+    heading.textContent = point;
+    card.append(heading);
+    metrics.forEach((metric) => {
+      const row = document.createElement('div');
+      row.className = 'sampling-row';
+      const label = document.createElement('span');
+      label.textContent = metric.label;
+      const value = document.createElement('span');
+      const detail = document.createElement('small');
+      row.append(label, value, detail);
+      rows.push({ pointIndex, metric, row, value, detail });
+      card.append(row);
+    });
+    grid.append(card);
+  });
+  container.replaceChildren(note, grid);
+  const update = ({ stages: nextStages = stages, usage: nextUsage = usage } = {}) => {
+    rows.forEach((row) => {
+      const value = row.pointIndex === 0 ? initial : (() => {
+        let id = row.pointIndex === 1 ? samplingStages.filter : samplingStages.disinfection;
+        if (row.pointIndex === 1 && !nextStages.some((stage) => stage.filter?.id === id)) id = [...nextStages].reverse().find((stage) => ['carbon', 'sand', 'gravel'].includes(stage.filter?.id))?.filter?.id;
+        return id ? nextStages.find((stage) => stage.filter?.id === id)?.quality || null : null;
+      })()?.[row.metric.key];
+      const unavailable = value === undefined || value === null;
+      row.value.textContent = unavailable && row.pointIndex === 2 ? `${DASH} (sin etapa de desinfección)` : unavailable ? DASH : `${format(value)} ${row.metric.unit || ''}`;
+      row.detail.textContent = unavailable && row.pointIndex === 2 ? 'Sin etapa de desinfección' : 'ilustrativo · pendiente de laboratorio';
+      const relevant = nextUsage.metricKeys?.includes(row.metric.key);
+      row.row.classList.toggle('is-relevant', relevant);
+      row.row.classList.toggle('is-muted', !relevant);
+      row.row.classList.toggle('is-highlighted', nextUsage.highlighted?.includes(row.metric.key));
+    });
   };
-  container.innerHTML = `<p class="tool-note">Criterio RTS 13.02.01:14: pendiente de laboratorio. Todos los valores son ilustrativos.</p><div class="sampling-grid">${POINTS.map((point, pointIndex) => `<section class="sampling-card"><h3>${point}</h3>${metrics.map((metric) => { const value = qualityAt(pointIndex)?.[metric.key]; const unavailable = value === undefined || value === null; const display = unavailable && pointIndex === 2 ? '? (sin etapa de desinfección)' : unavailable ? '?' : `${format(value)} ${metric.unit || ''}`; const relevant = usage.metricKeys?.includes(metric.key); const highlighted = usage.highlighted?.includes(metric.key); return `<div class="sampling-row ${relevant ? 'is-relevant' : 'is-muted'} ${highlighted ? 'is-highlighted' : ''}"><span>${metric.label}</span><span>${display}</span><small>${unavailable && pointIndex === 2 ? 'Sin etapa de desinfección' : 'ilustrativo · pendiente de laboratorio'}</small></div>`; }).join('')}</section>`).join('')}</div>`;
+  update();
+  return update;
 }
 
-function format(value) { return Number.isInteger(value) ? value : value.toFixed(1); }
+function format(value) {
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? (Number.isInteger(numericValue) ? numericValue : numericValue.toFixed(1)) : DASH;
+}

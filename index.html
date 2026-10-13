@@ -58,6 +58,7 @@
                 <span id="sceneStatus">Agua sin tratar</span>
               </div>
               <div class="scene-tools">
+                <label class="quality-control"><span class="quality-control__label">Calidad</span><select class="quality-control__select" id="qualitySelect" aria-label="Calidad de la escena"><option value="auto">Auto</option><option value="high">Alta</option><option value="light">Ligera</option></select><small class="quality-control__status" id="qualityStatus">Auto</small></label>
                 <button class="tool-button" id="resetViewButton" type="button"><span class="tool-button__icon">⌖</span> Centrar</button>
                 <button class="tool-button" id="zoomOutButton" type="button" aria-label="Alejar vista"><span class="tool-button__icon">−</span> Alejar</button>
                 <button class="tool-button" id="zoomInButton" type="button" aria-label="Acercar vista"><span class="tool-button__icon">+</span> Acercar</button>
@@ -97,6 +98,7 @@
             </div>
 
             <div class="metrics-grid" id="metricsGrid"></div>
+            <p class="metrics-note">Valores ilustrativos</p>
 
             <div class="inspector-divider"></div>
             <div class="detail-heading"><span>Comparación de la etapa</span><span id="selectedStageNumber">Entrada</span></div>
@@ -162,8 +164,7 @@
       <div class="help-modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
         <button class="modal-close" id="closeHelpButton" type="button" aria-label="Cerrar ayuda">×</button>
         <p class="eyebrow">CÓMO EXPLORAR</p><h2 id="helpTitle">Sigue el viaje de cada gota</h2>
-        <p>Usa <b>Reproducir</b> para iniciar el recorrido. Puedes pausar la simulación y arrastrar el timeline en cualquier dirección para ver cómo cambia la calidad.</p>
-        <p>Haz clic en una capa o en el balde para consultar su efecto. Activa <b>Radiografía</b> para ver el interior del sistema.</p>
+        <p id="helpDescription"></p>
       </div>
     </div>
     <script type="module" src="/src/main.js"></script>

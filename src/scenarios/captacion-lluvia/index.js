@@ -8,6 +8,12 @@ export default {
   initial: INITIAL,
   layers: LAYERS,
   metrics: METRICS,
+  camera: {
+    position: [12, 8, 18],
+    target: [1.5, 3.1, 0],
+    minDistance: 10,
+    maxDistance: 48,
+  },
   samplingStages: { filter: 'filtro-granular', disinfection: 'disinfection' },
   controls: [
     {
@@ -36,6 +42,7 @@ export default {
     description: 'Barreras múltiples desde el techo hasta el punto de muestreo. Valores ilustrativos; no es un plano constructivo.',
     inputDescription: 'La lluvia arrastra partículas del techo. La captación requiere una superficie compatible y mantenimiento.',
     disabledDescription: 'Esta etapa está desactivada. Actívala para incluirla en el recorrido.',
+    help: 'Usa Reproducir para seguir las ocho etapas desde el techo hasta el muestreo. Puedes pausar, seleccionar una etapa y activar Radiografía para inspeccionar el sistema de captación.',
   },
   onControlChange: (key, value, { layers }) => {
     if (key !== 'disinfection') return;

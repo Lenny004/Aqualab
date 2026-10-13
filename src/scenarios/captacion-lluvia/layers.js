@@ -31,11 +31,11 @@ export const LAYERS = [
 ];
 
 export const METRICS = [
-  { key: 'turbidity', label: 'Turbidez', unit: 'UTN · ilustrativo', max: 100 },
-  { key: 'color', label: 'Color', unit: 'índice · ilustrativo', max: 100 },
-  { key: 'odor', label: 'Olor', unit: 'índice · ilustrativo', max: 100 },
-  { key: 'ph', label: 'pH', unit: 'ilustrativo', max: 14 },
-  { key: 'conductivity', label: 'Conductividad', unit: 'µS/cm · ilustrativo', max: 500 },
-  { key: 'ecoli', label: 'E. coli', unit: 'índice · ilustrativo', max: 100 },
-  { key: 'coliforms', label: 'Coliformes', unit: 'índice · ilustrativo', max: 100 },
+  { key: 'turbidity', label: 'Turbidez', unit: 'UTN', max: 100 },
+  { key: 'color', label: 'Color', unit: 'índice', max: 100 },
+  { key: 'odor', label: 'Olor', unit: 'índice', max: 100 },
+  { key: 'ph', label: 'pH', unit: '', max: 14 },
+  { key: 'conductivity', label: 'Conductividad', unit: 'µS/cm', max: 500 },
+  { key: 'ecoli', label: 'E. coli', unit: 'índice', max: 100 },
+  { key: 'coliforms', label: 'Coliformes', unit: 'índice', max: 100 },
 ];
