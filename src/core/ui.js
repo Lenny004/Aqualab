@@ -379,7 +379,7 @@ export function createUI(scenario, scene) {
         const row = document.createElement('div');
         row.className = 'layer-row';
         row.dataset.filter = layer.id;
-        row.innerHTML = `<span class="layer-row__swatch layer-row__swatch--${layer.id}"></span><span class="layer-row__main"><b>${layer.name}</b><small>${layer.short}</small></span><label class="layer-row__toggle" aria-label="Activar ${layer.name}"><input type="checkbox" /><span class="layer-row__track"></span></label>`;
+        row.innerHTML = `<span class="layer-row__swatch layer-row__swatch--${layer.id}"></span><span class="layer-row__main"><b class="layer-row__title">${layer.name}</b><small class="layer-row__meta">${layer.short}</small></span><label class="layer-row__toggle" aria-label="Activar ${layer.name}"><input class="layer-row__input" type="checkbox" /><span class="layer-row__track"></span></label>`;
         return row;
       }));
     }
@@ -387,7 +387,9 @@ export function createUI(scenario, scene) {
       const row = dom.layerList.children[index];
       row.classList.toggle('is-disabled', layer.enabled === false);
       row.classList.toggle('is-selected', state.selected === layer.id);
-      row.querySelector('input').checked = layer.enabled !== false;
+      const input = row.querySelector('.layer-row__input');
+      input.checked = layer.enabled !== false;
+      input.parentElement.classList.toggle('is-checked', input.checked);
     });
   }
 
@@ -485,8 +487,8 @@ export function createUI(scenario, scene) {
     dom.metricsGrid.replaceChildren(...scenario.metrics.map((metric) => {
       const root = document.createElement('div');
       root.className = 'metric';
-      root.innerHTML = `<div class="metric-label"><span>${metric.label}</span><span>${metric.unit}</span></div><strong class="metric-value"><span></span>${metric.unit ? ` <small>${metric.unit}</small>` : ''}</strong><div class="metric-bar"><span></span></div>`;
-      metricNodes.set(metric.key, { root, value: root.querySelector('.metric-value span'), bar: root.querySelector('.metric-bar span') });
+      root.innerHTML = `<div class="metric-label"><span class="metric-label__text">${metric.label}</span><span class="metric-label__text">${metric.unit}</span></div><strong class="metric-value"><span></span>${metric.unit ? ` <small class="metric-value__unit">${metric.unit}</small>` : ''}</strong><div class="metric-bar"><span class="metric-bar__fill"></span></div>`;
+      metricNodes.set(metric.key, { root, value: root.querySelector('.metric-value span'), bar: root.querySelector('.metric-bar__fill') });
       return root;
     }));
   }

@@ -33,10 +33,10 @@
           </div>
           <nav class="journey" aria-label="Flujo principal">
             <ol class="journey__list">
-              <li class="journey__step is-current" id="journeyScenario"><span>1</span><b>Elige escenario</b></li>
-              <li class="journey__step" id="journeyPlay"><span>2</span><b>Reproduce</b></li>
-              <li class="journey__step" id="journeyStages"><span>3</span><b>Explora etapas</b></li>
-              <li class="journey__step" id="journeyResults"><span>4</span><b>Revisa resultados</b></li>
+              <li class="journey__step is-current" id="journeyScenario"><span class="journey__index">1</span><b class="journey__label">Elige escenario</b></li>
+              <li class="journey__step" id="journeyPlay"><span class="journey__index">2</span><b class="journey__label">Reproduce</b></li>
+              <li class="journey__step" id="journeyStages"><span class="journey__index">3</span><b class="journey__label">Explora etapas</b></li>
+              <li class="journey__step" id="journeyResults"><span class="journey__index">4</span><b class="journey__label">Revisa resultados</b></li>
             </ol>
           </nav>
         </section>
@@ -121,29 +121,29 @@
             <p class="inspector-description" id="inspectorDescription">Este es el punto de partida. El agua contiene partículas, color y microorganismos antes de atravesar el sistema.</p>
 
             <div class="quality-overview">
-              <div class="quality-ring" id="qualityRing"><div><strong id="qualityScore">18</strong><span>calidad</span></div></div>
-              <div class="quality-copy"><span>Índice de calidad</span><b id="qualityState">Requiere filtración</b><small id="qualityDelta">Punto de partida</small></div>
+              <div class="quality-ring" id="qualityRing"><div class="quality-ring__body"><strong class="quality-ring__score" id="qualityScore">18</strong><span class="quality-ring__label">calidad</span></div></div>
+              <div class="quality-copy"><span class="quality-copy__eyebrow">Índice de calidad</span><b class="quality-copy__title" id="qualityState">Requiere filtración</b><small class="quality-copy__hint" id="qualityDelta">Punto de partida</small></div>
             </div>
 
             <div class="metrics-grid" id="metricsGrid"></div>
             <p class="metrics-note">Valores ilustrativos</p>
 
             <div class="inspector-divider"></div>
-            <div class="detail-heading"><span>Comparación de la etapa</span><span id="selectedStageNumber">Entrada</span></div>
+            <div class="detail-heading"><span class="detail-heading__label">Comparación de la etapa</span><span class="detail-heading__label" id="selectedStageNumber">Entrada</span></div>
             <div class="before-after">
-              <div class="comparison comparison--before"><span class="comparison__label">Antes de la etapa</span><strong id="beforeScore">12</strong><small id="beforeLabel">Agua de entrada</small></div>
+              <div class="comparison comparison--before"><span class="comparison__label">Antes de la etapa</span><strong class="comparison__value" id="beforeScore">12</strong><small class="comparison__hint" id="beforeLabel">Agua de entrada</small></div>
               <div class="comparison__arrow">→</div>
-              <div class="comparison comparison--after"><span class="comparison__label">Después de la etapa</span><strong id="afterScore">12</strong><small id="afterLabel">Sin cambios</small></div>
+              <div class="comparison comparison--after"><span class="comparison__label">Después de la etapa</span><strong class="comparison__value" id="afterScore">12</strong><small class="comparison__hint" id="afterLabel">Sin cambios</small></div>
             </div>
-            <p class="selection-tip"><span>i</span> Filtrar no es potabilizar. La filtración no lleva E. coli ni coliformes a un nivel seguro.</p>
+            <p class="selection-tip"><span class="selection-tip__icon">i</span> Filtrar no es potabilizar. La filtración no lleva E. coli ni coliformes a un nivel seguro.</p>
           </aside>
           <aside class="layers-card floating-layers-panel" id="layersCard" aria-label="Etapas del sistema">
-            <div class="card-heading"><div><p class="eyebrow">CONFIGURACIÓN</p><h2>Etapas del sistema</h2></div><span class="layer-count" id="layerCount">3 / 4</span></div>
+            <div class="card-heading"><div><p class="eyebrow">CONFIGURACIÓN</p><h2 class="card-heading__title">Etapas del sistema</h2></div><span class="layer-count" id="layerCount">3 / 4</span></div>
             <p class="card-description">Activa etapas y ajusta los controles básicos del escenario.</p>
             <p class="scenario-note" id="scenarioDescription"></p>
             <div class="scenario-controls" id="scenarioControls"></div>
             <div class="layer-list" id="layerList"></div>
-            <div class="educational-note"><span>✦</span><p><b>¿Sabías que?</b><br />Cada etapa retiene o transforma distintos tipos de impurezas.</p></div>
+            <div class="educational-note"><span class="educational-note__icon">✦</span><p class="educational-note__text"><b class="educational-note__title">¿Sabías que?</b><br />Cada etapa retiene o transforma distintos tipos de impurezas.</p></div>
             <details class="advanced-panel" id="advancedPanel">
               <summary>Avanzado <span>Presets, rendimiento y más</span></summary>
               <div class="advanced-panel__content">
@@ -158,14 +158,14 @@
 
         <section class="lower-grid section-wrap">
           <div class="evolution-card">
-            <div class="card-heading"><div><p class="eyebrow">EVOLUCIÓN</p><h2>Antes y después</h2></div><span class="trend-pill" id="trendPill">+0% claridad</span></div>
+            <div class="card-heading"><div><p class="eyebrow">EVOLUCIÓN</p><h2 class="card-heading__title">Antes y después</h2></div><span class="trend-pill" id="trendPill">+0% claridad</span></div>
             <div class="evolution-chart" id="evolutionChart"></div>
             <div class="chart-legend"><span><i class="dot dot--before"></i> Antes de cada etapa</span><span><i class="dot dot--after"></i> Después de cada etapa</span><span class="chart-legend__unit">Índice de calidad · 0–100</span></div>
           </div>
         </section>
 
         <section class="tools-panel section-wrap" id="toolsPanel" aria-label="Herramientas compartidas">
-          <div class="card-heading"><div><p class="eyebrow">HERRAMIENTAS COMUNES</p><h2>Diseña, verifica y mantiene</h2></div></div>
+          <div class="card-heading"><div><p class="eyebrow">HERRAMIENTAS COMUNES</p><h2 class="card-heading__title">Diseña, verifica y mantiene</h2></div></div>
           <div class="tools-sections" id="toolsSections" role="tablist" aria-label="Secciones de herramientas">
             <button class="tools-section is-active" id="toolsSectionQuality" role="tab" aria-selected="true" aria-controls="toolsSectionPanelQuality" data-tool-section="quality" type="button">💧 Calidad</button>
             <button class="tools-section" id="toolsSectionPlanning" role="tab" aria-selected="false" aria-controls="toolsSectionPanelPlanning" data-tool-section="planning" type="button">🗓️ Planificación</button>
