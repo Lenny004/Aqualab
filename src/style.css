@@ -329,6 +329,65 @@ h1, h2, p { margin-block-start: 0; }
   .chart-label { max-width: 5.8rem; font-size: .8rem; }
 }
 
+/* UX principal: escena y reproducción visibles antes de la configuración avanzada. */
+.intro { padding-block: 2.8rem 2rem; }
+.intro h1 { max-width: none; margin-block-end: .8rem; font-size: clamp(3rem, 6vw, 5.2rem); }
+.intro-copy { font-size: 1.3rem; }
+.intro__tags { margin-block-start: 1.2rem; }
+.journey { margin-block-start: 2rem; padding: 1rem 1.2rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: rgba(45, 168, 232, .06); }
+.journey__list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .6rem; margin: 0; padding: 0; list-style: none; }
+.journey__step { display: flex; align-items: center; gap: .6rem; min-width: 0; color: var(--color-text-faint); font: 1.1rem var(--font-mono); }
+.journey__step span { display: grid; place-items: center; width: 2.2rem; height: 2.2rem; flex: 0 0 auto; border: 1px solid var(--color-border); border-radius: 50%; }
+.journey__step b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 400; }
+.journey__step.is-current { color: var(--color-primary); }
+.journey__step.is-current span { border-color: var(--color-primary); background: rgba(45, 168, 232, .16); }
+.simulation-layout { gap: 1.2rem; }
+.scene-card { display: flex; flex-direction: column; }
+.scene-card .controls-section { margin-block-start: 0; border: 0; border-block-start: 1px solid var(--color-border); border-radius: 0; box-shadow: none; }
+.scene-viewport, #sceneCanvas { min-height: 27rem; height: 27rem; }
+.layers-card { grid-column: 1; grid-row: 3; }
+.floating-layers-panel { position: static; }
+.scenario-controls { grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+.scenario-controls__warning { grid-column: 1 / -1; }
+.advanced-panel { margin-block-start: 1.6rem; border-block-start: 1px solid var(--color-border); }
+.advanced-panel summary { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-block: 1.3rem .8rem; cursor: pointer; color: var(--color-text); font: 500 1.3rem var(--font-display); }
+.advanced-panel summary::marker { color: var(--color-primary); }
+.advanced-panel summary span { color: var(--color-text-faint); font: 1rem var(--font-mono); }
+.advanced-panel__content { display: grid; gap: 1.2rem; padding-block-end: .4rem; }
+.advanced-panel .quality-control { grid-template-columns: 1fr auto; }
+.advanced-panel .preset-tool { margin-block: 0; }
+.preset-card__details { display: none; }
+.preset-card { padding: .9rem; }
+.preset-card h4 { margin-block-start: .2rem; font-size: 1.2rem; }
+.preset-card__button { padding: .6rem .8rem; }
+.preset-card__top { align-items: center; }
+.preset-list { grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); }
+.preset-heading__hint { font-size: 1rem; }
+
+@media (min-width: 40rem) {
+  .intro { padding-block: 3.6rem 2.4rem; }
+  .scene-viewport, #sceneCanvas { min-height: 31rem; height: 31rem; }
+}
+
+@media (min-width: 64rem) {
+  .intro { display: block; padding-block: 3.6rem 2.4rem; }
+  .journey { margin-block-start: 1.8rem; }
+  .simulation-layout { grid-template-columns: minmax(0, 1.55fr) minmax(24rem, .85fr); align-items: start; }
+  .scene-card { grid-column: 1; grid-row: 1; }
+  .inspector { grid-column: 2; grid-row: 1; }
+  .layers-card { grid-column: 1 / -1; grid-row: 2; }
+  .scene-viewport, #sceneCanvas { min-height: 34rem; height: 34rem; }
+  .scene-toolbar { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+  .controls-section { padding: 1.6rem 2rem 1.7rem; }
+  .timeline-wrap { height: 6rem; margin-block: 1.4rem .6rem; }
+  .control-row { padding-block-start: 1rem; }
+}
+
+@media (max-width: 40rem) {
+  .journey__list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem .6rem; }
+  .journey__step { font-size: 1rem; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto; animation-duration: .01ms; transition-duration: .01ms; }
 }

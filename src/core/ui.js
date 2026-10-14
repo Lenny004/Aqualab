@@ -26,6 +26,7 @@ const ids = [
   'scenarioControls',
   'presetTool',
   'qualitySelect', 'qualityStatus',
+  'journeyScenario', 'journeyPlay', 'journeyStages', 'journeyResults',
   'usageTool', 'calculatorTool', 'budgetTool', 'maintenanceTool', 'deteriorationTool', 'samplingTool', 'safetyTool', 'risksTool', 'scheduleTool', 'economicsTool', 'agronomyTool', 'toolsTabs',
 ];
 
@@ -62,6 +63,12 @@ export function createUI(scenario, scene) {
   let uiErrorLogged = false;
   let economicsUpdater;
   let risksUpdater;
+  let journeyStep = 2;
+
+  function updateJourney() {
+    const steps = [dom.journeyScenario, dom.journeyPlay, dom.journeyStages, dom.journeyResults];
+    steps.forEach((step, index) => step?.classList.toggle('is-current', index + 1 === journeyStep));
+  }
 
   function renderUsageTool() {
     const blocked = Boolean(scenarioState.roofType && scenarioState.roofType !== 'compatible');
@@ -111,6 +118,7 @@ export function createUI(scenario, scene) {
   listen(dom.playButton, 'click', () => {
     state.playing = !state.playing;
     if (state.progress >= 1) state.progress = 0;
+    journeyStep = 3;
     render();
   });
   listen(dom.restartButton, 'click', () => {
@@ -119,6 +127,7 @@ export function createUI(scenario, scene) {
     state.realElapsed = 0;
     state.selected = 'input';
     state.playedTime = 0;
+    journeyStep = 2;
     render();
   });
   listen(dom.timelineInput, 'input', (event) => {
@@ -416,7 +425,8 @@ export function createUI(scenario, scene) {
     dom.beforeLabel.textContent = detail.beforeLabel;
     dom.afterLabel.textContent = detail.afterLabel;
     dom.playLabel.textContent = state.playing ? 'Pausar' : 'Reproducir';
-    dom.playButton.querySelector('.play-button__icon').textContent = state.playing ? 'Ⅱ' : '▶';
+      dom.playButton.querySelector('.play-button__icon').textContent = state.playing ? 'Ⅱ' : '▶';
+    updateJourney();
     dom.layerCount.textContent = `${simulation.filters.length} / ${layers.length}`;
     dom.activeStagesChip.textContent = `${simulation.filters.length} ${simulation.filters.length === 1 ? 'etapa' : 'etapas'}`;
     dom.trendPill.textContent = `+${Math.max(0, score - qualityScore(initial, initial))} calidad`;
@@ -438,7 +448,7 @@ export function createUI(scenario, scene) {
       state.progress += delta * state.speed / Math.max(totalDuration, 1);
       state.playedTime += delta * state.speed;
       state.realElapsed += delta;
-      if (state.progress >= 1) { state.progress = 1; state.playing = false; }
+      if (state.progress >= 1) { state.progress = 1; state.playing = false; journeyStep = 4; }
       render();
     }
 

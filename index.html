@@ -27,14 +27,18 @@
         <section class="intro section-wrap">
           <div>
             <p class="eyebrow">LABORATORIO VIRTUAL · 01</p>
-            <h1>Observa cómo el agua<br /><em>recupera su claridad.</em></h1>
-            <p class="intro-copy">Controla el tiempo, inspecciona cada capa y descubre qué sucede con la calidad del agua durante el recorrido.</p>
+            <h1>Observa cómo el agua <em>recupera su claridad.</em></h1>
+            <p class="intro-copy">Elige un escenario, reproduce el recorrido y revisa cada etapa.</p>
             <div class="intro__tags" aria-label="Características del simulador"><span id="activeStagesChip">4 etapas</span><span>Escena 3D</span><span>Datos ilustrativos</span></div>
           </div>
-          <div class="intro__note">
-            <span class="intro__note-line"></span>
-            <div><b>Explora el proceso</b><p>Arrastra la línea de tiempo<br />o selecciona una capa</p></div>
-          </div>
+          <nav class="journey" aria-label="Flujo principal">
+            <ol class="journey__list">
+              <li class="journey__step is-current" id="journeyScenario"><span>1</span><b>Elige escenario</b></li>
+              <li class="journey__step" id="journeyPlay"><span>2</span><b>Reproduce</b></li>
+              <li class="journey__step" id="journeyStages"><span>3</span><b>Explora etapas</b></li>
+              <li class="journey__step" id="journeyResults"><span>4</span><b>Revisa resultados</b></li>
+            </ol>
+          </nav>
         </section>
 
         <section class="safety-banner safety-banner--visible section-wrap" id="safetyNotice" aria-label="Aviso de seguridad">
@@ -42,16 +46,6 @@
         </section>
 
         <section class="simulation-layout section-wrap" aria-label="Simulación de purificación">
-          <aside class="layers-card floating-layers-panel" aria-label="Configuración de capas">
-            <div class="card-heading"><div><p class="eyebrow">CONFIGURACIÓN</p><h2>Capas activas</h2></div><span class="layer-count" id="layerCount">3 / 4</span></div>
-            <p class="card-description">Selecciona una capa para inspeccionarla o activa y desactiva su interruptor.</p>
-            <p class="scenario-note" id="scenarioDescription"></p>
-            <div class="scenario-controls" id="scenarioControls"></div>
-            <div class="preset-tool" id="presetTool"></div>
-            <div class="layer-list" id="layerList"></div>
-            <div class="educational-note"><span>✦</span><p><b>¿Sabías que?</b><br />Cada capa retiene o transforma distintos tipos de impurezas.</p></div>
-          </aside>
-
           <div class="scene-card">
             <div class="scene-toolbar">
               <div class="scene-title">
@@ -59,7 +53,6 @@
                 <span id="sceneStatus">Agua sin tratar</span>
               </div>
               <div class="scene-tools">
-                <label class="quality-control"><span class="quality-control__label">Calidad</span><select class="quality-control__select" id="qualitySelect" aria-label="Calidad de la escena"><option value="auto">Auto</option><option value="high">Alta</option><option value="light">Ligera</option></select><small class="quality-control__status" id="qualityStatus">Auto</small></label>
                 <button class="tool-button" id="resetViewButton" type="button"><span class="tool-button__icon">⌖</span> Centrar</button>
                 <button class="tool-button" id="zoomOutButton" type="button" aria-label="Alejar vista"><span class="tool-button__icon">−</span> Alejar</button>
                 <button class="tool-button" id="zoomInButton" type="button" aria-label="Acercar vista"><span class="tool-button__icon">+</span> Acercar</button>
@@ -81,8 +74,25 @@
               <div class="scene-footer-item"><span class="footer-icon">◌</span><span><b id="activeLayerName">Entrada</b><small id="activeLayerHint">Selecciona una capa para inspeccionarla</small></span></div>
               <div class="scene-footer-item"><span class="footer-icon">◷</span><span><b id="sceneTime">00:00</b><small>tiempo simulado</small></span></div>
             </div>
+            <section class="controls-section" aria-label="Controles de la simulación">
+              <div class="timeline-header">
+                <div class="timeline-title"><span class="eyebrow">RECORRIDO DEL AGUA</span><h2>Secuencia de purificación</h2></div>
+                <div class="timeline-times"><span id="currentTime">00:00</span><span class="time-slash">/</span><span id="totalTime">00:48</span></div>
+              </div>
+              <div class="timeline-wrap">
+                <div class="timeline-track"><div class="timeline-fill" id="timelineFill"></div><div class="timeline-thumb" id="timelineThumb"></div></div>
+                <input class="timeline-input" id="timelineInput" type="range" min="0" max="1000" value="0" step="1" aria-label="Progreso de purificación" />
+                <div class="timeline-markers" id="timelineMarkers"></div>
+              </div>
+              <div class="control-row">
+                <div class="transport-controls">
+                  <button class="play-button" id="playButton" type="button"><span class="play-button__icon">▶</span><span id="playLabel">Reproducir</span></button>
+                  <button class="secondary-button" id="restartButton" type="button">↺ <span>Reiniciar</span></button>
+                </div>
+                <div class="control-meta"><div class="real-time"><span>Tiempo real</span><b id="realTime">00:00</b></div><div class="speed-control"><span>Velocidad</span><div class="speed-options" id="speedOptions"><button type="button" data-speed="0.5">0.5×</button><button type="button" data-speed="1" class="speed-options__button is-active">1×</button><button type="button" data-speed="2">2×</button><button type="button" data-speed="4">4×</button></div></div></div>
+              </div>
+            </section>
           </div>
-
           <aside class="inspector" aria-label="Panel de inspección">
             <div class="inspector-heading">
               <div>
@@ -110,25 +120,21 @@
             </div>
             <p class="selection-tip"><span>i</span> Filtrar no es potabilizar. La filtración no lleva E. coli ni coliformes a un nivel seguro.</p>
           </aside>
-        </section>
-
-        <section class="controls-section section-wrap" aria-label="Controles de la simulación">
-          <div class="timeline-header">
-            <div class="timeline-title"><span class="eyebrow">RECORRIDO DEL AGUA</span><h2>Secuencia de purificación</h2></div>
-            <div class="timeline-times"><span id="currentTime">00:00</span><span class="time-slash">/</span><span id="totalTime">00:48</span></div>
-          </div>
-          <div class="timeline-wrap">
-            <div class="timeline-track"><div class="timeline-fill" id="timelineFill"></div><div class="timeline-thumb" id="timelineThumb"></div></div>
-            <input class="timeline-input" id="timelineInput" type="range" min="0" max="1000" value="0" step="1" aria-label="Progreso de purificación" />
-            <div class="timeline-markers" id="timelineMarkers"></div>
-          </div>
-          <div class="control-row">
-            <div class="transport-controls">
-              <button class="play-button" id="playButton" type="button"><span class="play-button__icon">▶</span><span id="playLabel">Reproducir</span></button>
-              <button class="secondary-button" id="restartButton" type="button">↺ <span>Reiniciar</span></button>
-            </div>
-            <div class="control-meta"><div class="real-time"><span>Tiempo real</span><b id="realTime">00:00</b></div><div class="speed-control"><span>Velocidad</span><div class="speed-options" id="speedOptions"><button type="button" data-speed="0.5">0.5×</button><button type="button" data-speed="1" class="speed-options__button is-active">1×</button><button type="button" data-speed="2">2×</button><button type="button" data-speed="4">4×</button></div></div></div>
-          </div>
+          <aside class="layers-card floating-layers-panel" aria-label="Etapas del sistema">
+            <div class="card-heading"><div><p class="eyebrow">CONFIGURACIÓN</p><h2>Etapas del sistema</h2></div><span class="layer-count" id="layerCount">3 / 4</span></div>
+            <p class="card-description">Activa etapas y ajusta los controles básicos del escenario.</p>
+            <p class="scenario-note" id="scenarioDescription"></p>
+            <div class="scenario-controls" id="scenarioControls"></div>
+            <div class="layer-list" id="layerList"></div>
+            <div class="educational-note"><span>✦</span><p><b>¿Sabías que?</b><br />Cada etapa retiene o transforma distintos tipos de impurezas.</p></div>
+            <details class="advanced-panel">
+              <summary>Avanzado <span>Presets, rendimiento y más</span></summary>
+              <div class="advanced-panel__content">
+                <div class="quality-control"><span class="quality-control__label">Calidad de escena</span><select class="quality-control__select" id="qualitySelect" aria-label="Calidad de la escena"><option value="auto">Auto</option><option value="high">Alta</option><option value="light">Ligera</option></select><small class="quality-control__status" id="qualityStatus">Auto</small></div>
+                <div class="preset-tool" id="presetTool"></div>
+              </div>
+            </details>
+          </aside>
         </section>
 
         <section class="lower-grid section-wrap">
