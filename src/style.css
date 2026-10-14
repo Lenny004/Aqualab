@@ -567,7 +567,7 @@ h1, h2, p { margin-block-start: 0; }
 @media (max-width: 37.5rem) {
   :root { --mobile-sheet-collapsed: 6.6rem; }
   main { padding-block-end: var(--mobile-sheet-collapsed); }
-  .mobile-sheet { position: fixed; z-index: 20; inset-inline: 0; inset-block-end: 0; display: flex; flex-direction: column; max-height: 75dvh; padding: .5rem 1.2rem 0; border-block-start: 1px solid var(--color-border); border-radius: 1.2rem 1.2rem 0 0; background: var(--color-surface); box-shadow: 0 -1.5rem 4rem rgba(0, 15, 42, .45); transform: translateY(calc(100% - var(--mobile-sheet-collapsed))); transition: transform var(--transition-fast); }
+  .mobile-sheet { position: fixed; z-index: 20; inset-inline: 0; inset-block-end: 0; display: flex; flex-direction: column; max-height: 75dvh; padding: .5rem 1.2rem 0; border-block-start: 1px solid var(--color-border); border-radius: 1.2rem 1.2rem 0 0; background: var(--blue-900); box-shadow: 0 -.8rem 2rem rgba(0, 15, 42, .45); transform: translateY(calc(100% - var(--mobile-sheet-collapsed))); transition: transform var(--transition-fast); }
   .mobile-sheet.is-expanded { transform: translateY(0); }
   .mobile-sheet__handle { display: grid; grid-template-columns: 1fr auto; gap: .3rem 1rem; align-items: center; min-height: 5.8rem; padding: .2rem 0 .6rem; border: 0; color: var(--color-text); background: transparent; text-align: start; touch-action: none; }
   .mobile-sheet__grab { grid-column: 1 / -1; justify-self: center; width: 4rem; height: .4rem; border-radius: var(--radius-full); background: var(--color-text-faint); }
