@@ -20,6 +20,7 @@ const ids = [
   'qualityDelta', 'metricsGrid', 'selectedStageNumber', 'beforeScore', 'beforeLabel',
   'afterScore', 'afterLabel', 'currentTime', 'totalTime', 'timelineFill', 'timelineThumb',
   'timelineInput', 'timelineMarkers', 'playButton', 'playLabel', 'restartButton',
+  'previousStageButton', 'nextStageButton', 'stageCounter', 'stageDescription',
   'speedOptions', 'layerCount', 'layerList', 'evolutionChart', 'trendPill', 'helpButton',
   'helpModal', 'closeHelpButton', 'helpDescription', 'scenarioDescription',
   'activeStagesChip',
@@ -27,6 +28,7 @@ const ids = [
   'presetTool',
   'qualitySelect', 'qualityStatus',
   'journeyScenario', 'journeyPlay', 'journeyStages', 'journeyResults',
+  'tourOverlay', 'tourTitle', 'tourDescription', 'tourNextButton', 'tourSkipButton',
   'usageTool', 'calculatorTool', 'budgetTool', 'maintenanceTool', 'deteriorationTool', 'samplingTool', 'safetyTool', 'risksTool', 'scheduleTool', 'economicsTool', 'agronomyTool', 'toolsTabs', 'toolsSections',
 ];
 
@@ -63,11 +65,68 @@ export function createUI(scenario, scene) {
   let uiErrorLogged = false;
   let economicsUpdater;
   let risksUpdater;
-  let journeyStep = 2;
+  let journeyStep = 1;
+  let currentSimulation;
+  let tourIndex = 0;
+  let tourTrigger;
+  const tourEnabled = new URLSearchParams(window.location.search).get('tour') !== '0';
+  const tourSteps = [
+    { target: 'scenarioSelect', title: 'Elige un escenario', description: 'Cambia entre los sistemas disponibles para comparar su recorrido.' },
+    { target: 'playButton', title: 'Reproduce el recorrido', description: 'Pulsa Reproducir para ver cómo avanza el agua por el sistema.' },
+    { target: 'stage-navigation', title: 'Explora las etapas', description: 'Usa la línea de tiempo o los botones de etapa para inspeccionar cada parte.' },
+    { target: 'toolsSections', title: 'Prueba las herramientas', description: 'Encuentra controles de calidad, planificación y gestión.' },
+    { target: 'advancedPanel', title: 'Ajusta Avanzado', description: 'Aquí puedes cambiar la calidad de escena y usar presets.' },
+  ];
 
   function updateJourney() {
     const steps = [dom.journeyScenario, dom.journeyPlay, dom.journeyStages, dom.journeyResults];
     steps.forEach((step, index) => step?.classList.toggle('is-current', index + 1 === journeyStep));
+  }
+
+  function closeTour(save = true) {
+    if (save) localStorage.setItem('aqualab.tourDone', '1');
+    dom.tourOverlay.hidden = true;
+    dom.tourOverlay.setAttribute('aria-hidden', 'true');
+    document.querySelectorAll('.is-tour-target').forEach((node) => node.classList.remove('is-tour-target'));
+    tourTrigger?.focus?.();
+    tourTrigger = undefined;
+  }
+
+  function renderTourStep() {
+    const step = tourSteps[tourIndex];
+    const target = document.getElementById(step.target) || document.querySelector(`.${step.target}`);
+    if (!target) return;
+    document.querySelectorAll('.is-tour-target').forEach((node) => node.classList.remove('is-tour-target'));
+    target.classList.add('is-tour-target');
+    target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    dom.tourTitle.textContent = step.title;
+    dom.tourDescription.textContent = step.description;
+    dom.tourNextButton.textContent = tourIndex === tourSteps.length - 1 ? 'Listo' : 'Siguiente';
+    dom.tourOverlay.hidden = false;
+    dom.tourOverlay.setAttribute('aria-hidden', 'false');
+    dom.tourNextButton.focus();
+  }
+
+  function openTour() {
+    if (!tourEnabled) return;
+    tourTrigger = document.activeElement;
+    tourIndex = 0;
+    renderTourStep();
+  }
+
+  function trapTourFocus(event) {
+    if (dom.tourOverlay.hidden || event.key !== 'Tab') return;
+    const focusable = [...dom.tourOverlay.querySelectorAll('button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')];
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable.at(-1);
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
   }
 
   function renderUsageTool() {
@@ -113,14 +172,29 @@ export function createUI(scenario, scene) {
 
   listen(document, 'scene-select', (event) => {
     state.selected = event.detail;
-    render();
-  });
-  listen(dom.playButton, 'click', () => {
-    state.playing = !state.playing;
-    if (state.progress >= 1) state.progress = 0;
     journeyStep = 3;
     render();
   });
+  listen(document, 'scenario-change', () => { journeyStep = 1; render(); });
+  listen(dom.playButton, 'click', () => {
+    state.playing = !state.playing;
+    if (state.progress >= 1) state.progress = 0;
+    journeyStep = 2;
+    render();
+  });
+  const jumpToStage = (offset) => {
+    const simulation = currentSimulation;
+    if (!simulation) return;
+    const current = simulation.stageStarts.reduce((stage, start, index) => (state.progress >= start ? index : stage), 0);
+    const target = Math.max(0, Math.min(simulation.filters.length, current + offset));
+    state.playing = false;
+    state.progress = simulation.stageStarts[target] || 0;
+    state.selected = target === 0 ? 'input' : simulation.filters[target - 1].id;
+    journeyStep = 3;
+    render();
+  };
+  listen(dom.previousStageButton, 'click', () => jumpToStage(-1));
+  listen(dom.nextStageButton, 'click', () => jumpToStage(1));
   listen(dom.restartButton, 'click', () => {
     state.playing = false;
     state.progress = 0;
@@ -133,6 +207,7 @@ export function createUI(scenario, scene) {
   listen(dom.timelineInput, 'input', (event) => {
     state.progress = normalizeProgress(event.target.value);
     state.playing = false;
+    journeyStep = 3;
     render();
   });
   listen(dom.xrayButton, 'click', () => {
@@ -166,6 +241,7 @@ export function createUI(scenario, scene) {
       return;
     }
     state.selected = layer.id;
+    journeyStep = 3;
     render();
   });
   listen(dom.scenarioControls, 'input', handleScenarioControl);
@@ -213,16 +289,37 @@ export function createUI(scenario, scene) {
     tabs[next]?.focus();
     tabs[next]?.click();
   };
-  listen(dom.toolsSections, 'click', (event) => setToolSection(event.target.closest('[data-tool-section]')));
+  listen(dom.toolsSections, 'click', (event) => {
+    setToolSection(event.target.closest('[data-tool-section]'));
+    journeyStep = 4;
+    render();
+  });
   listen(dom.toolsSections, 'keydown', (event) => moveTab(event, '[data-tool-section]'));
   document.querySelectorAll('.tools-section-panel [data-tool-tab]').forEach((button) => {
-    listen(button, 'click', () => setToolTab(button));
+    listen(button, 'click', () => {
+      setToolTab(button);
+      journeyStep = 4;
+      render();
+    });
     listen(button, 'keydown', (event) => moveTab(event, '.tools-section-panel:not([hidden]) [data-tool-tab]'));
   });
   setToolSection(document.querySelector('[data-tool-section].is-active'));
-  listen(dom.helpButton, 'click', () => { dom.helpModal.hidden = false; });
+  listen(dom.helpButton, 'click', openTour);
   listen(dom.closeHelpButton, 'click', () => { dom.helpModal.hidden = true; });
   listen(dom.helpModal, 'click', (event) => { if (event.target === dom.helpModal) dom.helpModal.hidden = true; });
+  listen(dom.tourNextButton, 'click', () => {
+    if (tourIndex === tourSteps.length - 1) closeTour();
+    else { tourIndex += 1; renderTourStep(); }
+  });
+  listen(dom.tourSkipButton, 'click', () => closeTour());
+  listen(dom.tourOverlay, 'click', (event) => { if (event.target === dom.tourOverlay) closeTour(); });
+  listen(document, 'keydown', (event) => {
+    trapTourFocus(event);
+    if (event.key !== 'Escape') return;
+    if (!dom.tourOverlay.hidden) closeTour();
+    if (!dom.helpModal.hidden) dom.helpModal.hidden = true;
+  });
+  if (tourEnabled && !localStorage.getItem('aqualab.tourDone')) openTour();
 
   function renderLayerList() {
     const signature = layers.map((layer) => layer.id).join('|');
@@ -253,9 +350,9 @@ export function createUI(scenario, scene) {
     dom.scenarioControls.innerHTML = `${warning}${scenario.controls.map((control) => {
       if (control.type === 'select') {
         const options = control.options.map((option) => `<option value="${option.value}" ${scenarioState[control.key] === option.value ? 'selected' : ''}>${option.label}</option>`).join('');
-        return `<label class="scenario-controls__field"><span>${control.label}</span><select class="scenario-controls__select" data-scenario-control="${control.key}">${options}</select><small>${control.help}</small></label>`;
+        return `<label class="scenario-controls__field"><span>${control.label}</span><select class="scenario-controls__select" data-scenario-control="${control.key}" title="${control.help}" aria-describedby="scenario-${control.key}-hint">${options}</select><small id="scenario-${control.key}-hint">${control.help}</small></label>`;
       }
-      return `<label class="scenario-controls__field"><span>${control.label}</span><input class="scenario-controls__input" data-scenario-control="${control.key}" type="${control.type}" value="${scenarioState[control.key]}" min="${control.min}" max="${control.max}" step="${control.step}" /><small>${control.help}</small></label>`;
+      return `<label class="scenario-controls__field"><span>${control.label}</span><input class="scenario-controls__input" data-scenario-control="${control.key}" type="${control.type}" value="${scenarioState[control.key]}" min="${control.min}" max="${control.max}" step="${control.step}" title="${control.help}" aria-describedby="scenario-${control.key}-hint" /><small id="scenario-${control.key}-hint">${control.help}</small></label>`;
     }).join('')}`;
   }
 
@@ -398,6 +495,7 @@ export function createUI(scenario, scene) {
     const carbon = layers.find((layer) => layer.id === 'carbon');
     if (carbon) carbon.saturation = effects.carbon || 0;
     const simulation = computeSimulation(state.progress, { initial, layers, deterioration: { effects } });
+    currentSimulation = simulation;
     currentQuality = simulation.current;
     const renderState = { ...state, ...scenarioState };
     scene.setState({ ...renderState, deterioration: deteriorationState });
@@ -466,6 +564,13 @@ export function createUI(scenario, scene) {
     dom.playLabel.textContent = state.playing ? 'Pausar' : 'Reproducir';
       dom.playButton.querySelector('.play-button__icon').textContent = state.playing ? 'Ⅱ' : '▶';
     updateJourney();
+    const stageCount = simulation.filters.length + 1;
+    const stageIndex = simulation.stageStarts.reduce((stage, start, index) => (state.progress >= start ? index : stage), 0);
+    const stageLayer = stageIndex > 0 ? simulation.filters[stageIndex - 1] : null;
+    dom.stageCounter.textContent = `Etapa ${stageIndex + 1} de ${stageCount}`;
+    dom.stageDescription.textContent = stageLayer?.description || scenario.text.inputDescription;
+    dom.previousStageButton.disabled = stageIndex === 0;
+    dom.nextStageButton.disabled = stageIndex >= simulation.filters.length;
     dom.layerCount.textContent = `${simulation.filters.length} / ${layers.length}`;
     dom.activeStagesChip.textContent = `${simulation.filters.length} ${simulation.filters.length === 1 ? 'etapa' : 'etapas'}`;
     dom.trendPill.textContent = `+${Math.max(0, score - qualityScore(initial, initial))} calidad`;

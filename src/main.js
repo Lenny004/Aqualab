@@ -34,5 +34,8 @@ function mountScenario(id) {
 }
 
 selector.innerHTML = scenarios.map((scenario) => `<option value="${scenario.id}">${scenario.name}</option>`).join('');
-selector.addEventListener('change', (event) => mountScenario(event.target.value));
+selector.addEventListener('change', (event) => {
+  mountScenario(event.target.value);
+  document.dispatchEvent(new CustomEvent('scenario-change'));
+});
 mountScenario(scenarios[0].id);
