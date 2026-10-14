@@ -504,9 +504,9 @@ export function createUI(scenario, scene) {
     dom.evolutionChart.replaceChildren(...chartPoints.map((point) => {
       const column = document.createElement('div');
       column.className = 'chart-column';
-      column.innerHTML = `<span class="chart-bar before"></span><span class="chart-bar after"></span><span class="chart-label"></span>`;
+      column.innerHTML = `<span class="chart-bar chart-bar--before"></span><span class="chart-bar chart-bar--after"></span><span class="chart-label"></span>`;
       column.querySelector('.chart-label').textContent = point.label;
-      chartNodes.push({ column, before: column.querySelector('.before'), after: column.querySelector('.after'), point });
+      chartNodes.push({ column, before: column.querySelector('.chart-bar--before'), after: column.querySelector('.chart-bar--after'), point });
       return column;
     }));
   }
@@ -519,7 +519,7 @@ export function createUI(scenario, scene) {
       if (next) point.after = qualityScore(next.quality, initial);
       before.style.transform = `scaleY(${Math.max(4, point.before) / 100})`;
       after.style.transform = `scaleY(${Math.max(4, point.after) / 100})`;
-      column.classList.toggle('current', index === simulation.currentIndex);
+      column.classList.toggle('chart-column--current', index === simulation.currentIndex);
     });
   }
 
@@ -601,7 +601,7 @@ export function createUI(scenario, scene) {
     dom.inspectorTitle.textContent = detail.title;
     dom.inspectorDescription.textContent = detail.description;
     dom.qualityBadge.textContent = 'NO POTABLE';
-    dom.qualityBadge.className = 'quality-badge low';
+    dom.qualityBadge.className = 'quality-badge quality-badge--low';
     dom.qualityScore.textContent = score;
     dom.qualityRing.style.setProperty('--ring', `${Math.max(5, score)}%`);
     dom.qualityState.textContent = 'NO POTABLE';

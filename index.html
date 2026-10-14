@@ -10,8 +10,8 @@
     <div class="app-shell">
       <header class="topbar">
         <a class="brand" href="/" aria-label="AquaLab inicio">
-          <span class="brand__mark"><span></span><span></span><span></span></span>
-          <span>Aqua<span>Lab</span></span>
+          <span class="brand__mark"><span class="brand__mark-bar"></span><span class="brand__mark-bar"></span><span class="brand__mark-bar"></span></span>
+          <span class="brand__name">Aqua<span class="brand__name-accent">Lab</span></span>
         </a>
         <div class="topbar__meta">
           <span class="topbar__live-dot"></span>
@@ -29,7 +29,7 @@
             <p class="eyebrow">LABORATORIO VIRTUAL · 01</p>
             <h1>Observa cómo el agua <em>recupera su claridad.</em></h1>
             <p class="intro-copy">Elige un escenario, reproduce el recorrido y revisa cada etapa.</p>
-            <div class="intro__tags" aria-label="Características del simulador"><span id="activeStagesChip">4 etapas</span><span>Escena 3D</span><span>Datos ilustrativos</span></div>
+            <div class="intro__tags" aria-label="Características del simulador"><span class="intro__tag" id="activeStagesChip">4 etapas</span><span class="intro__tag">Escena 3D</span><span class="intro__tag">Datos ilustrativos</span></div>
           </div>
           <nav class="journey" aria-label="Flujo principal">
             <ol class="journey__list">
@@ -62,7 +62,7 @@
               </div>
             </div>
             <div class="scene-viewport" id="sceneViewport">
-              <canvas id="sceneCanvas" aria-label="Escena 3D del filtro de agua"></canvas>
+              <canvas class="scene-canvas" id="sceneCanvas" aria-label="Escena 3D del filtro de agua"></canvas>
               <div class="scene-hint"><span>↗</span> Arrastra para rotar · rueda para acercar</div>
               <div class="scene-label scene-label--inlet"><span class="scene-label__dot"></span> Entrada</div>
               <div class="scene-label scene-label--output"><span class="scene-label__dot"></span> Agua filtrada</div>
@@ -116,7 +116,7 @@
                 <p class="eyebrow">LECTURA EN VIVO</p>
                 <h2 id="inspectorTitle">Agua de entrada</h2>
               </div>
-              <span class="quality-badge medium" id="qualityBadge">Turbia</span>
+              <span class="quality-badge quality-badge--medium" id="qualityBadge">Turbia</span>
             </div>
             <p class="inspector-description" id="inspectorDescription">Este es el punto de partida. El agua contiene partículas, color y microorganismos antes de atravesar el sistema.</p>
 
