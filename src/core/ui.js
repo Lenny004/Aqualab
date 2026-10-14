@@ -279,7 +279,19 @@ export function createUI(scenario, scene) {
       item.tabIndex = selected ? 0 : -1;
     });
     document.querySelectorAll('[data-tool-section-panel]').forEach((panel) => { panel.hidden = panel.dataset.toolSectionPanel !== button.dataset.toolSection; });
-    setToolTab(button.closest('[data-tool-section-panel]')?.querySelector('[data-tool-tab]'));
+    setToolTab(document.querySelector(`[data-tool-section-panel="${button.dataset.toolSection}"] [data-tool-tab]`));
+  };
+  const mobileSheetQuery = window.matchMedia('(max-width: 600px)');
+  const toolsPanel = document.getElementById('toolsPanel');
+  const toolsPanelOriginalParent = toolsPanel?.parentNode;
+  const toolsPanelOriginalNextSibling = toolsPanel?.nextSibling;
+  const syncMobileSheetLayout = () => {
+    if (!toolsPanel || !dom.mobileSheetBody || !toolsPanelOriginalParent) return;
+    if (mobileSheetQuery.matches) {
+      if (toolsPanel.parentNode !== dom.mobileSheetBody) dom.mobileSheetBody.append(toolsPanel);
+    } else if (toolsPanel.parentNode !== toolsPanelOriginalParent) {
+      toolsPanelOriginalParent.insertBefore(toolsPanel, toolsPanelOriginalNextSibling);
+    }
   };
   const moveTab = (event, selector) => {
     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
@@ -321,15 +333,18 @@ export function createUI(scenario, scene) {
     dom.mobileSheetToggle.setAttribute('aria-expanded', String(expanded));
   };
   const setSheetTab = (tab) => {
-    const reading = tab !== 'tools';
+    const activeTab = ['reading', 'tools', 'stages'].includes(tab) ? tab : 'reading';
     dom.mobileSheet?.querySelectorAll('[data-sheet-tab]').forEach((button) => {
-      const selected = button.dataset.sheetTab === (reading ? 'reading' : 'tools');
+      const selected = button.dataset.sheetTab === activeTab;
       button.classList.toggle('is-active', selected);
       button.setAttribute('aria-selected', String(selected));
     });
-    dom.inspector?.classList.toggle('is-sheet-visible', reading);
-    document.getElementById('layersCard')?.classList.toggle('is-sheet-visible', !reading);
+    dom.inspector?.classList.toggle('is-sheet-visible', activeTab === 'reading');
+    toolsPanel?.classList.toggle('is-sheet-visible', activeTab === 'tools');
+    document.getElementById('layersCard')?.classList.toggle('is-sheet-visible', activeTab === 'stages');
   };
+  syncMobileSheetLayout();
+  mobileSheetQuery.addEventListener('change', syncMobileSheetLayout);
   setSheetTab('reading');
   setSheetExpanded(false);
   listen(dom.mobileSheetToggle, 'click', () => {

@@ -42,7 +42,7 @@
         </section>
 
         <section class="safety-banner safety-banner--visible section-wrap" id="safetyNotice" aria-label="Aviso de seguridad">
-          <strong>Propuesta académica</strong><span>NO POTABLE sin análisis de laboratorio conforme al RTS 13.02.01:14 (El Salvador). Filtrar no es potabilizar.</span>
+          <strong>Propuesta académica</strong><span class="safety-banner__copy">NO POTABLE sin análisis de laboratorio conforme al RTS 13.02.01:14 (El Salvador). Filtrar no es potabilizar.</span>
         </section>
 
         <section class="simulation-layout section-wrap" aria-label="Simulación de purificación">
@@ -106,7 +106,8 @@
             <button class="mobile-sheet__handle" id="mobileSheetToggle" type="button" aria-expanded="false" aria-controls="mobileSheetBody"><span class="mobile-sheet__grab" aria-hidden="true"></span><span class="mobile-sheet__summary"><b id="mobileSheetStage">Entrada</b><span id="mobileSheetStatus">NO POTABLE</span><strong id="mobileSheetQuality">18/100</strong></span><span class="sr-only">Abrir lectura en vivo y herramientas</span></button>
             <div class="mobile-sheet__tabs" role="tablist" aria-label="Panel inferior">
               <button class="mobile-sheet__tab is-active" id="mobileSheetReadTab" type="button" role="tab" aria-selected="true" aria-controls="inspector" data-sheet-tab="reading">Lectura</button>
-              <button class="mobile-sheet__tab" id="mobileSheetToolsTab" type="button" role="tab" aria-selected="false" aria-controls="layersCard" data-sheet-tab="tools">Herramientas</button>
+              <button class="mobile-sheet__tab" id="mobileSheetToolsTab" type="button" role="tab" aria-selected="false" aria-controls="toolsPanel" data-sheet-tab="tools">Herramientas</button>
+              <button class="mobile-sheet__tab" id="mobileSheetStagesTab" type="button" role="tab" aria-selected="false" aria-controls="layersCard" data-sheet-tab="stages">Etapas</button>
             </div>
             <div class="mobile-sheet__body" id="mobileSheetBody">
           <aside class="inspector" id="inspector" aria-label="Panel de inspección">
@@ -163,7 +164,7 @@
           </div>
         </section>
 
-        <section class="tools-panel section-wrap" aria-label="Herramientas compartidas">
+        <section class="tools-panel section-wrap" id="toolsPanel" aria-label="Herramientas compartidas">
           <div class="card-heading"><div><p class="eyebrow">HERRAMIENTAS COMUNES</p><h2>Diseña, verifica y mantiene</h2></div></div>
           <div class="tools-sections" id="toolsSections" role="tablist" aria-label="Secciones de herramientas">
             <button class="tools-section is-active" id="toolsSectionQuality" role="tab" aria-selected="true" aria-controls="toolsSectionPanelQuality" data-tool-section="quality" type="button">💧 Calidad</button>
