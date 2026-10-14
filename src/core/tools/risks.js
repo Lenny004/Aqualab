@@ -24,7 +24,7 @@ export function renderRisks(container, initialUse = 'tomar') {
   select.value = initialUse === 'cultivar' ? 'cultivar' : 'tomar';
   const update = () => {
     const use = select.value;
-    container.querySelector('[data-risk-rows]').innerHTML = RISK_ROWS.filter((row) => row.uses.includes(use)).map((row) => `<div class="risk-row" role="row"><span class="risk-row__cell">${row.danger}</span><span class="risk-row__cell">${row.consequence}</span><span class="risk-row__cell">${row.prevention}</span><span class="risk-row__cell">${row.action}</span></div>`).join('');
+    container.querySelector('[data-risk-rows]').innerHTML = RISK_ROWS.filter((row) => row.uses.includes(use)).map((row) => `<div class="risk-row" role="row"><span class="risk-row__cell" data-label="Peligro">${row.danger}</span><span class="risk-row__cell" data-label="Consecuencia">${row.consequence}</span><span class="risk-row__cell" data-label="Prevenci\u00f3n">${row.prevention}</span><span class="risk-row__cell" data-label="Acci\u00f3n correctiva">${row.action}</span></div>`).join('');
   };
   select.addEventListener('change', update);
   update();

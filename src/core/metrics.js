@@ -52,6 +52,11 @@ export function computeSimulation(progress = 0, config) {
   });
 
   const totalDuration = filters.reduce((sum, filter) => sum + durationFor(filter), 0);
+  const stageStarts = [0];
+  filters.forEach((filter, index) => {
+    const elapsedBefore = filters.slice(0, index + 1).reduce((sum, item) => sum + durationFor(item), 0);
+    stageStarts.push(totalDuration ? elapsedBefore / totalDuration : 0);
+  });
 
   if (!filters.length || !totalDuration) {
     return {
@@ -61,6 +66,7 @@ export function computeSimulation(progress = 0, config) {
       currentIndex: 0,
       local: 0,
       totalDuration,
+      stageStarts,
     };
   }
 
@@ -96,6 +102,7 @@ export function computeSimulation(progress = 0, config) {
     currentIndex: index + 1,
     local,
     totalDuration,
+    stageStarts,
   };
 }
 

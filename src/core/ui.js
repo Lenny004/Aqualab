@@ -14,19 +14,23 @@ import { renderAgronomy } from './tools/agronomy.js';
 import { createDeteriorationState, getDeteriorationEffects, renderDeterioration, updateDeterioration } from './tools/deterioration.js';
 
 const ids = [
-  'sceneStatus', 'activeLayerName', 'activeLayerHint', 'sceneTime', 'realTime', 'xrayButton',
+  'sceneStatus', 'activeLayerName', 'activeLayerHint', 'sceneTime', 'realTime', 'xrayButton', 'inspector',
   'resetViewButton', 'zoomOutButton', 'zoomInButton', 'lockViewButton', 'inspectorTitle',
   'inspectorDescription', 'qualityBadge', 'qualityRing', 'qualityScore', 'qualityState',
   'qualityDelta', 'metricsGrid', 'selectedStageNumber', 'beforeScore', 'beforeLabel',
   'afterScore', 'afterLabel', 'currentTime', 'totalTime', 'timelineFill', 'timelineThumb',
   'timelineInput', 'timelineMarkers', 'playButton', 'playLabel', 'restartButton',
+  'previousStageButton', 'nextStageButton', 'stageCounter', 'stageDescription',
   'speedOptions', 'layerCount', 'layerList', 'evolutionChart', 'trendPill', 'helpButton',
   'helpModal', 'closeHelpButton', 'helpDescription', 'scenarioDescription',
   'activeStagesChip',
   'scenarioControls',
   'presetTool',
   'qualitySelect', 'qualityStatus',
-  'usageTool', 'calculatorTool', 'budgetTool', 'maintenanceTool', 'deteriorationTool', 'samplingTool', 'safetyTool', 'risksTool', 'scheduleTool', 'economicsTool', 'agronomyTool', 'toolsTabs',
+  'journeyScenario', 'journeyPlay', 'journeyStages', 'journeyResults',
+  'tourOverlay', 'tourTitle', 'tourDescription', 'tourNextButton', 'tourSkipButton',
+  'usageTool', 'calculatorTool', 'budgetTool', 'maintenanceTool', 'deteriorationTool', 'samplingTool', 'safetyTool', 'risksTool', 'scheduleTool', 'economicsTool', 'agronomyTool', 'toolsTabs', 'toolsSections',
+  'mobileSheet', 'mobileSheetToggle', 'mobileSheetBody', 'mobileSheetStage', 'mobileSheetStatus', 'mobileSheetQuality',
 ];
 
 const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
@@ -62,6 +66,70 @@ export function createUI(scenario, scene) {
   let uiErrorLogged = false;
   let economicsUpdater;
   let risksUpdater;
+  let journeyStep = 1;
+  let currentSimulation;
+  let tourIndex = 0;
+  let tourTrigger;
+  const tourEnabled = new URLSearchParams(window.location.search).get('tour') !== '0';
+  const tourSteps = [
+    { target: 'scenarioSelect', title: 'Elige un escenario', description: 'Cambia entre los sistemas disponibles para comparar su recorrido.' },
+    { target: 'playButton', title: 'Reproduce el recorrido', description: 'Pulsa Reproducir para ver cómo avanza el agua por el sistema.' },
+    { target: 'stage-navigation', title: 'Explora las etapas', description: 'Usa la línea de tiempo o los botones de etapa para inspeccionar cada parte.' },
+    { target: 'toolsSections', title: 'Prueba las herramientas', description: 'Encuentra controles de calidad, planificación y gestión.' },
+    { target: 'advancedPanel', title: 'Ajusta Avanzado', description: 'Aquí puedes cambiar la calidad de escena y usar presets.' },
+  ];
+
+  function updateJourney() {
+    const steps = [dom.journeyScenario, dom.journeyPlay, dom.journeyStages, dom.journeyResults];
+    steps.forEach((step, index) => step?.classList.toggle('is-current', index + 1 === journeyStep));
+  }
+
+  function closeTour(save = true) {
+    if (save) localStorage.setItem('aqualab.tourDone', '1');
+    dom.tourOverlay.hidden = true;
+    dom.tourOverlay.setAttribute('aria-hidden', 'true');
+    document.querySelectorAll('.is-tour-target').forEach((node) => node.classList.remove('is-tour-target'));
+    tourTrigger?.focus?.();
+    tourTrigger = undefined;
+  }
+
+  function renderTourStep() {
+    const step = tourSteps[tourIndex];
+    const targetId = window.matchMedia('(max-width: 600px)').matches && step.target === 'toolsSections' ? 'mobileSheetToggle' : step.target;
+    const target = document.getElementById(targetId) || document.querySelector(`.${targetId}`);
+    if (!target) return;
+    document.querySelectorAll('.is-tour-target').forEach((node) => node.classList.remove('is-tour-target'));
+    target.classList.add('is-tour-target');
+    target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    dom.tourTitle.textContent = step.title;
+    dom.tourDescription.textContent = step.description;
+    dom.tourNextButton.textContent = tourIndex === tourSteps.length - 1 ? 'Listo' : 'Siguiente';
+    dom.tourOverlay.hidden = false;
+    dom.tourOverlay.setAttribute('aria-hidden', 'false');
+    dom.tourNextButton.focus();
+  }
+
+  function openTour() {
+    if (!tourEnabled) return;
+    tourTrigger = document.activeElement;
+    tourIndex = 0;
+    renderTourStep();
+  }
+
+  function trapTourFocus(event) {
+    if (dom.tourOverlay.hidden || event.key !== 'Tab') return;
+    const focusable = [...dom.tourOverlay.querySelectorAll('button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')];
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable.at(-1);
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
 
   function renderUsageTool() {
     const blocked = Boolean(scenarioState.roofType && scenarioState.roofType !== 'compatible');
@@ -106,24 +174,42 @@ export function createUI(scenario, scene) {
 
   listen(document, 'scene-select', (event) => {
     state.selected = event.detail;
+    journeyStep = 3;
     render();
   });
+  listen(document, 'scenario-change', () => { journeyStep = 1; render(); });
   listen(dom.playButton, 'click', () => {
     state.playing = !state.playing;
     if (state.progress >= 1) state.progress = 0;
+    journeyStep = 2;
     render();
   });
+  const jumpToStage = (offset) => {
+    const simulation = currentSimulation;
+    if (!simulation) return;
+    const current = simulation.stageStarts.reduce((stage, start, index) => (state.progress >= start ? index : stage), 0);
+    const target = Math.max(0, Math.min(simulation.filters.length, current + offset));
+    state.playing = false;
+    state.progress = simulation.stageStarts[target] || 0;
+    state.selected = target === 0 ? 'input' : simulation.filters[target - 1].id;
+    journeyStep = 3;
+    render();
+  };
+  listen(dom.previousStageButton, 'click', () => jumpToStage(-1));
+  listen(dom.nextStageButton, 'click', () => jumpToStage(1));
   listen(dom.restartButton, 'click', () => {
     state.playing = false;
     state.progress = 0;
     state.realElapsed = 0;
     state.selected = 'input';
     state.playedTime = 0;
+    journeyStep = 2;
     render();
   });
   listen(dom.timelineInput, 'input', (event) => {
     state.progress = normalizeProgress(event.target.value);
     state.playing = false;
+    journeyStep = 3;
     render();
   });
   listen(dom.xrayButton, 'click', () => {
@@ -157,6 +243,7 @@ export function createUI(scenario, scene) {
       return;
     }
     state.selected = layer.id;
+    journeyStep = 3;
     render();
   });
   listen(dom.scenarioControls, 'input', handleScenarioControl);
@@ -166,15 +253,123 @@ export function createUI(scenario, scene) {
     scene.setQuality(event.target.value);
     dom.qualityStatus.textContent = event.target.value === 'auto' ? 'Auto' : event.target.value === 'light' ? 'Ligera' : 'Alta';
   });
-  listen(dom.toolsTabs, 'click', (event) => {
-    const button = event.target.closest('[data-tool-tab]');
+  const toolTabs = () => [...document.querySelectorAll('.tools-section-panel [data-tool-tab]')];
+  const setToolTab = (button) => {
     if (!button) return;
-    dom.toolsTabs.querySelectorAll('[data-tool-tab]').forEach((item) => item.classList.toggle('is-active', item === button));
-    document.querySelectorAll('[data-tool-panel]').forEach((panel) => { panel.hidden = panel.dataset.toolPanel !== button.dataset.toolTab; });
+    toolTabs().forEach((item) => {
+      const selected = item === button;
+      item.classList.toggle('is-active', selected);
+      item.setAttribute('aria-selected', String(selected));
+      item.tabIndex = selected ? 0 : -1;
+    });
+    document.querySelectorAll('[data-tool-panel]').forEach((panel) => {
+      const selected = panel.dataset.toolPanel === button.dataset.toolTab;
+      panel.hidden = !selected;
+      panel.setAttribute('role', 'tabpanel');
+      if (selected) panel.setAttribute('aria-labelledby', button.id);
+      else panel.removeAttribute('aria-labelledby');
+    });
+  };
+  const setToolSection = (button) => {
+    if (!button) return;
+    document.querySelectorAll('[data-tool-section]').forEach((item) => {
+      const selected = item === button;
+      item.classList.toggle('is-active', selected);
+      item.setAttribute('aria-selected', String(selected));
+      item.tabIndex = selected ? 0 : -1;
+    });
+    document.querySelectorAll('[data-tool-section-panel]').forEach((panel) => { panel.hidden = panel.dataset.toolSectionPanel !== button.dataset.toolSection; });
+    setToolTab(document.querySelector(`[data-tool-section-panel="${button.dataset.toolSection}"] [data-tool-tab]`));
+  };
+  const mobileSheetQuery = window.matchMedia('(max-width: 600px)');
+  const toolsPanel = document.getElementById('toolsPanel');
+  const toolsPanelOriginalParent = toolsPanel?.parentNode;
+  const toolsPanelOriginalNextSibling = toolsPanel?.nextSibling;
+  const syncMobileSheetLayout = () => {
+    if (!toolsPanel || !dom.mobileSheetBody || !toolsPanelOriginalParent) return;
+    if (mobileSheetQuery.matches) {
+      if (toolsPanel.parentNode !== dom.mobileSheetBody) dom.mobileSheetBody.append(toolsPanel);
+    } else if (toolsPanel.parentNode !== toolsPanelOriginalParent) {
+      toolsPanelOriginalParent.insertBefore(toolsPanel, toolsPanelOriginalNextSibling);
+    }
+  };
+  const moveTab = (event, selector) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    const tabs = [...document.querySelectorAll(selector)];
+    const current = event.target.closest(selector);
+    const index = tabs.indexOf(current);
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+    tabs[next]?.focus();
+    tabs[next]?.click();
+  };
+  listen(dom.toolsSections, 'click', (event) => {
+    setToolSection(event.target.closest('[data-tool-section]'));
+    journeyStep = 4;
+    render();
   });
-  listen(dom.helpButton, 'click', () => { dom.helpModal.hidden = false; });
+  listen(dom.toolsSections, 'keydown', (event) => moveTab(event, '[data-tool-section]'));
+  document.querySelectorAll('.tools-section-panel [data-tool-tab]').forEach((button) => {
+    listen(button, 'click', () => {
+      setToolTab(button);
+      journeyStep = 4;
+      render();
+    });
+    listen(button, 'keydown', (event) => moveTab(event, '.tools-section-panel:not([hidden]) [data-tool-tab]'));
+  });
+  setToolSection(document.querySelector('[data-tool-section].is-active'));
+  listen(dom.helpButton, 'click', openTour);
   listen(dom.closeHelpButton, 'click', () => { dom.helpModal.hidden = true; });
   listen(dom.helpModal, 'click', (event) => { if (event.target === dom.helpModal) dom.helpModal.hidden = true; });
+  listen(dom.tourNextButton, 'click', () => {
+    if (tourIndex === tourSteps.length - 1) closeTour();
+    else { tourIndex += 1; renderTourStep(); }
+  });
+  listen(dom.tourSkipButton, 'click', () => closeTour());
+  listen(dom.tourOverlay, 'click', (event) => { if (event.target === dom.tourOverlay) closeTour(); });
+  const setSheetExpanded = (expanded) => {
+    if (!dom.mobileSheet || !dom.mobileSheetToggle) return;
+    dom.mobileSheet.classList.toggle('is-expanded', expanded);
+    dom.mobileSheetToggle.setAttribute('aria-expanded', String(expanded));
+  };
+  const setSheetTab = (tab) => {
+    const activeTab = ['reading', 'tools', 'stages'].includes(tab) ? tab : 'reading';
+    dom.mobileSheet?.querySelectorAll('[data-sheet-tab]').forEach((button) => {
+      const selected = button.dataset.sheetTab === activeTab;
+      button.classList.toggle('is-active', selected);
+      button.setAttribute('aria-selected', String(selected));
+    });
+    dom.inspector?.classList.toggle('is-sheet-visible', activeTab === 'reading');
+    toolsPanel?.classList.toggle('is-sheet-visible', activeTab === 'tools');
+    document.getElementById('layersCard')?.classList.toggle('is-sheet-visible', activeTab === 'stages');
+  };
+  syncMobileSheetLayout();
+  mobileSheetQuery.addEventListener('change', syncMobileSheetLayout);
+  setSheetTab('reading');
+  setSheetExpanded(false);
+  listen(dom.mobileSheetToggle, 'click', () => {
+    if (sheetDragged) { sheetDragged = false; return; }
+    setSheetExpanded(dom.mobileSheetToggle.getAttribute('aria-expanded') !== 'true');
+  });
+  dom.mobileSheet?.querySelectorAll('[data-sheet-tab]').forEach((button) => listen(button, 'click', () => { setSheetTab(button.dataset.sheetTab); setSheetExpanded(true); }));
+  let sheetPointerStart;
+  let sheetDragged = false;
+  listen(dom.mobileSheetToggle, 'pointerdown', (event) => { sheetPointerStart = event.clientY; sheetDragged = false; dom.mobileSheetToggle.setPointerCapture?.(event.pointerId); });
+  listen(dom.mobileSheetToggle, 'pointermove', (event) => { if (sheetPointerStart === undefined) return; sheetDragged = Math.abs(event.clientY - sheetPointerStart) > 12; });
+  listen(dom.mobileSheetToggle, 'pointerup', (event) => {
+    if (sheetPointerStart === undefined) return;
+    const delta = event.clientY - sheetPointerStart;
+    if (Math.abs(delta) > 24) setSheetExpanded(delta < 0);
+    sheetPointerStart = undefined;
+  });
+  listen(document, 'keydown', (event) => {
+    trapTourFocus(event);
+    if (event.key !== 'Escape') return;
+    if (!dom.tourOverlay.hidden) closeTour();
+    if (!dom.helpModal.hidden) dom.helpModal.hidden = true;
+    if (dom.mobileSheetToggle?.getAttribute('aria-expanded') === 'true') setSheetExpanded(false);
+  });
+  if (tourEnabled && !localStorage.getItem('aqualab.tourDone')) openTour();
 
   function renderLayerList() {
     const signature = layers.map((layer) => layer.id).join('|');
@@ -205,9 +400,9 @@ export function createUI(scenario, scene) {
     dom.scenarioControls.innerHTML = `${warning}${scenario.controls.map((control) => {
       if (control.type === 'select') {
         const options = control.options.map((option) => `<option value="${option.value}" ${scenarioState[control.key] === option.value ? 'selected' : ''}>${option.label}</option>`).join('');
-        return `<label class="scenario-controls__field"><span>${control.label}</span><select class="scenario-controls__select" data-scenario-control="${control.key}">${options}</select><small>${control.help}</small></label>`;
+        return `<label class="scenario-controls__field"><span>${control.label}</span><select class="scenario-controls__select" data-scenario-control="${control.key}" title="${control.help}" aria-describedby="scenario-${control.key}-hint">${options}</select><small id="scenario-${control.key}-hint">${control.help}</small></label>`;
       }
-      return `<label class="scenario-controls__field"><span>${control.label}</span><input class="scenario-controls__input" data-scenario-control="${control.key}" type="${control.type}" value="${scenarioState[control.key]}" min="${control.min}" max="${control.max}" step="${control.step}" /><small>${control.help}</small></label>`;
+      return `<label class="scenario-controls__field"><span>${control.label}</span><input class="scenario-controls__input" data-scenario-control="${control.key}" type="${control.type}" value="${scenarioState[control.key]}" min="${control.min}" max="${control.max}" step="${control.step}" title="${control.help}" aria-describedby="scenario-${control.key}-hint" /><small id="scenario-${control.key}-hint">${control.help}</small></label>`;
     }).join('')}`;
   }
 
@@ -350,6 +545,7 @@ export function createUI(scenario, scene) {
     const carbon = layers.find((layer) => layer.id === 'carbon');
     if (carbon) carbon.saturation = effects.carbon || 0;
     const simulation = computeSimulation(state.progress, { initial, layers, deterioration: { effects } });
+    currentSimulation = simulation;
     currentQuality = simulation.current;
     const renderState = { ...state, ...scenarioState };
     scene.setState({ ...renderState, deterioration: deteriorationState });
@@ -410,13 +606,24 @@ export function createUI(scenario, scene) {
     dom.qualityRing.style.setProperty('--ring', `${Math.max(5, score)}%`);
     dom.qualityState.textContent = 'NO POTABLE';
     dom.qualityDelta.textContent = 'Filtrar no es potabilizar';
+    dom.mobileSheetStage.textContent = detail.stage === 'Entrada' ? 'Entrada' : detail.title;
+    dom.mobileSheetStatus.textContent = 'NO POTABLE';
+    dom.mobileSheetQuality.textContent = `${score}/100`;
     dom.selectedStageNumber.textContent = detail.stage;
     dom.beforeScore.textContent = qualityScore(detail.before, initial);
     dom.afterScore.textContent = qualityScore(detail.after, initial);
     dom.beforeLabel.textContent = detail.beforeLabel;
     dom.afterLabel.textContent = detail.afterLabel;
     dom.playLabel.textContent = state.playing ? 'Pausar' : 'Reproducir';
-    dom.playButton.querySelector('.play-button__icon').textContent = state.playing ? 'Ⅱ' : '▶';
+      dom.playButton.querySelector('.play-button__icon').textContent = state.playing ? 'Ⅱ' : '▶';
+    updateJourney();
+    const stageCount = simulation.filters.length + 1;
+    const stageIndex = simulation.stageStarts.reduce((stage, start, index) => (state.progress >= start ? index : stage), 0);
+    const stageLayer = stageIndex > 0 ? simulation.filters[stageIndex - 1] : null;
+    dom.stageCounter.textContent = `Etapa ${stageIndex + 1} de ${stageCount}`;
+    dom.stageDescription.textContent = stageLayer?.description || scenario.text.inputDescription;
+    dom.previousStageButton.disabled = stageIndex === 0;
+    dom.nextStageButton.disabled = stageIndex >= simulation.filters.length;
     dom.layerCount.textContent = `${simulation.filters.length} / ${layers.length}`;
     dom.activeStagesChip.textContent = `${simulation.filters.length} ${simulation.filters.length === 1 ? 'etapa' : 'etapas'}`;
     dom.trendPill.textContent = `+${Math.max(0, score - qualityScore(initial, initial))} calidad`;
@@ -438,7 +645,7 @@ export function createUI(scenario, scene) {
       state.progress += delta * state.speed / Math.max(totalDuration, 1);
       state.playedTime += delta * state.speed;
       state.realElapsed += delta;
-      if (state.progress >= 1) { state.progress = 1; state.playing = false; }
+      if (state.progress >= 1) { state.progress = 1; state.playing = false; journeyStep = 4; }
       render();
     }
 

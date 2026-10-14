@@ -19,39 +19,33 @@
           <span class="topbar__divider"></span>
           <span>Modo educativo</span>
         </div>
-        <label class="scenario-picker"><span>Escenario</span><select id="scenarioSelect" aria-label="Seleccionar escenario"></select></label>
-        <button class="icon-button" id="helpButton" type="button" aria-label="Abrir ayuda">?</button>
+        <label class="scenario-picker"><span>Escenario</span><select id="scenarioSelect" aria-label="Seleccionar escenario" title="Cambia el sistema que quieres explorar" aria-describedby="scenarioSelectHint"></select><small id="scenarioSelectHint" class="sr-only">Elige entre los escenarios disponibles.</small></label>
+        <button class="icon-button" id="helpButton" type="button" aria-label="Abrir el tour guiado" title="Abrir el tour guiado">?</button>
       </header>
 
       <main>
         <section class="intro section-wrap">
           <div>
             <p class="eyebrow">LABORATORIO VIRTUAL · 01</p>
-            <h1>Observa cómo el agua<br /><em>recupera su claridad.</em></h1>
-            <p class="intro-copy">Controla el tiempo, inspecciona cada capa y descubre qué sucede con la calidad del agua durante el recorrido.</p>
+            <h1>Observa cómo el agua <em>recupera su claridad.</em></h1>
+            <p class="intro-copy">Elige un escenario, reproduce el recorrido y revisa cada etapa.</p>
             <div class="intro__tags" aria-label="Características del simulador"><span id="activeStagesChip">4 etapas</span><span>Escena 3D</span><span>Datos ilustrativos</span></div>
           </div>
-          <div class="intro__note">
-            <span class="intro__note-line"></span>
-            <div><b>Explora el proceso</b><p>Arrastra la línea de tiempo<br />o selecciona una capa</p></div>
-          </div>
+          <nav class="journey" aria-label="Flujo principal">
+            <ol class="journey__list">
+              <li class="journey__step is-current" id="journeyScenario"><span>1</span><b>Elige escenario</b></li>
+              <li class="journey__step" id="journeyPlay"><span>2</span><b>Reproduce</b></li>
+              <li class="journey__step" id="journeyStages"><span>3</span><b>Explora etapas</b></li>
+              <li class="journey__step" id="journeyResults"><span>4</span><b>Revisa resultados</b></li>
+            </ol>
+          </nav>
         </section>
 
         <section class="safety-banner safety-banner--visible section-wrap" id="safetyNotice" aria-label="Aviso de seguridad">
-          <strong>Propuesta académica</strong><span>NO POTABLE sin análisis de laboratorio conforme al RTS 13.02.01:14 (El Salvador). Filtrar no es potabilizar.</span>
+          <strong>Propuesta académica</strong><span class="safety-banner__copy">NO POTABLE sin análisis de laboratorio conforme al RTS 13.02.01:14 (El Salvador). Filtrar no es potabilizar.</span>
         </section>
 
         <section class="simulation-layout section-wrap" aria-label="Simulación de purificación">
-          <aside class="layers-card floating-layers-panel" aria-label="Configuración de capas">
-            <div class="card-heading"><div><p class="eyebrow">CONFIGURACIÓN</p><h2>Capas activas</h2></div><span class="layer-count" id="layerCount">3 / 4</span></div>
-            <p class="card-description">Selecciona una capa para inspeccionarla o activa y desactiva su interruptor.</p>
-            <p class="scenario-note" id="scenarioDescription"></p>
-            <div class="scenario-controls" id="scenarioControls"></div>
-            <div class="preset-tool" id="presetTool"></div>
-            <div class="layer-list" id="layerList"></div>
-            <div class="educational-note"><span>✦</span><p><b>¿Sabías que?</b><br />Cada capa retiene o transforma distintos tipos de impurezas.</p></div>
-          </aside>
-
           <div class="scene-card">
             <div class="scene-toolbar">
               <div class="scene-title">
@@ -59,12 +53,12 @@
                 <span id="sceneStatus">Agua sin tratar</span>
               </div>
               <div class="scene-tools">
-                <label class="quality-control"><span class="quality-control__label">Calidad</span><select class="quality-control__select" id="qualitySelect" aria-label="Calidad de la escena"><option value="auto">Auto</option><option value="high">Alta</option><option value="light">Ligera</option></select><small class="quality-control__status" id="qualityStatus">Auto</small></label>
-                <button class="tool-button" id="resetViewButton" type="button"><span class="tool-button__icon">⌖</span> Centrar</button>
-                <button class="tool-button" id="zoomOutButton" type="button" aria-label="Alejar vista"><span class="tool-button__icon">−</span> Alejar</button>
-                <button class="tool-button" id="zoomInButton" type="button" aria-label="Acercar vista"><span class="tool-button__icon">+</span> Acercar</button>
-                <button class="tool-button" id="lockViewButton" type="button" aria-pressed="false"><span class="tool-button__icon">◇</span> Fijar vista</button>
-                <button class="tool-button" id="xrayButton" type="button"><span class="tool-button__icon">◉</span> Radiografía</button>
+                <button class="tool-button" id="resetViewButton" type="button" title="Centra la cámara" aria-describedby="resetViewHint"><span class="tool-button__icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" /></svg></span> <span class="tool-button__label">Centrar</span></button>
+                <button class="tool-button" id="zoomOutButton" type="button" aria-label="Alejar vista" title="Aleja la cámara" aria-describedby="zoomOutHint"><span class="tool-button__icon">−</span> Alejar</button>
+                <button class="tool-button" id="zoomInButton" type="button" aria-label="Acercar vista" title="Acerca la cámara" aria-describedby="zoomInHint"><span class="tool-button__icon">+</span> Acercar</button>
+                <button class="tool-button" id="lockViewButton" type="button" aria-pressed="false" title="Fija o libera la cámara" aria-describedby="lockViewHint"><span class="tool-button__icon">◇</span> Fijar vista</button>
+                <button class="tool-button" id="xrayButton" type="button" title="Muestra el interior de la escena" aria-describedby="xrayHint"><span class="tool-button__icon">◉</span> Radiografía</button>
+                <span class="sr-only" id="resetViewHint">Restablece la vista inicial.</span><span class="sr-only" id="zoomOutHint">Reduce el zoom.</span><span class="sr-only" id="zoomInHint">Aumenta el zoom.</span><span class="sr-only" id="lockViewHint">Evita que la cámara cambie.</span><span class="sr-only" id="xrayHint">Alterna la vista del interior.</span>
               </div>
             </div>
             <div class="scene-viewport" id="sceneViewport">
@@ -81,9 +75,42 @@
               <div class="scene-footer-item"><span class="footer-icon">◌</span><span><b id="activeLayerName">Entrada</b><small id="activeLayerHint">Selecciona una capa para inspeccionarla</small></span></div>
               <div class="scene-footer-item"><span class="footer-icon">◷</span><span><b id="sceneTime">00:00</b><small>tiempo simulado</small></span></div>
             </div>
+            <section class="controls-section" aria-label="Controles de la simulación">
+              <div class="timeline-header">
+                <div class="timeline-title"><span class="eyebrow">RECORRIDO DEL AGUA</span><h2>Secuencia de purificación</h2></div>
+                <div class="timeline-times"><span id="currentTime">00:00</span><span class="time-slash">/</span><span id="totalTime">00:48</span></div>
+              </div>
+              <div class="timeline-wrap">
+                <div class="timeline-track"><div class="timeline-fill" id="timelineFill"></div><div class="timeline-thumb" id="timelineThumb"></div></div>
+                <input class="timeline-input" id="timelineInput" type="range" min="0" max="1000" value="0" step="1" aria-label="Progreso de purificación" title="Mueve el agua por la secuencia" aria-describedby="timelineHint" />
+                <div class="timeline-markers" id="timelineMarkers"></div>
+                <span class="sr-only" id="timelineHint">Arrastra para cambiar de etapa y consultar el inspector.</span>
+              </div>
+              <div class="control-row">
+                <div class="transport-controls">
+                  <button class="play-button" id="playButton" type="button" title="Reproduce o pausa la simulación" aria-describedby="playHint"><span class="play-button__icon">▶</span><span id="playLabel">Reproducir</span></button>
+                  <button class="secondary-button" id="restartButton" type="button">↺ <span>Reiniciar</span></button>
+                  <span class="sr-only" id="playHint">Sigue el recorrido del agua.</span>
+                </div>
+                <div class="control-meta"><div class="real-time"><span>Tiempo real</span><b id="realTime">00:00</b></div><div class="speed-control"><span>Velocidad</span><div class="speed-options" id="speedOptions"><button type="button" data-speed="0.5">0.5×</button><button type="button" data-speed="1" class="speed-options__button is-active">1×</button><button type="button" data-speed="2">2×</button><button type="button" data-speed="4">4×</button></div></div></div>
+              </div>
+              <div class="stage-navigation" id="stage-navigation" aria-label="Navegación de etapas">
+                <button class="secondary-button" id="previousStageButton" type="button" title="Ir a la etapa anterior" aria-describedby="previousStageHint">← Etapa anterior</button>
+                <div class="stage-summary"><strong id="stageCounter">Etapa 1 de 1</strong><span id="stageDescription">Agua de entrada.</span></div>
+                <button class="secondary-button" id="nextStageButton" type="button" title="Ir a la etapa siguiente" aria-describedby="nextStageHint">Etapa siguiente →</button>
+                <span class="sr-only" id="previousStageHint">Salta al inicio de la etapa anterior.</span><span class="sr-only" id="nextStageHint">Salta al inicio de la etapa siguiente.</span>
+              </div>
+            </section>
           </div>
-
-          <aside class="inspector" aria-label="Panel de inspección">
+          <div class="mobile-sheet" id="mobileSheet" aria-label="Lectura y herramientas">
+            <button class="mobile-sheet__handle" id="mobileSheetToggle" type="button" aria-expanded="false" aria-controls="mobileSheetBody"><span class="mobile-sheet__grab" aria-hidden="true"></span><span class="mobile-sheet__summary"><b id="mobileSheetStage">Entrada</b><span id="mobileSheetStatus">NO POTABLE</span><strong id="mobileSheetQuality">18/100</strong></span><span class="sr-only">Abrir lectura en vivo y herramientas</span></button>
+            <div class="mobile-sheet__tabs" role="tablist" aria-label="Panel inferior">
+              <button class="mobile-sheet__tab is-active" id="mobileSheetReadTab" type="button" role="tab" aria-selected="true" aria-controls="inspector" data-sheet-tab="reading">Lectura</button>
+              <button class="mobile-sheet__tab" id="mobileSheetToolsTab" type="button" role="tab" aria-selected="false" aria-controls="toolsPanel" data-sheet-tab="tools">Herramientas</button>
+              <button class="mobile-sheet__tab" id="mobileSheetStagesTab" type="button" role="tab" aria-selected="false" aria-controls="layersCard" data-sheet-tab="stages">Etapas</button>
+            </div>
+            <div class="mobile-sheet__body" id="mobileSheetBody">
+          <aside class="inspector" id="inspector" aria-label="Panel de inspección">
             <div class="inspector-heading">
               <div>
                 <p class="eyebrow">LECTURA EN VIVO</p>
@@ -110,24 +137,22 @@
             </div>
             <p class="selection-tip"><span>i</span> Filtrar no es potabilizar. La filtración no lleva E. coli ni coliformes a un nivel seguro.</p>
           </aside>
-        </section>
-
-        <section class="controls-section section-wrap" aria-label="Controles de la simulación">
-          <div class="timeline-header">
-            <div class="timeline-title"><span class="eyebrow">RECORRIDO DEL AGUA</span><h2>Secuencia de purificación</h2></div>
-            <div class="timeline-times"><span id="currentTime">00:00</span><span class="time-slash">/</span><span id="totalTime">00:48</span></div>
-          </div>
-          <div class="timeline-wrap">
-            <div class="timeline-track"><div class="timeline-fill" id="timelineFill"></div><div class="timeline-thumb" id="timelineThumb"></div></div>
-            <input class="timeline-input" id="timelineInput" type="range" min="0" max="1000" value="0" step="1" aria-label="Progreso de purificación" />
-            <div class="timeline-markers" id="timelineMarkers"></div>
-          </div>
-          <div class="control-row">
-            <div class="transport-controls">
-              <button class="play-button" id="playButton" type="button"><span class="play-button__icon">▶</span><span id="playLabel">Reproducir</span></button>
-              <button class="secondary-button" id="restartButton" type="button">↺ <span>Reiniciar</span></button>
+          <aside class="layers-card floating-layers-panel" id="layersCard" aria-label="Etapas del sistema">
+            <div class="card-heading"><div><p class="eyebrow">CONFIGURACIÓN</p><h2>Etapas del sistema</h2></div><span class="layer-count" id="layerCount">3 / 4</span></div>
+            <p class="card-description">Activa etapas y ajusta los controles básicos del escenario.</p>
+            <p class="scenario-note" id="scenarioDescription"></p>
+            <div class="scenario-controls" id="scenarioControls"></div>
+            <div class="layer-list" id="layerList"></div>
+            <div class="educational-note"><span>✦</span><p><b>¿Sabías que?</b><br />Cada etapa retiene o transforma distintos tipos de impurezas.</p></div>
+            <details class="advanced-panel" id="advancedPanel">
+              <summary>Avanzado <span>Presets, rendimiento y más</span></summary>
+              <div class="advanced-panel__content">
+                <div class="quality-control"><span class="quality-control__label">Calidad de escena</span><select class="quality-control__select" id="qualitySelect" aria-label="Calidad de la escena" title="Ajusta el rendimiento visual" aria-describedby="qualityHint"><option value="auto">Auto</option><option value="high">Alta</option><option value="light">Ligera</option></select><small class="quality-control__status" id="qualityStatus">Auto</small><span class="sr-only" id="qualityHint">Elige entre calidad visual y rendimiento.</span></div>
+                <div class="preset-tool" id="presetTool"></div>
+              </div>
+            </details>
+          </aside>
             </div>
-            <div class="control-meta"><div class="real-time"><span>Tiempo real</span><b id="realTime">00:00</b></div><div class="speed-control"><span>Velocidad</span><div class="speed-options" id="speedOptions"><button type="button" data-speed="0.5">0.5×</button><button type="button" data-speed="1" class="speed-options__button is-active">1×</button><button type="button" data-speed="2">2×</button><button type="button" data-speed="4">4×</button></div></div></div>
           </div>
         </section>
 
@@ -139,20 +164,38 @@
           </div>
         </section>
 
-        <section class="tools-panel section-wrap" aria-label="Herramientas compartidas">
+        <section class="tools-panel section-wrap" id="toolsPanel" aria-label="Herramientas compartidas">
           <div class="card-heading"><div><p class="eyebrow">HERRAMIENTAS COMUNES</p><h2>Diseña, verifica y mantiene</h2></div></div>
-          <div class="tools-tabs" id="toolsTabs" role="tablist" aria-label="Herramientas">
-            <button class="tools-tab is-active" data-tool-tab="usageTool" type="button">Uso final</button>
-            <button class="tools-tab" data-tool-tab="calculatorTool" type="button">Cálculo</button>
-            <button class="tools-tab" data-tool-tab="budgetTool" type="button">Presupuesto</button>
-            <button class="tools-tab" data-tool-tab="maintenanceTool" type="button">Mantenimiento</button>
-            <button class="tools-tab" data-tool-tab="deteriorationTool" type="button">Deterioro</button>
-            <button class="tools-tab" data-tool-tab="samplingTool" type="button">Muestreo</button>
-            <button class="tools-tab" data-tool-tab="safetyTool" type="button">Seguridad</button>
-            <button class="tools-tab" data-tool-tab="risksTool" type="button">Riesgos</button>
-            <button class="tools-tab" data-tool-tab="scheduleTool" type="button">Cronograma</button>
-            <button class="tools-tab" data-tool-tab="economicsTool" type="button">Economía</button>
-            <button class="tools-tab" data-tool-tab="agronomyTool" type="button">Agronomía</button>
+          <div class="tools-sections" id="toolsSections" role="tablist" aria-label="Secciones de herramientas">
+            <button class="tools-section is-active" id="toolsSectionQuality" role="tab" aria-selected="true" aria-controls="toolsSectionPanelQuality" data-tool-section="quality" type="button">💧 Calidad</button>
+            <button class="tools-section" id="toolsSectionPlanning" role="tab" aria-selected="false" aria-controls="toolsSectionPanelPlanning" data-tool-section="planning" type="button">🗓️ Planificación</button>
+            <button class="tools-section" id="toolsSectionManagement" role="tab" aria-selected="false" aria-controls="toolsSectionPanelManagement" data-tool-section="management" type="button">🛠️ Gestión</button>
+          </div>
+          <div class="tools-section-panel" id="toolsSectionPanelQuality" role="tabpanel" aria-labelledby="toolsSectionQuality" data-tool-section-panel="quality">
+            <p class="tools-section__description">Define la calidad del agua, su uso y las condiciones para aprovecharla.</p>
+            <div class="tools-tabs" id="toolsTabs" role="tablist" aria-label="Herramientas de Calidad">
+              <button class="tools-tab is-active" id="toolTabUsage" role="tab" aria-selected="true" aria-controls="usageTool" data-tool-tab="usageTool" type="button">Uso</button>
+              <button class="tools-tab" id="toolTabSampling" role="tab" aria-selected="false" aria-controls="samplingTool" data-tool-tab="samplingTool" type="button">Muestreo</button>
+              <button class="tools-tab" id="toolTabSafety" role="tab" aria-selected="false" aria-controls="safetyTool" data-tool-tab="safetyTool" type="button">Seguridad</button>
+              <button class="tools-tab" id="toolTabAgronomy" role="tab" aria-selected="false" aria-controls="agronomyTool" data-tool-tab="agronomyTool" type="button">Agronomía</button>
+            </div>
+          </div>
+          <div class="tools-section-panel" id="toolsSectionPanelPlanning" role="tabpanel" aria-labelledby="toolsSectionPlanning" data-tool-section-panel="planning" hidden>
+            <p class="tools-section__description">Convierte los datos del sistema en decisiones de diseño, costo y calendario.</p>
+            <div class="tools-tabs" role="tablist" aria-label="Herramientas de Planificación">
+              <button class="tools-tab" id="toolTabCalculator" role="tab" aria-selected="false" aria-controls="calculatorTool" data-tool-tab="calculatorTool" type="button">Cálculo</button>
+              <button class="tools-tab" id="toolTabBudget" role="tab" aria-selected="false" aria-controls="budgetTool" data-tool-tab="budgetTool" type="button">Presupuesto</button>
+              <button class="tools-tab" id="toolTabEconomics" role="tab" aria-selected="false" aria-controls="economicsTool" data-tool-tab="economicsTool" type="button">Economía</button>
+              <button class="tools-tab" id="toolTabSchedule" role="tab" aria-selected="false" aria-controls="scheduleTool" data-tool-tab="scheduleTool" type="button">Cronograma</button>
+            </div>
+          </div>
+          <div class="tools-section-panel" id="toolsSectionPanelManagement" role="tabpanel" aria-labelledby="toolsSectionManagement" data-tool-section-panel="management" hidden>
+            <p class="tools-section__description">Da seguimiento al estado del sistema y anticipa sus necesidades de operación.</p>
+            <div class="tools-tabs" role="tablist" aria-label="Herramientas de Gestión">
+              <button class="tools-tab" id="toolTabMaintenance" role="tab" aria-selected="false" aria-controls="maintenanceTool" data-tool-tab="maintenanceTool" type="button">Mantenimiento</button>
+              <button class="tools-tab" id="toolTabDeterioration" role="tab" aria-selected="false" aria-controls="deteriorationTool" data-tool-tab="deteriorationTool" type="button">Deterioro</button>
+              <button class="tools-tab" id="toolTabRisks" role="tab" aria-selected="false" aria-controls="risksTool" data-tool-tab="risksTool" type="button">Riesgos</button>
+            </div>
           </div>
           <div class="tool-panel" data-tool-panel="usageTool" id="usageTool"></div>
           <div class="tool-panel" data-tool-panel="calculatorTool" id="calculatorTool" hidden></div>
@@ -171,6 +214,12 @@
       <footer class="footer section-wrap"><span>AquaLab / Simulador de purificación</span><span>Modelo educativo parametrizado · Los valores son ilustrativos</span></footer>
     </div>
 
+    <div class="tour-backdrop" id="tourOverlay" hidden aria-hidden="true">
+      <div class="tour-card" role="dialog" aria-modal="true" aria-labelledby="tourTitle" aria-describedby="tourDescription">
+        <p class="eyebrow">PRIMER RECORRIDO</p><h2 id="tourTitle">Conoce AquaLab</h2><p id="tourDescription"></p>
+        <div class="tour-actions"><button class="secondary-button" id="tourSkipButton" type="button">Omitir</button><button class="play-button" id="tourNextButton" type="button">Siguiente</button></div>
+      </div>
+    </div>
     <div class="modal-backdrop" id="helpModal" hidden>
       <div class="help-modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
         <button class="modal-close" id="closeHelpButton" type="button" aria-label="Cerrar ayuda">×</button>
