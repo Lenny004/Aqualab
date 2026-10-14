@@ -338,9 +338,9 @@ h1, h2, p { margin-block-start: 0; }
   .topbar { width: min(calc(100% - 3.6rem), 128rem); }
   .intro { padding-block: 5.6rem 4rem; }
   .simulation-layout { grid-template-columns: minmax(0, 1fr); }
-  .floating-layers-panel { grid-column: 1; grid-row: 1; }
-  .scene-card { grid-column: 1; grid-row: 2; }
-  .inspector { grid-column: 1; grid-row: 3; }
+  .floating-layers-panel { grid-column: 1; grid-row: 3; }
+  .scene-card { grid-column: 1; grid-row: 1; }
+  .inspector { grid-column: 1; grid-row: 2; }
   .scene-viewport, .scene-canvas { min-height: 50rem; height: 50rem; }
 }
 
@@ -383,7 +383,7 @@ h1, h2, p { margin-block-start: 0; }
 }
 
 /* Narrow mobile */
-@media (max-width: 60rem) {
+@media (max-width: 60.99rem) {
   :root { --section-gap: var(--space-12); }
   .tools-section-panel, .tool-panel { gap: var(--space-12); }
   .topbar__meta { display: none; }
@@ -441,6 +441,15 @@ h1, h2, p { margin-block-start: 0; }
 .scene-viewport, .scene-canvas { min-height: 27rem; height: 27rem; }
 .layers-card { grid-column: 1; grid-row: 3; }
 .floating-layers-panel { position: static; }
+
+/* Tablet flow: scene, live inspector and layers occupy distinct rows. */
+@media (min-width: 37.5625rem) and (max-width: 63.99rem) {
+  .simulation-layout { grid-template-columns: minmax(0, 1fr); }
+  .scene-card { grid-column: 1; grid-row: 1; }
+  .inspector { grid-column: 1; grid-row: 2; }
+  .layers-card, .floating-layers-panel { grid-column: 1; grid-row: 3; }
+}
+
 .scenario-controls { grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
 .scenario-controls__warning { grid-column: 1 / -1; }
 .advanced-panel { margin-block-start: 1.6rem; border-block-start: 1px solid var(--color-border); }
@@ -704,7 +713,7 @@ h1, h2, p { margin-block-start: 0; }
 }
 
 /* Tablas de herramientas como tarjetas: al final para ganar a los estilos base de cada tabla. */
-@media (max-width: 60rem) {
+@media (max-width: 60.99rem) {
   .risk-table, .schedule-table, .budget-table, .agronomy-table { overflow-x: visible; }
   .risk-row, .schedule-row, .budget-row, .agronomy-row { display: grid; grid-template-columns: 1fr; min-width: 0; width: auto; gap: 0; padding: 1rem; border: 1px solid var(--color-border); }
   .risk-row--head, .schedule-row--head, .budget-row--head, .agronomy-row--head { display: none; }

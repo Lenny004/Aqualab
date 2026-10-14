@@ -285,11 +285,13 @@ export function createUI(scenario, scene) {
   const toolsPanel = document.getElementById('toolsPanel');
   const toolsPanelOriginalParent = toolsPanel?.parentNode;
   const toolsPanelOriginalNextSibling = toolsPanel?.nextSibling;
+  let activeSheetTab = 'reading';
   const syncMobileSheetLayout = () => {
     if (!toolsPanel || !dom.mobileSheetBody || !toolsPanelOriginalParent) return;
     if (mobileSheetQuery.matches) {
       if (toolsPanel.parentNode !== dom.mobileSheetBody) dom.mobileSheetBody.append(toolsPanel);
       [dom.inspector, toolsPanel, document.getElementById('layersCard'), dom.toolsSections].forEach((node) => node?.classList.add('is-sheet-hidden'));
+      setSheetTab(activeSheetTab);
     } else if (toolsPanel.parentNode !== toolsPanelOriginalParent) {
       toolsPanelOriginalParent.insertBefore(toolsPanel, toolsPanelOriginalNextSibling);
       [dom.inspector, toolsPanel, document.getElementById('layersCard'), dom.toolsSections].forEach((node) => node?.classList.remove('is-sheet-hidden', 'is-sheet-visible'));
@@ -336,6 +338,7 @@ export function createUI(scenario, scene) {
   };
   const setSheetTab = (tab) => {
     const activeTab = ['reading', 'tools', 'stages'].includes(tab) ? tab : 'reading';
+    activeSheetTab = activeTab;
     dom.mobileSheet?.querySelectorAll('[data-sheet-tab]').forEach((button) => {
       const selected = button.dataset.sheetTab === activeTab;
       button.classList.toggle('is-active', selected);
@@ -345,9 +348,9 @@ export function createUI(scenario, scene) {
     sheetPanels.forEach(([node, visible]) => node?.classList.toggle('is-sheet-visible', visible));
     sheetPanels.forEach(([node, visible]) => node?.classList.toggle('is-sheet-hidden', !visible));
   };
+  setSheetTab('reading');
   syncMobileSheetLayout();
   mobileSheetQuery.addEventListener('change', syncMobileSheetLayout);
-  setSheetTab('reading');
   setSheetExpanded(false);
   listen(dom.mobileSheetToggle, 'click', () => {
     if (sheetDragged) { sheetDragged = false; return; }
