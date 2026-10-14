@@ -289,8 +289,10 @@ export function createUI(scenario, scene) {
     if (!toolsPanel || !dom.mobileSheetBody || !toolsPanelOriginalParent) return;
     if (mobileSheetQuery.matches) {
       if (toolsPanel.parentNode !== dom.mobileSheetBody) dom.mobileSheetBody.append(toolsPanel);
+      [dom.inspector, toolsPanel, document.getElementById('layersCard'), dom.toolsSections].forEach((node) => node?.classList.add('is-sheet-hidden'));
     } else if (toolsPanel.parentNode !== toolsPanelOriginalParent) {
       toolsPanelOriginalParent.insertBefore(toolsPanel, toolsPanelOriginalNextSibling);
+      [dom.inspector, toolsPanel, document.getElementById('layersCard'), dom.toolsSections].forEach((node) => node?.classList.remove('is-sheet-hidden', 'is-sheet-visible'));
     }
   };
   const moveTab = (event, selector) => {
@@ -339,9 +341,9 @@ export function createUI(scenario, scene) {
       button.classList.toggle('is-active', selected);
       button.setAttribute('aria-selected', String(selected));
     });
-    dom.inspector?.classList.toggle('is-sheet-visible', activeTab === 'reading');
-    toolsPanel?.classList.toggle('is-sheet-visible', activeTab === 'tools');
-    document.getElementById('layersCard')?.classList.toggle('is-sheet-visible', activeTab === 'stages');
+    const sheetPanels = [[dom.inspector, activeTab === 'reading'], [toolsPanel, activeTab === 'tools'], [document.getElementById('layersCard'), activeTab === 'stages'], [dom.toolsSections, activeTab === 'tools']];
+    sheetPanels.forEach(([node, visible]) => node?.classList.toggle('is-sheet-visible', visible));
+    sheetPanels.forEach(([node, visible]) => node?.classList.toggle('is-sheet-hidden', !visible));
   };
   syncMobileSheetLayout();
   mobileSheetQuery.addEventListener('change', syncMobileSheetLayout);
