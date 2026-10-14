@@ -10,7 +10,7 @@
     <div class="app-shell">
       <header class="topbar">
         <a class="brand" href="/" aria-label="AquaLab inicio">
-          <span class="brand__mark"><span class="brand__mark-bar"></span><span class="brand__mark-bar"></span><span class="brand__mark-bar"></span></span>
+          <span class="brand__mark"><span class="brand__mark-bar brand__mark-bar--short"></span><span class="brand__mark-bar brand__mark-bar--mid"></span><span class="brand__mark-bar brand__mark-bar--tall"></span></span>
           <span class="brand__name">Aqua<span class="brand__name-accent">Lab</span></span>
         </a>
         <div class="topbar__meta">
@@ -27,7 +27,7 @@
         <section class="intro section-wrap">
           <div>
             <p class="eyebrow">LABORATORIO VIRTUAL · 01</p>
-            <h1>Observa cómo el agua <em>recupera su claridad.</em></h1>
+            <h1 class="intro__title">Observa cómo el agua <em class="intro__title-em">recupera su claridad.</em></h1>
             <p class="intro-copy">Elige un escenario, reproduce el recorrido y revisa cada etapa.</p>
             <div class="intro__tags" aria-label="Características del simulador"><span class="intro__tag" id="activeStagesChip">4 etapas</span><span class="intro__tag">Escena 3D</span><span class="intro__tag">Datos ilustrativos</span></div>
           </div>
@@ -50,10 +50,10 @@
             <div class="scene-toolbar">
               <div class="scene-title">
                 <span class="scene-title__status"></span>
-                <span id="sceneStatus">Agua sin tratar</span>
+                <span class="scene-title__label" id="sceneStatus">Agua sin tratar</span>
               </div>
               <div class="scene-tools">
-                <button class="tool-button" id="resetViewButton" type="button" title="Centra la cámara" aria-describedby="resetViewHint"><span class="tool-button__icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" /></svg></span> <span class="tool-button__label">Centrar</span></button>
+                <button class="tool-button" id="resetViewButton" type="button" title="Centra la cámara" aria-describedby="resetViewHint"><span class="tool-button__icon" aria-hidden="true"><svg class="tool-button__icon-svg" viewBox="0 0 24 24" focusable="false"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" /></svg></span> <span class="tool-button__label">Centrar</span></button>
                 <button class="tool-button" id="zoomOutButton" type="button" aria-label="Alejar vista" title="Aleja la cámara" aria-describedby="zoomOutHint"><span class="tool-button__icon">−</span> Alejar</button>
                 <button class="tool-button" id="zoomInButton" type="button" aria-label="Acercar vista" title="Acerca la cámara" aria-describedby="zoomInHint"><span class="tool-button__icon">+</span> Acercar</button>
                 <button class="tool-button" id="lockViewButton" type="button" aria-pressed="false" title="Fija o libera la cámara" aria-describedby="lockViewHint"><span class="tool-button__icon">◇</span> Fijar vista</button>
@@ -63,17 +63,17 @@
             </div>
             <div class="scene-viewport" id="sceneViewport">
               <canvas class="scene-canvas" id="sceneCanvas" aria-label="Escena 3D del filtro de agua"></canvas>
-              <div class="scene-hint"><span>↗</span> Arrastra para rotar · rueda para acercar</div>
+              <div class="scene-hint"><span class="scene-hint__icon">↗</span> Arrastra para rotar · rueda para acercar</div>
               <div class="scene-label scene-label--inlet"><span class="scene-label__dot"></span> Entrada</div>
               <div class="scene-label scene-label--output"><span class="scene-label__dot"></span> Agua filtrada</div>
               <div class="scene-legend">
-                <div><span class="scene-legend__swatch scene-legend__swatch--dirty"></span> Sin tratar</div>
-                <div><span class="scene-legend__swatch scene-legend__swatch--clean"></span> Filtrada</div>
+                <div class="scene-legend__item"><span class="scene-legend__swatch scene-legend__swatch--dirty"></span> Sin tratar</div>
+                <div class="scene-legend__item"><span class="scene-legend__swatch scene-legend__swatch--clean"></span> Filtrada</div>
               </div>
             </div>
             <div class="scene-footer">
-              <div class="scene-footer-item"><span class="footer-icon">◌</span><span><b id="activeLayerName">Entrada</b><small id="activeLayerHint">Selecciona una capa para inspeccionarla</small></span></div>
-              <div class="scene-footer-item"><span class="footer-icon">◷</span><span><b id="sceneTime">00:00</b><small>tiempo simulado</small></span></div>
+              <div class="scene-footer-item"><span class="footer-icon">◌</span><span class="scene-footer-item__copy"><b class="scene-footer__value" id="activeLayerName">Entrada</b><small class="scene-footer__hint" id="activeLayerHint">Selecciona una capa para inspeccionarla</small></span></div>
+              <div class="scene-footer-item"><span class="footer-icon">◷</span><span class="scene-footer-item__copy"><b class="scene-footer__value" id="sceneTime">00:00</b><small class="scene-footer__hint">tiempo simulado</small></span></div>
             </div>
             <section class="controls-section" aria-label="Controles de la simulación">
               <div class="timeline-header">
