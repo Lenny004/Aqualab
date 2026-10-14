@@ -19,7 +19,7 @@
           <span class="topbar__divider"></span>
           <span>Modo educativo</span>
         </div>
-        <label class="scenario-picker"><span>Escenario</span><select id="scenarioSelect" aria-label="Seleccionar escenario" title="Cambia el sistema que quieres explorar" aria-describedby="scenarioSelectHint"></select><small id="scenarioSelectHint" class="sr-only">Elige entre los escenarios disponibles.</small></label>
+        <label class="scenario-picker"><span>Escenario</span><select class="scenario-picker__select" id="scenarioSelect" aria-label="Seleccionar escenario" title="Cambia el sistema que quieres explorar" aria-describedby="scenarioSelectHint"></select><small id="scenarioSelectHint" class="sr-only">Elige entre los escenarios disponibles.</small></label>
         <button class="icon-button" id="helpButton" type="button" aria-label="Abrir el tour guiado" title="Abrir el tour guiado">?</button>
       </header>
 
@@ -77,8 +77,8 @@
             </div>
             <section class="controls-section" aria-label="Controles de la simulación">
               <div class="timeline-header">
-                <div class="timeline-title"><span class="eyebrow">RECORRIDO DEL AGUA</span><h2>Secuencia de purificación</h2></div>
-                <div class="timeline-times"><span id="currentTime">00:00</span><span class="time-slash">/</span><span id="totalTime">00:48</span></div>
+                <div class="timeline-title"><span class="timeline-title__eyebrow eyebrow">RECORRIDO DEL AGUA</span><h2 class="timeline-title__heading">Secuencia de purificación</h2></div>
+                <div class="timeline-times"><span class="timeline-times__start" id="currentTime">00:00</span><span class="time-slash">/</span><span class="timeline-times__end" id="totalTime">00:48</span></div>
               </div>
               <div class="timeline-wrap">
                 <div class="timeline-track"><div class="timeline-fill" id="timelineFill"></div><div class="timeline-thumb" id="timelineThumb"></div></div>
@@ -92,12 +92,12 @@
                   <button class="secondary-button" id="restartButton" type="button">↺ <span>Reiniciar</span></button>
                   <span class="sr-only" id="playHint">Sigue el recorrido del agua.</span>
                 </div>
-                <div class="control-meta"><div class="real-time"><span>Tiempo real</span><b id="realTime">00:00</b></div><div class="speed-control"><span>Velocidad</span><div class="speed-options" id="speedOptions"><button type="button" data-speed="0.5">0.5×</button><button type="button" data-speed="1" class="speed-options__button is-active">1×</button><button type="button" data-speed="2">2×</button><button type="button" data-speed="4">4×</button></div></div></div>
+                <div class="control-meta"><div class="real-time"><span>Tiempo real</span><b class="real-time__value" id="realTime">00:00</b></div><div class="speed-control"><span>Velocidad</span><div class="speed-options" id="speedOptions"><button class="speed-options__button" type="button" data-speed="0.5">0.5×</button><button type="button" data-speed="1" class="speed-options__button is-active">1×</button><button class="speed-options__button" type="button" data-speed="2">2×</button><button class="speed-options__button" type="button" data-speed="4">4×</button></div></div></div>
               </div>
               <div class="stage-navigation" id="stage-navigation" aria-label="Navegación de etapas">
-                <button class="secondary-button" id="previousStageButton" type="button" title="Ir a la etapa anterior" aria-describedby="previousStageHint">← Etapa anterior</button>
-                <div class="stage-summary"><strong id="stageCounter">Etapa 1 de 1</strong><span id="stageDescription">Agua de entrada.</span></div>
-                <button class="secondary-button" id="nextStageButton" type="button" title="Ir a la etapa siguiente" aria-describedby="nextStageHint">Etapa siguiente →</button>
+                <button class="secondary-button stage-navigation__button" id="previousStageButton" type="button" title="Ir a la etapa anterior" aria-describedby="previousStageHint">← Etapa anterior</button>
+                <div class="stage-summary"><strong class="stage-summary__title" id="stageCounter">Etapa 1 de 1</strong><span class="stage-summary__text" id="stageDescription">Agua de entrada.</span></div>
+                <button class="secondary-button stage-navigation__button" id="nextStageButton" type="button" title="Ir a la etapa siguiente" aria-describedby="nextStageHint">Etapa siguiente →</button>
                 <span class="sr-only" id="previousStageHint">Salta al inicio de la etapa anterior.</span><span class="sr-only" id="nextStageHint">Salta al inicio de la etapa siguiente.</span>
               </div>
             </section>
@@ -114,7 +114,7 @@
             <div class="inspector-heading">
               <div>
                 <p class="eyebrow">LECTURA EN VIVO</p>
-                <h2 id="inspectorTitle">Agua de entrada</h2>
+                <h2 class="inspector__title" id="inspectorTitle">Agua de entrada</h2>
               </div>
               <span class="quality-badge quality-badge--medium" id="qualityBadge">Turbia</span>
             </div>
@@ -145,7 +145,7 @@
             <div class="layer-list" id="layerList"></div>
             <div class="educational-note"><span class="educational-note__icon">✦</span><p class="educational-note__text"><b class="educational-note__title">¿Sabías que?</b><br />Cada etapa retiene o transforma distintos tipos de impurezas.</p></div>
             <details class="advanced-panel" id="advancedPanel">
-              <summary>Avanzado <span>Presets, rendimiento y más</span></summary>
+              <summary class="advanced-panel__summary"><span class="advanced-panel__summary-label">Avanzado</span><span class="advanced-panel__summary-note">Presets, rendimiento y más</span></summary>
               <div class="advanced-panel__content">
                 <div class="quality-control"><span class="quality-control__label">Calidad de escena</span><select class="quality-control__select" id="qualitySelect" aria-label="Calidad de la escena" title="Ajusta el rendimiento visual" aria-describedby="qualityHint"><option value="auto">Auto</option><option value="high">Alta</option><option value="light">Ligera</option></select><small class="quality-control__status" id="qualityStatus">Auto</small><span class="sr-only" id="qualityHint">Elige entre calidad visual y rendimiento.</span></div>
                 <div class="preset-tool" id="presetTool"></div>
@@ -160,7 +160,7 @@
           <div class="evolution-card">
             <div class="card-heading"><div><p class="eyebrow">EVOLUCIÓN</p><h2 class="card-heading__title">Antes y después</h2></div><span class="trend-pill" id="trendPill">+0% claridad</span></div>
             <div class="evolution-chart" id="evolutionChart"></div>
-            <div class="chart-legend"><span><i class="dot dot--before"></i> Antes de cada etapa</span><span><i class="dot dot--after"></i> Después de cada etapa</span><span class="chart-legend__unit">Índice de calidad · 0–100</span></div>
+            <div class="chart-legend"><span class="chart-legend__item"><i class="dot dot--before"></i> Antes de cada etapa</span><span class="chart-legend__item"><i class="dot dot--after"></i> Después de cada etapa</span><span class="chart-legend__unit">Índice de calidad · 0–100</span></div>
           </div>
         </section>
 
@@ -211,20 +211,20 @@
         </section>
       </main>
 
-      <footer class="footer section-wrap"><span>AquaLab / Simulador de purificación</span><span>Modelo educativo parametrizado · Los valores son ilustrativos</span></footer>
+      <footer class="footer section-wrap"><span class="footer__meta">AquaLab / Simulador de purificación</span><span class="footer__meta">Modelo educativo parametrizado · Los valores son ilustrativos</span></footer>
     </div>
 
     <div class="tour-backdrop" id="tourOverlay" hidden aria-hidden="true">
       <div class="tour-card" role="dialog" aria-modal="true" aria-labelledby="tourTitle" aria-describedby="tourDescription">
-        <p class="eyebrow">PRIMER RECORRIDO</p><h2 id="tourTitle">Conoce AquaLab</h2><p id="tourDescription"></p>
+        <p class="eyebrow">PRIMER RECORRIDO</p><h2 class="tour-card__title" id="tourTitle">Conoce AquaLab</h2><p class="tour-card__text" id="tourDescription"></p>
         <div class="tour-actions"><button class="secondary-button" id="tourSkipButton" type="button">Omitir</button><button class="play-button" id="tourNextButton" type="button">Siguiente</button></div>
       </div>
     </div>
     <div class="modal-backdrop" id="helpModal" hidden>
       <div class="help-modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
         <button class="modal-close" id="closeHelpButton" type="button" aria-label="Cerrar ayuda">×</button>
-        <p class="eyebrow">CÓMO EXPLORAR</p><h2 id="helpTitle">Sigue el viaje de cada gota</h2>
-        <p id="helpDescription"></p>
+        <p class="eyebrow">CÓMO EXPLORAR</p><h2 class="help-modal__title" id="helpTitle">Sigue el viaje de cada gota</h2>
+        <p class="help-modal__text" id="helpDescription"></p>
       </div>
     </div>
     <script type="module" src="/src/main.js"></script>

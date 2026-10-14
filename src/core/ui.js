@@ -402,9 +402,9 @@ export function createUI(scenario, scene) {
     dom.scenarioControls.innerHTML = `${warning}${scenario.controls.map((control) => {
       if (control.type === 'select') {
         const options = control.options.map((option) => `<option value="${option.value}" ${scenarioState[control.key] === option.value ? 'selected' : ''}>${option.label}</option>`).join('');
-        return `<label class="scenario-controls__field"><span>${control.label}</span><select class="scenario-controls__select" data-scenario-control="${control.key}" title="${control.help}" aria-describedby="scenario-${control.key}-hint">${options}</select><small id="scenario-${control.key}-hint">${control.help}</small></label>`;
+        return `<label class="scenario-controls__field"><span>${control.label}</span><select class="scenario-controls__select" data-scenario-control="${control.key}" title="${control.help}" aria-describedby="scenario-${control.key}-hint">${options}</select><small class="scenario-controls__hint" id="scenario-${control.key}-hint">${control.help}</small></label>`;
       }
-      return `<label class="scenario-controls__field"><span>${control.label}</span><input class="scenario-controls__input" data-scenario-control="${control.key}" type="${control.type}" value="${scenarioState[control.key]}" min="${control.min}" max="${control.max}" step="${control.step}" title="${control.help}" aria-describedby="scenario-${control.key}-hint" /><small id="scenario-${control.key}-hint">${control.help}</small></label>`;
+      return `<label class="scenario-controls__field"><span>${control.label}</span><input class="scenario-controls__input" data-scenario-control="${control.key}" type="${control.type}" value="${scenarioState[control.key]}" min="${control.min}" max="${control.max}" step="${control.step}" title="${control.help}" aria-describedby="scenario-${control.key}-hint" /><small class="scenario-controls__hint" id="scenario-${control.key}-hint">${control.help}</small></label>`;
     }).join('')}`;
   }
 
