@@ -1,3 +1,5 @@
+import { toolField, toolHeading } from '../ui-helpers.js';
+
 const RISK_ROWS = [
   { danger: 'Excrementos de aves o roedores', consequence: 'Contaminación fecal y enfermedad', prevention: 'Limpiar techo, instalar malla, desviar primeras aguas y mantener el depósito cerrado', action: 'Suspender el consumo, limpiar, desinfectar y analizar', uses: ['tomar', 'cultivar'] },
   { danger: 'Turbidez elevada', consequence: 'Desinfección menos eficaz', prevention: 'Controlar sedimentos y usar filtración apropiada', action: 'Detener el tratamiento para beber, revisar el filtro y repetir pruebas', uses: ['tomar'] },
@@ -20,6 +22,9 @@ const RISK_ROWS = [
 
 export function renderRisks(container, initialUse = 'tomar') {
   container.innerHTML = `<div class="tool-heading"><div><h3 class="tool-heading__title">Matriz de riesgos</h3><p class="tool-note tool-heading__note">Controles orientativos para el uso final seleccionado. No sustituye el análisis de calidad.</p></div><label class="tool-field tool-field--inline"><span class="tool-field__label">Uso final</span><select class="tool-field__control" data-risk-use><option value="tomar">Tomar</option><option value="cultivar">Cultivar</option></select></label></div><div class="risk-table" role="table"><div class="risk-row risk-row--head" role="row"><span class="risk-row__cell">Peligro</span><span class="risk-row__cell">Consecuencia</span><span class="risk-row__cell">Prevención</span><span class="risk-row__cell">Acción correctiva</span></div><div data-risk-rows></div></div>`;
+  const useField = toolField({ label: 'Uso final', inline: true, control: '<select class="tool-field__control" data-risk-use><option value="tomar">Tomar</option><option value="cultivar">Cultivar</option></select>' });
+  const heading = toolHeading('Matriz de riesgos', 'Controles orientativos para el uso final seleccionado. No sustituye el análisis de calidad.', useField);
+  container.innerHTML = container.innerHTML.replace(/<div class="tool-heading">[\s\S]*?<\/div><\/div><div class="risk-table">/, `${heading}<div class="risk-table">`);
   const select = container.querySelector('[data-risk-use]');
   select.value = initialUse === 'cultivar' ? 'cultivar' : 'tomar';
   const update = () => {

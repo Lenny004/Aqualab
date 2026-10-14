@@ -285,12 +285,16 @@ export function createUI(scenario, scene) {
   const toolsPanel = document.getElementById('toolsPanel');
   const toolsPanelOriginalParent = toolsPanel?.parentNode;
   const toolsPanelOriginalNextSibling = toolsPanel?.nextSibling;
+  let activeSheetTab = 'reading';
   const syncMobileSheetLayout = () => {
     if (!toolsPanel || !dom.mobileSheetBody || !toolsPanelOriginalParent) return;
     if (mobileSheetQuery.matches) {
       if (toolsPanel.parentNode !== dom.mobileSheetBody) dom.mobileSheetBody.append(toolsPanel);
+      [dom.inspector, toolsPanel, document.getElementById('layersCard'), dom.toolsSections].forEach((node) => node?.classList.add('is-sheet-hidden'));
+      setSheetTab(activeSheetTab);
     } else if (toolsPanel.parentNode !== toolsPanelOriginalParent) {
       toolsPanelOriginalParent.insertBefore(toolsPanel, toolsPanelOriginalNextSibling);
+      [dom.inspector, toolsPanel, document.getElementById('layersCard'), dom.toolsSections].forEach((node) => node?.classList.remove('is-sheet-hidden', 'is-sheet-visible'));
     }
   };
   const moveTab = (event, selector) => {
@@ -334,18 +338,19 @@ export function createUI(scenario, scene) {
   };
   const setSheetTab = (tab) => {
     const activeTab = ['reading', 'tools', 'stages'].includes(tab) ? tab : 'reading';
+    activeSheetTab = activeTab;
     dom.mobileSheet?.querySelectorAll('[data-sheet-tab]').forEach((button) => {
       const selected = button.dataset.sheetTab === activeTab;
       button.classList.toggle('is-active', selected);
       button.setAttribute('aria-selected', String(selected));
     });
-    dom.inspector?.classList.toggle('is-sheet-visible', activeTab === 'reading');
-    toolsPanel?.classList.toggle('is-sheet-visible', activeTab === 'tools');
-    document.getElementById('layersCard')?.classList.toggle('is-sheet-visible', activeTab === 'stages');
+    const sheetPanels = [[dom.inspector, activeTab === 'reading'], [toolsPanel, activeTab === 'tools'], [document.getElementById('layersCard'), activeTab === 'stages'], [dom.toolsSections, activeTab === 'tools']];
+    sheetPanels.forEach(([node, visible]) => node?.classList.toggle('is-sheet-visible', visible));
+    sheetPanels.forEach(([node, visible]) => node?.classList.toggle('is-sheet-hidden', !visible));
   };
+  setSheetTab('reading');
   syncMobileSheetLayout();
   mobileSheetQuery.addEventListener('change', syncMobileSheetLayout);
-  setSheetTab('reading');
   setSheetExpanded(false);
   listen(dom.mobileSheetToggle, 'click', () => {
     if (sheetDragged) { sheetDragged = false; return; }
@@ -379,7 +384,7 @@ export function createUI(scenario, scene) {
         const row = document.createElement('div');
         row.className = 'layer-row';
         row.dataset.filter = layer.id;
-        row.innerHTML = `<span class="layer-row__swatch layer-row__swatch--${layer.id}"></span><span class="layer-row__main"><b>${layer.name}</b><small>${layer.short}</small></span><label class="layer-row__toggle" aria-label="Activar ${layer.name}"><input type="checkbox" /><span class="layer-row__track"></span></label>`;
+        row.innerHTML = `<span class="layer-row__swatch layer-row__swatch--${layer.id}"></span><span class="layer-row__main"><b class="layer-row__title">${layer.name}</b><small class="layer-row__meta">${layer.short}</small></span><label class="layer-row__toggle" aria-label="Activar ${layer.name}"><input class="layer-row__input" type="checkbox" /><span class="layer-row__track"></span></label>`;
         return row;
       }));
     }
@@ -387,7 +392,9 @@ export function createUI(scenario, scene) {
       const row = dom.layerList.children[index];
       row.classList.toggle('is-disabled', layer.enabled === false);
       row.classList.toggle('is-selected', state.selected === layer.id);
-      row.querySelector('input').checked = layer.enabled !== false;
+      const input = row.querySelector('.layer-row__input');
+      input.checked = layer.enabled !== false;
+      input.parentElement.classList.toggle('is-checked', input.checked);
     });
   }
 
@@ -400,9 +407,9 @@ export function createUI(scenario, scene) {
     dom.scenarioControls.innerHTML = `${warning}${scenario.controls.map((control) => {
       if (control.type === 'select') {
         const options = control.options.map((option) => `<option value="${option.value}" ${scenarioState[control.key] === option.value ? 'selected' : ''}>${option.label}</option>`).join('');
-        return `<label class="scenario-controls__field"><span>${control.label}</span><select class="scenario-controls__select" data-scenario-control="${control.key}" title="${control.help}" aria-describedby="scenario-${control.key}-hint">${options}</select><small id="scenario-${control.key}-hint">${control.help}</small></label>`;
+        return `<label class="scenario-controls__field"><span>${control.label}</span><select class="scenario-controls__select" data-scenario-control="${control.key}" title="${control.help}" aria-describedby="scenario-${control.key}-hint">${options}</select><small class="scenario-controls__hint" id="scenario-${control.key}-hint">${control.help}</small></label>`;
       }
-      return `<label class="scenario-controls__field"><span>${control.label}</span><input class="scenario-controls__input" data-scenario-control="${control.key}" type="${control.type}" value="${scenarioState[control.key]}" min="${control.min}" max="${control.max}" step="${control.step}" title="${control.help}" aria-describedby="scenario-${control.key}-hint" /><small id="scenario-${control.key}-hint">${control.help}</small></label>`;
+      return `<label class="scenario-controls__field"><span>${control.label}</span><input class="scenario-controls__input" data-scenario-control="${control.key}" type="${control.type}" value="${scenarioState[control.key]}" min="${control.min}" max="${control.max}" step="${control.step}" title="${control.help}" aria-describedby="scenario-${control.key}-hint" /><small class="scenario-controls__hint" id="scenario-${control.key}-hint">${control.help}</small></label>`;
     }).join('')}`;
   }
 
@@ -485,8 +492,8 @@ export function createUI(scenario, scene) {
     dom.metricsGrid.replaceChildren(...scenario.metrics.map((metric) => {
       const root = document.createElement('div');
       root.className = 'metric';
-      root.innerHTML = `<div class="metric-label"><span>${metric.label}</span><span>${metric.unit}</span></div><strong class="metric-value"><span></span>${metric.unit ? ` <small>${metric.unit}</small>` : ''}</strong><div class="metric-bar"><span></span></div>`;
-      metricNodes.set(metric.key, { root, value: root.querySelector('.metric-value span'), bar: root.querySelector('.metric-bar span') });
+      root.innerHTML = `<div class="metric-label"><span class="metric-label__text">${metric.label}</span><span class="metric-label__text">${metric.unit}</span></div><strong class="metric-value"><span></span>${metric.unit ? ` <small class="metric-value__unit">${metric.unit}</small>` : ''}</strong><div class="metric-bar"><span class="metric-bar__fill"></span></div>`;
+      metricNodes.set(metric.key, { root, value: root.querySelector('.metric-value span'), bar: root.querySelector('.metric-bar__fill') });
       return root;
     }));
   }
@@ -504,9 +511,9 @@ export function createUI(scenario, scene) {
     dom.evolutionChart.replaceChildren(...chartPoints.map((point) => {
       const column = document.createElement('div');
       column.className = 'chart-column';
-      column.innerHTML = `<span class="chart-bar before"></span><span class="chart-bar after"></span><span class="chart-label"></span>`;
+      column.innerHTML = `<span class="chart-bar chart-bar--before"></span><span class="chart-bar chart-bar--after"></span><span class="chart-label"></span>`;
       column.querySelector('.chart-label').textContent = point.label;
-      chartNodes.push({ column, before: column.querySelector('.before'), after: column.querySelector('.after'), point });
+      chartNodes.push({ column, before: column.querySelector('.chart-bar--before'), after: column.querySelector('.chart-bar--after'), point });
       return column;
     }));
   }
@@ -519,7 +526,7 @@ export function createUI(scenario, scene) {
       if (next) point.after = qualityScore(next.quality, initial);
       before.style.transform = `scaleY(${Math.max(4, point.before) / 100})`;
       after.style.transform = `scaleY(${Math.max(4, point.after) / 100})`;
-      column.classList.toggle('current', index === simulation.currentIndex);
+      column.classList.toggle('chart-column--current', index === simulation.currentIndex);
     });
   }
 
@@ -601,7 +608,7 @@ export function createUI(scenario, scene) {
     dom.inspectorTitle.textContent = detail.title;
     dom.inspectorDescription.textContent = detail.description;
     dom.qualityBadge.textContent = 'NO POTABLE';
-    dom.qualityBadge.className = 'quality-badge low';
+    dom.qualityBadge.className = 'quality-badge quality-badge--low';
     dom.qualityScore.textContent = score;
     dom.qualityRing.style.setProperty('--ring', `${Math.max(5, score)}%`);
     dom.qualityState.textContent = 'NO POTABLE';

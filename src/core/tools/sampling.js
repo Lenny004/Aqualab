@@ -13,6 +13,7 @@ export function renderSampling(container, { metrics = [], stages = [], initial, 
     const card = document.createElement('section');
     card.className = 'sampling-card';
     const heading = document.createElement('h3');
+    heading.className = 'sampling-card__title';
     heading.textContent = point;
     card.append(heading);
     metrics.forEach((metric) => {
@@ -22,6 +23,7 @@ export function renderSampling(container, { metrics = [], stages = [], initial, 
       label.textContent = metric.label;
       const value = document.createElement('span');
       const detail = document.createElement('small');
+      detail.className = 'sampling-row__hint';
       row.append(label, value, detail);
       rows.push({ pointIndex, metric, row, value, detail });
       card.append(row);
