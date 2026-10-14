@@ -14,7 +14,7 @@ import { renderAgronomy } from './tools/agronomy.js';
 import { createDeteriorationState, getDeteriorationEffects, renderDeterioration, updateDeterioration } from './tools/deterioration.js';
 
 const ids = [
-  'sceneStatus', 'activeLayerName', 'activeLayerHint', 'sceneTime', 'realTime', 'xrayButton',
+  'sceneStatus', 'activeLayerName', 'activeLayerHint', 'sceneTime', 'realTime', 'xrayButton', 'inspector',
   'resetViewButton', 'zoomOutButton', 'zoomInButton', 'lockViewButton', 'inspectorTitle',
   'inspectorDescription', 'qualityBadge', 'qualityRing', 'qualityScore', 'qualityState',
   'qualityDelta', 'metricsGrid', 'selectedStageNumber', 'beforeScore', 'beforeLabel',
@@ -30,6 +30,7 @@ const ids = [
   'journeyScenario', 'journeyPlay', 'journeyStages', 'journeyResults',
   'tourOverlay', 'tourTitle', 'tourDescription', 'tourNextButton', 'tourSkipButton',
   'usageTool', 'calculatorTool', 'budgetTool', 'maintenanceTool', 'deteriorationTool', 'samplingTool', 'safetyTool', 'risksTool', 'scheduleTool', 'economicsTool', 'agronomyTool', 'toolsTabs', 'toolsSections',
+  'mobileSheet', 'mobileSheetToggle', 'mobileSheetBody', 'mobileSheetStage', 'mobileSheetStatus', 'mobileSheetQuality',
 ];
 
 const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
@@ -94,7 +95,8 @@ export function createUI(scenario, scene) {
 
   function renderTourStep() {
     const step = tourSteps[tourIndex];
-    const target = document.getElementById(step.target) || document.querySelector(`.${step.target}`);
+    const targetId = window.matchMedia('(max-width: 600px)').matches && step.target === 'toolsSections' ? 'mobileSheetToggle' : step.target;
+    const target = document.getElementById(targetId) || document.querySelector(`.${targetId}`);
     if (!target) return;
     document.querySelectorAll('.is-tour-target').forEach((node) => node.classList.remove('is-tour-target'));
     target.classList.add('is-tour-target');
@@ -313,11 +315,44 @@ export function createUI(scenario, scene) {
   });
   listen(dom.tourSkipButton, 'click', () => closeTour());
   listen(dom.tourOverlay, 'click', (event) => { if (event.target === dom.tourOverlay) closeTour(); });
+  const setSheetExpanded = (expanded) => {
+    if (!dom.mobileSheet || !dom.mobileSheetToggle) return;
+    dom.mobileSheet.classList.toggle('is-expanded', expanded);
+    dom.mobileSheetToggle.setAttribute('aria-expanded', String(expanded));
+  };
+  const setSheetTab = (tab) => {
+    const reading = tab !== 'tools';
+    dom.mobileSheet?.querySelectorAll('[data-sheet-tab]').forEach((button) => {
+      const selected = button.dataset.sheetTab === (reading ? 'reading' : 'tools');
+      button.classList.toggle('is-active', selected);
+      button.setAttribute('aria-selected', String(selected));
+    });
+    dom.inspector?.classList.toggle('is-sheet-visible', reading);
+    document.getElementById('layersCard')?.classList.toggle('is-sheet-visible', !reading);
+  };
+  setSheetTab('reading');
+  setSheetExpanded(false);
+  listen(dom.mobileSheetToggle, 'click', () => {
+    if (sheetDragged) { sheetDragged = false; return; }
+    setSheetExpanded(dom.mobileSheetToggle.getAttribute('aria-expanded') !== 'true');
+  });
+  dom.mobileSheet?.querySelectorAll('[data-sheet-tab]').forEach((button) => listen(button, 'click', () => { setSheetTab(button.dataset.sheetTab); setSheetExpanded(true); }));
+  let sheetPointerStart;
+  let sheetDragged = false;
+  listen(dom.mobileSheetToggle, 'pointerdown', (event) => { sheetPointerStart = event.clientY; sheetDragged = false; dom.mobileSheetToggle.setPointerCapture?.(event.pointerId); });
+  listen(dom.mobileSheetToggle, 'pointermove', (event) => { if (sheetPointerStart === undefined) return; sheetDragged = Math.abs(event.clientY - sheetPointerStart) > 12; });
+  listen(dom.mobileSheetToggle, 'pointerup', (event) => {
+    if (sheetPointerStart === undefined) return;
+    const delta = event.clientY - sheetPointerStart;
+    if (Math.abs(delta) > 24) setSheetExpanded(delta < 0);
+    sheetPointerStart = undefined;
+  });
   listen(document, 'keydown', (event) => {
     trapTourFocus(event);
     if (event.key !== 'Escape') return;
     if (!dom.tourOverlay.hidden) closeTour();
     if (!dom.helpModal.hidden) dom.helpModal.hidden = true;
+    if (dom.mobileSheetToggle?.getAttribute('aria-expanded') === 'true') setSheetExpanded(false);
   });
   if (tourEnabled && !localStorage.getItem('aqualab.tourDone')) openTour();
 
@@ -556,6 +591,9 @@ export function createUI(scenario, scene) {
     dom.qualityRing.style.setProperty('--ring', `${Math.max(5, score)}%`);
     dom.qualityState.textContent = 'NO POTABLE';
     dom.qualityDelta.textContent = 'Filtrar no es potabilizar';
+    dom.mobileSheetStage.textContent = detail.stage === 'Entrada' ? 'Entrada' : detail.title;
+    dom.mobileSheetStatus.textContent = 'NO POTABLE';
+    dom.mobileSheetQuality.textContent = `${score}/100`;
     dom.selectedStageNumber.textContent = detail.stage;
     dom.beforeScore.textContent = qualityScore(detail.before, initial);
     dom.afterScore.textContent = qualityScore(detail.after, initial);

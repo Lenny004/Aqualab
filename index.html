@@ -53,7 +53,7 @@
                 <span id="sceneStatus">Agua sin tratar</span>
               </div>
               <div class="scene-tools">
-                <button class="tool-button" id="resetViewButton" type="button" title="Centra la cámara" aria-describedby="resetViewHint"><span class="tool-button__icon">⌖</span> Centrar</button>
+                <button class="tool-button" id="resetViewButton" type="button" title="Centra la cámara" aria-describedby="resetViewHint"><span class="tool-button__icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" /></svg></span> <span class="tool-button__label">Centrar</span></button>
                 <button class="tool-button" id="zoomOutButton" type="button" aria-label="Alejar vista" title="Aleja la cámara" aria-describedby="zoomOutHint"><span class="tool-button__icon">−</span> Alejar</button>
                 <button class="tool-button" id="zoomInButton" type="button" aria-label="Acercar vista" title="Acerca la cámara" aria-describedby="zoomInHint"><span class="tool-button__icon">+</span> Acercar</button>
                 <button class="tool-button" id="lockViewButton" type="button" aria-pressed="false" title="Fija o libera la cámara" aria-describedby="lockViewHint"><span class="tool-button__icon">◇</span> Fijar vista</button>
@@ -102,7 +102,14 @@
               </div>
             </section>
           </div>
-          <aside class="inspector" aria-label="Panel de inspección">
+          <div class="mobile-sheet" id="mobileSheet" aria-label="Lectura y herramientas">
+            <button class="mobile-sheet__handle" id="mobileSheetToggle" type="button" aria-expanded="false" aria-controls="mobileSheetBody"><span class="mobile-sheet__grab" aria-hidden="true"></span><span class="mobile-sheet__summary"><b id="mobileSheetStage">Entrada</b><span id="mobileSheetStatus">NO POTABLE</span><strong id="mobileSheetQuality">18/100</strong></span><span class="sr-only">Abrir lectura en vivo y herramientas</span></button>
+            <div class="mobile-sheet__tabs" role="tablist" aria-label="Panel inferior">
+              <button class="mobile-sheet__tab is-active" id="mobileSheetReadTab" type="button" role="tab" aria-selected="true" aria-controls="inspector" data-sheet-tab="reading">Lectura</button>
+              <button class="mobile-sheet__tab" id="mobileSheetToolsTab" type="button" role="tab" aria-selected="false" aria-controls="layersCard" data-sheet-tab="tools">Herramientas</button>
+            </div>
+            <div class="mobile-sheet__body" id="mobileSheetBody">
+          <aside class="inspector" id="inspector" aria-label="Panel de inspección">
             <div class="inspector-heading">
               <div>
                 <p class="eyebrow">LECTURA EN VIVO</p>
@@ -129,7 +136,7 @@
             </div>
             <p class="selection-tip"><span>i</span> Filtrar no es potabilizar. La filtración no lleva E. coli ni coliformes a un nivel seguro.</p>
           </aside>
-          <aside class="layers-card floating-layers-panel" aria-label="Etapas del sistema">
+          <aside class="layers-card floating-layers-panel" id="layersCard" aria-label="Etapas del sistema">
             <div class="card-heading"><div><p class="eyebrow">CONFIGURACIÓN</p><h2>Etapas del sistema</h2></div><span class="layer-count" id="layerCount">3 / 4</span></div>
             <p class="card-description">Activa etapas y ajusta los controles básicos del escenario.</p>
             <p class="scenario-note" id="scenarioDescription"></p>
@@ -144,6 +151,8 @@
               </div>
             </details>
           </aside>
+            </div>
+          </div>
         </section>
 
         <section class="lower-grid section-wrap">
