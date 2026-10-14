@@ -27,7 +27,7 @@ const ids = [
   'presetTool',
   'qualitySelect', 'qualityStatus',
   'journeyScenario', 'journeyPlay', 'journeyStages', 'journeyResults',
-  'usageTool', 'calculatorTool', 'budgetTool', 'maintenanceTool', 'deteriorationTool', 'samplingTool', 'safetyTool', 'risksTool', 'scheduleTool', 'economicsTool', 'agronomyTool', 'toolsTabs',
+  'usageTool', 'calculatorTool', 'budgetTool', 'maintenanceTool', 'deteriorationTool', 'samplingTool', 'safetyTool', 'risksTool', 'scheduleTool', 'economicsTool', 'agronomyTool', 'toolsTabs', 'toolsSections',
 ];
 
 const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
@@ -175,12 +175,51 @@ export function createUI(scenario, scene) {
     scene.setQuality(event.target.value);
     dom.qualityStatus.textContent = event.target.value === 'auto' ? 'Auto' : event.target.value === 'light' ? 'Ligera' : 'Alta';
   });
-  listen(dom.toolsTabs, 'click', (event) => {
-    const button = event.target.closest('[data-tool-tab]');
+  const toolTabs = () => [...document.querySelectorAll('.tools-section-panel [data-tool-tab]')];
+  const setToolTab = (button) => {
     if (!button) return;
-    dom.toolsTabs.querySelectorAll('[data-tool-tab]').forEach((item) => item.classList.toggle('is-active', item === button));
-    document.querySelectorAll('[data-tool-panel]').forEach((panel) => { panel.hidden = panel.dataset.toolPanel !== button.dataset.toolTab; });
+    toolTabs().forEach((item) => {
+      const selected = item === button;
+      item.classList.toggle('is-active', selected);
+      item.setAttribute('aria-selected', String(selected));
+      item.tabIndex = selected ? 0 : -1;
+    });
+    document.querySelectorAll('[data-tool-panel]').forEach((panel) => {
+      const selected = panel.dataset.toolPanel === button.dataset.toolTab;
+      panel.hidden = !selected;
+      panel.setAttribute('role', 'tabpanel');
+      if (selected) panel.setAttribute('aria-labelledby', button.id);
+      else panel.removeAttribute('aria-labelledby');
+    });
+  };
+  const setToolSection = (button) => {
+    if (!button) return;
+    document.querySelectorAll('[data-tool-section]').forEach((item) => {
+      const selected = item === button;
+      item.classList.toggle('is-active', selected);
+      item.setAttribute('aria-selected', String(selected));
+      item.tabIndex = selected ? 0 : -1;
+    });
+    document.querySelectorAll('[data-tool-section-panel]').forEach((panel) => { panel.hidden = panel.dataset.toolSectionPanel !== button.dataset.toolSection; });
+    setToolTab(button.closest('[data-tool-section-panel]')?.querySelector('[data-tool-tab]'));
+  };
+  const moveTab = (event, selector) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    const tabs = [...document.querySelectorAll(selector)];
+    const current = event.target.closest(selector);
+    const index = tabs.indexOf(current);
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+    tabs[next]?.focus();
+    tabs[next]?.click();
+  };
+  listen(dom.toolsSections, 'click', (event) => setToolSection(event.target.closest('[data-tool-section]')));
+  listen(dom.toolsSections, 'keydown', (event) => moveTab(event, '[data-tool-section]'));
+  document.querySelectorAll('.tools-section-panel [data-tool-tab]').forEach((button) => {
+    listen(button, 'click', () => setToolTab(button));
+    listen(button, 'keydown', (event) => moveTab(event, '.tools-section-panel:not([hidden]) [data-tool-tab]'));
   });
+  setToolSection(document.querySelector('[data-tool-section].is-active'));
   listen(dom.helpButton, 'click', () => { dom.helpModal.hidden = false; });
   listen(dom.closeHelpButton, 'click', () => { dom.helpModal.hidden = true; });
   listen(dom.helpModal, 'click', (event) => { if (event.target === dom.helpModal) dom.helpModal.hidden = true; });

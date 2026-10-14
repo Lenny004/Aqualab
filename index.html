@@ -147,18 +147,36 @@
 
         <section class="tools-panel section-wrap" aria-label="Herramientas compartidas">
           <div class="card-heading"><div><p class="eyebrow">HERRAMIENTAS COMUNES</p><h2>Diseña, verifica y mantiene</h2></div></div>
-          <div class="tools-tabs" id="toolsTabs" role="tablist" aria-label="Herramientas">
-            <button class="tools-tab is-active" data-tool-tab="usageTool" type="button">Uso final</button>
-            <button class="tools-tab" data-tool-tab="calculatorTool" type="button">Cálculo</button>
-            <button class="tools-tab" data-tool-tab="budgetTool" type="button">Presupuesto</button>
-            <button class="tools-tab" data-tool-tab="maintenanceTool" type="button">Mantenimiento</button>
-            <button class="tools-tab" data-tool-tab="deteriorationTool" type="button">Deterioro</button>
-            <button class="tools-tab" data-tool-tab="samplingTool" type="button">Muestreo</button>
-            <button class="tools-tab" data-tool-tab="safetyTool" type="button">Seguridad</button>
-            <button class="tools-tab" data-tool-tab="risksTool" type="button">Riesgos</button>
-            <button class="tools-tab" data-tool-tab="scheduleTool" type="button">Cronograma</button>
-            <button class="tools-tab" data-tool-tab="economicsTool" type="button">Economía</button>
-            <button class="tools-tab" data-tool-tab="agronomyTool" type="button">Agronomía</button>
+          <div class="tools-sections" id="toolsSections" role="tablist" aria-label="Secciones de herramientas">
+            <button class="tools-section is-active" id="toolsSectionQuality" role="tab" aria-selected="true" aria-controls="toolsSectionPanelQuality" data-tool-section="quality" type="button">💧 Calidad</button>
+            <button class="tools-section" id="toolsSectionPlanning" role="tab" aria-selected="false" aria-controls="toolsSectionPanelPlanning" data-tool-section="planning" type="button">🗓️ Planificación</button>
+            <button class="tools-section" id="toolsSectionManagement" role="tab" aria-selected="false" aria-controls="toolsSectionPanelManagement" data-tool-section="management" type="button">🛠️ Gestión</button>
+          </div>
+          <div class="tools-section-panel" id="toolsSectionPanelQuality" role="tabpanel" aria-labelledby="toolsSectionQuality" data-tool-section-panel="quality">
+            <p class="tools-section__description">Define la calidad del agua, su uso y las condiciones para aprovecharla.</p>
+            <div class="tools-tabs" id="toolsTabs" role="tablist" aria-label="Herramientas de Calidad">
+              <button class="tools-tab is-active" id="toolTabUsage" role="tab" aria-selected="true" aria-controls="usageTool" data-tool-tab="usageTool" type="button">Uso</button>
+              <button class="tools-tab" id="toolTabSampling" role="tab" aria-selected="false" aria-controls="samplingTool" data-tool-tab="samplingTool" type="button">Muestreo</button>
+              <button class="tools-tab" id="toolTabSafety" role="tab" aria-selected="false" aria-controls="safetyTool" data-tool-tab="safetyTool" type="button">Seguridad</button>
+              <button class="tools-tab" id="toolTabAgronomy" role="tab" aria-selected="false" aria-controls="agronomyTool" data-tool-tab="agronomyTool" type="button">Agronomía</button>
+            </div>
+          </div>
+          <div class="tools-section-panel" id="toolsSectionPanelPlanning" role="tabpanel" aria-labelledby="toolsSectionPlanning" data-tool-section-panel="planning" hidden>
+            <p class="tools-section__description">Convierte los datos del sistema en decisiones de diseño, costo y calendario.</p>
+            <div class="tools-tabs" role="tablist" aria-label="Herramientas de Planificación">
+              <button class="tools-tab" id="toolTabCalculator" role="tab" aria-selected="false" aria-controls="calculatorTool" data-tool-tab="calculatorTool" type="button">Cálculo</button>
+              <button class="tools-tab" id="toolTabBudget" role="tab" aria-selected="false" aria-controls="budgetTool" data-tool-tab="budgetTool" type="button">Presupuesto</button>
+              <button class="tools-tab" id="toolTabEconomics" role="tab" aria-selected="false" aria-controls="economicsTool" data-tool-tab="economicsTool" type="button">Economía</button>
+              <button class="tools-tab" id="toolTabSchedule" role="tab" aria-selected="false" aria-controls="scheduleTool" data-tool-tab="scheduleTool" type="button">Cronograma</button>
+            </div>
+          </div>
+          <div class="tools-section-panel" id="toolsSectionPanelManagement" role="tabpanel" aria-labelledby="toolsSectionManagement" data-tool-section-panel="management" hidden>
+            <p class="tools-section__description">Da seguimiento al estado del sistema y anticipa sus necesidades de operación.</p>
+            <div class="tools-tabs" role="tablist" aria-label="Herramientas de Gestión">
+              <button class="tools-tab" id="toolTabMaintenance" role="tab" aria-selected="false" aria-controls="maintenanceTool" data-tool-tab="maintenanceTool" type="button">Mantenimiento</button>
+              <button class="tools-tab" id="toolTabDeterioration" role="tab" aria-selected="false" aria-controls="deteriorationTool" data-tool-tab="deteriorationTool" type="button">Deterioro</button>
+              <button class="tools-tab" id="toolTabRisks" role="tab" aria-selected="false" aria-controls="risksTool" data-tool-tab="risksTool" type="button">Riesgos</button>
+            </div>
           </div>
           <div class="tool-panel" data-tool-panel="usageTool" id="usageTool"></div>
           <div class="tool-panel" data-tool-panel="calculatorTool" id="calculatorTool" hidden></div>
