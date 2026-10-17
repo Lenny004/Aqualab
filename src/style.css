@@ -517,6 +517,7 @@ h1, h2, p { margin-block-start: 0; }
 .tools-section-panel[hidden] { display: none; }
 .tools-section-panel { display: grid; gap: var(--space-16); min-width: 0; }
 .tools-section__description { margin: 0; color: var(--color-text-muted); font-size: 1.1rem; }
+.tools-panel__intro { max-width: 72ch; margin: var(--space-4) 0 0; color: var(--color-text-muted); font-size: 1.2rem; line-height: 1.5; }
 .tools-tabs { display: flex; flex-wrap: nowrap; gap: var(--space-8); overflow-x: auto; margin: 0; padding-block-end: var(--space-12); border-block-end: 1px solid var(--color-border); scrollbar-width: thin; }
 .tools-tab { padding: .8rem 1rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); color: var(--color-text-muted); background: transparent; font: 1rem var(--font-mono); }
 .tools-tab:hover, .tools-tab.is-active { border-color: var(--color-primary); color: var(--color-on-primary); background: var(--color-primary); }
