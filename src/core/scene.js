@@ -50,6 +50,8 @@ export class PurificationScene {
     this.handleResize = () => this.resize();
     this.handlePointer = (event) => this.onPointer(event);
     window.addEventListener('resize', this.handleResize);
+    this.viewportObserver = new ResizeObserver(() => this.resize());
+    this.viewportObserver.observe(canvas);
     canvas.addEventListener('pointerdown', this.handlePointer);
     this.animate();
   }
@@ -304,6 +306,7 @@ export class PurificationScene {
   dispose() {
     this.disposed = true;
     window.removeEventListener('resize', this.handleResize);
+    this.viewportObserver?.disconnect();
     this.canvas.removeEventListener('pointerdown', this.handlePointer);
     this.objects.dispose?.();
     const textures = new Set();

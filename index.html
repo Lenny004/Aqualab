@@ -84,10 +84,10 @@
                   <button class="secondary-button" id="restartButton" type="button">↺ <span>Reiniciar</span></button>
                   <span class="sr-only" id="playHint">Sigue el recorrido del agua.</span>
                 </div>
-                <details class="fold-panel fold-panel--inline playback-options" id="playbackOptions">
-                  <summary class="fold-panel__summary"><span class="fold-panel__label">Velocidad y tiempo</span><span class="fold-panel__aside"><span class="fold-panel__hint">Ver más</span></span></summary>
-                  <div class="fold-panel__body control-meta"><div class="real-time"><span>Tiempo real</span><b class="real-time__value" id="realTime">00:00</b></div><div class="speed-control"><span>Velocidad</span><div class="speed-options" id="speedOptions"><button class="speed-options__button" type="button" data-speed="0.5">0.5×</button><button type="button" data-speed="1" class="speed-options__button is-active">1×</button><button class="speed-options__button" type="button" data-speed="2">2×</button><button class="speed-options__button" type="button" data-speed="4">4×</button></div></div></div>
-                </details>
+                <div class="control-meta">
+                  <div class="real-time"><span>Tiempo real</span><b class="real-time__value" id="realTime">00:00</b></div>
+                  <div class="speed-control"><span class="speed-control__label">Velocidad</span><div class="speed-options" id="speedOptions"><button class="speed-options__button" type="button" data-speed="0.5">0.5×</button><button type="button" data-speed="1" class="speed-options__button is-active">1×</button><button class="speed-options__button" type="button" data-speed="2">2×</button><button class="speed-options__button" type="button" data-speed="4">4×</button></div></div>
+                </div>
               </div>
               <div class="stage-navigation" id="stage-navigation" aria-label="Navegación de etapas">
                 <button class="secondary-button stage-navigation__button" id="previousStageButton" type="button" title="Ir a la etapa anterior" aria-describedby="previousStageHint">← Etapa anterior</button>
@@ -119,56 +119,46 @@
               <div class="quality-copy"><b class="quality-copy__title" id="qualityState">NO POTABLE</b><small class="quality-copy__hint" id="qualityDelta">Filtrar no es potabilizar</small></div>
             </div>
 
-            <details class="fold-panel fold-panel--inspector" id="inspectorDetails">
-              <summary class="fold-panel__summary"><span class="fold-panel__label">Parámetros y comparación</span><span class="fold-panel__aside"><span class="fold-panel__hint">Ver más</span></span></summary>
-              <div class="fold-panel__body">
-                <div class="metrics-grid" id="metricsGrid"></div>
-                <p class="metrics-note">Valores ilustrativos</p>
-                <div class="inspector-divider"></div>
-                <div class="detail-heading"><span class="detail-heading__label">Etapa</span><span class="detail-heading__label" id="selectedStageNumber">Entrada</span></div>
-                <div class="before-after">
-                  <div class="comparison comparison--before"><span class="comparison__label">Antes</span><strong class="comparison__value" id="beforeScore">12</strong><small class="comparison__hint" id="beforeLabel">Agua de entrada</small></div>
-                  <div class="comparison__arrow">→</div>
-                  <div class="comparison comparison--after"><span class="comparison__label">Después</span><strong class="comparison__value" id="afterScore">12</strong><small class="comparison__hint" id="afterLabel">Sin cambios</small></div>
-                </div>
-                <p class="selection-tip"><span class="selection-tip__icon">i</span> No apta para beber sin análisis de laboratorio.</p>
-              </div>
-            </details>
+            <div class="metrics-grid" id="metricsGrid"></div>
+            <p class="metrics-note">Valores ilustrativos</p>
+            <div class="inspector-divider"></div>
+            <div class="detail-heading"><span class="detail-heading__label">Etapa</span><span class="detail-heading__label" id="selectedStageNumber">Entrada</span></div>
+            <div class="before-after">
+              <div class="comparison comparison--before"><span class="comparison__label">Antes</span><strong class="comparison__value" id="beforeScore">12</strong><small class="comparison__hint" id="beforeLabel">Agua de entrada</small></div>
+              <div class="comparison__arrow">→</div>
+              <div class="comparison comparison--after"><span class="comparison__label">Después</span><strong class="comparison__value" id="afterScore">12</strong><small class="comparison__hint" id="afterLabel">Sin cambios</small></div>
+            </div>
+            <p class="selection-tip"><span class="selection-tip__icon">i</span> No apta para beber sin análisis de laboratorio.</p>
           </aside>
-          <details class="fold-panel fold-panel--layers floating-layers-panel" id="layersFold">
-            <summary class="fold-panel__summary"><span class="fold-panel__label">Configurar etapas</span><span class="fold-panel__aside"><span class="fold-panel__meta" id="layerCount">3 / 4</span><span class="fold-panel__hint">Ver más</span></span></summary>
-            <aside class="layers-card layers-card--bare" id="layersCard" aria-label="Etapas del sistema">
+          <aside class="layers-card" id="layersCard" aria-label="Etapas del sistema">
+            <div class="card-heading">
+              <h2 class="card-heading__title">Etapas</h2>
+              <span class="layer-count" id="layerCount">3 / 4</span>
+            </div>
             <p class="scenario-note" id="scenarioDescription"></p>
             <div class="scenario-controls" id="scenarioControls"></div>
             <div class="layer-list" id="layerList"></div>
-            <details class="advanced-panel" id="advancedPanel">
-              <summary class="advanced-panel__summary"><span class="advanced-panel__summary-label">Diseños y rendimiento</span><span class="advanced-panel__summary-note">Abrir</span></summary>
-              <div class="advanced-panel__content">
-                <div class="quality-control"><span class="quality-control__label">Calidad de escena</span><select class="quality-control__select" id="qualitySelect" aria-label="Calidad de la escena" title="Ajusta el rendimiento visual" aria-describedby="qualityHint"><option value="auto">Auto</option><option value="high">Alta</option><option value="light">Ligera</option></select><small class="quality-control__status" id="qualityStatus">Auto</small><span class="sr-only" id="qualityHint">Elige entre calidad visual y rendimiento.</span></div>
-                <div class="preset-tool" id="presetTool"></div>
-              </div>
-            </details>
-            </aside>
-          </details>
+            <div class="layers-card__tools">
+              <div class="quality-control"><span class="quality-control__label">Calidad de escena</span><select class="quality-control__select" id="qualitySelect" aria-label="Calidad de la escena" title="Ajusta el rendimiento visual" aria-describedby="qualityHint"><option value="auto">Auto</option><option value="high">Alta</option><option value="light">Ligera</option></select><small class="quality-control__status" id="qualityStatus">Auto</small><span class="sr-only" id="qualityHint">Elige entre calidad visual y rendimiento.</span></div>
+              <div class="preset-tool" id="presetTool"></div>
+            </div>
+          </aside>
             </div>
           </div>
-        </section>
-
-        <section class="lower-grid section-wrap">
-          <details class="fold-panel fold-panel--section">
-            <summary class="fold-panel__summary"><span class="fold-panel__label">Evolución del índice</span><span class="fold-panel__aside"><span class="fold-panel__hint">Ver más</span></span></summary>
-            <div class="fold-panel__body evolution-card evolution-card--bare">
-            <p class="evolution-card__trend"><span class="fold-panel__meta" id="trendPill">+0</span> índice vs entrada</p>
+          <article class="evolution-card" aria-label="Evolución del índice">
+            <div class="card-heading">
+              <h2 class="card-heading__title">Evolución del índice</h2>
+              <span class="trend-pill" id="trendPill">+0</span>
+            </div>
             <div class="evolution-chart" id="evolutionChart"></div>
             <div class="chart-legend"><span class="chart-legend__item"><i class="dot dot--before"></i> Antes</span><span class="chart-legend__item"><i class="dot dot--after"></i> Después</span><span class="chart-legend__unit">Índice 0–100</span></div>
-            </div>
-          </details>
+          </article>
         </section>
 
-        <details class="fold-panel fold-panel--section section-wrap" id="toolsFold">
-          <summary class="fold-panel__summary"><span class="fold-panel__label">Herramientas del proyecto</span><span class="fold-panel__aside"><span class="fold-panel__hint">Ver más</span></span></summary>
-          <div class="fold-panel__body">
-        <section class="tools-panel tools-panel--bare" id="toolsPanel" aria-label="Herramientas compartidas">
+        <section class="tools-panel section-wrap" id="toolsPanel" aria-label="Herramientas compartidas">
+          <div class="card-heading">
+            <h2 class="card-heading__title">Herramientas</h2>
+          </div>
           <div class="tools-sections" id="toolsSections" role="tablist" aria-label="Secciones de herramientas">
             <button class="tools-section is-active" id="toolsSectionQuality" role="tab" aria-selected="true" aria-controls="toolsSectionPanelQuality" data-tool-section="quality" type="button">💧 Calidad</button>
             <button class="tools-section" id="toolsSectionPlanning" role="tab" aria-selected="false" aria-controls="toolsSectionPanelPlanning" data-tool-section="planning" type="button">🗓️ Planificación</button>
@@ -212,8 +202,6 @@
           <div class="tool-panel" data-tool-panel="economicsTool" id="economicsTool" hidden></div>
           <div class="tool-panel" data-tool-panel="agronomyTool" id="agronomyTool" hidden></div>
         </section>
-          </div>
-        </details>
       </main>
 
       <footer class="footer section-wrap"><span class="footer__meta">AquaLab · Valores ilustrativos</span></footer>

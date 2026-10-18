@@ -268,16 +268,6 @@ export function createUI(scenario, scene) {
     journeyStep = 3;
     render();
   });
-  listen(document.getElementById('advancedPanel'), 'toggle', (event) => {
-    const note = event.currentTarget.querySelector('.advanced-panel__summary-note');
-    if (note) note.textContent = event.currentTarget.open ? 'Cerrar' : 'Abrir';
-  });
-  document.querySelectorAll('.fold-panel').forEach((panel) => {
-    listen(panel, 'toggle', (event) => {
-      const hint = event.currentTarget.querySelector('.fold-panel__hint');
-      if (hint) hint.textContent = event.currentTarget.open ? 'Ver menos' : 'Ver más';
-    });
-  });
   listen(dom.scenarioControls, 'change', handleScenarioControl);
   listen(dom.qualitySelect, 'change', (event) => {
     scene.setQuality(event.target.value);
@@ -374,8 +364,6 @@ export function createUI(scenario, scene) {
       button.classList.toggle('is-active', selected);
       button.setAttribute('aria-selected', String(selected));
     });
-    if (activeTab === 'stages') document.getElementById('layersFold')?.setAttribute('open', '');
-    if (activeTab === 'tools') document.getElementById('toolsFold')?.setAttribute('open', '');
     const sheetPanels = [[dom.inspector, activeTab === 'reading'], [toolsPanel, activeTab === 'tools'], [document.getElementById('layersCard'), activeTab === 'stages'], [dom.toolsSections, activeTab === 'tools']];
     sheetPanels.forEach(([node, visible]) => node?.classList.toggle('is-sheet-visible', visible));
     sheetPanels.forEach(([node, visible]) => node?.classList.toggle('is-sheet-hidden', !visible));
