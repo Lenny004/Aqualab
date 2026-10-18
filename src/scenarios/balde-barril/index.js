@@ -21,10 +21,10 @@ export default {
     clogging: ['gravel', 'sand', 'carbon'],
   },
   text: {
-    description: 'Ilustración conceptual: orden, espesor y granulometría provienen de un diseño hidráulico.',
-    inputDescription: 'El agua contiene partículas, color, olor y microorganismos antes de atravesar el sistema.',
-    disabledDescription: 'Esta capa está desactivada. Actívala para incluirla en el recorrido.',
-    help: 'Usa Reproducir para seguir el agua por la grava, la arena, el carbón activado y la etapa avanzada opcional. Puedes seleccionar una capa o el balde y activar Radiografía para inspeccionar su interior.',
+    description: 'Orden y espesores según diseño hidráulico (ilustrativo).',
+    inputDescription: 'Agua sin tratar.',
+    disabledDescription: 'Etapa desactivada.',
+    help: 'Reproduce el recorrido, cambia de etapa y usa Radiografía para ver el interior.',
   },
   onUsageChange: (usage, { scene }) => scene.setUsage?.(usage),
   applyPreset: (presetId, { layers, setFinalUse }) => {

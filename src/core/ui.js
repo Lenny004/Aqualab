@@ -683,7 +683,10 @@ export function createUI(scenario, scene) {
     dom.totalTime.textContent = formatTime(simulation.totalDuration);
     dom.timelineInput.value = Math.round(state.progress * 1000);
     dom.inspectorTitle.textContent = detail.title;
-    dom.inspectorDescription.textContent = detail.description;
+    const selectedLayer = layers.find((item) => item.id === state.selected);
+    dom.inspectorDescription.textContent = state.selected === 'input'
+      ? scenario.text.inputDescription
+      : (selectedLayer?.short || detail.description);
     dom.qualityBadge.textContent = 'NO POTABLE';
     dom.qualityBadge.className = 'quality-badge quality-badge--low';
     dom.qualityScore.textContent = score;
