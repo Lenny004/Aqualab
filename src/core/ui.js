@@ -275,7 +275,7 @@ export function createUI(scenario, scene) {
   document.querySelectorAll('.fold-panel').forEach((panel) => {
     listen(panel, 'toggle', (event) => {
       const hint = event.currentTarget.querySelector('.fold-panel__hint');
-      if (hint) hint.textContent = event.currentTarget.open ? 'Cerrar' : 'Ver más';
+      if (hint) hint.textContent = event.currentTarget.open ? 'Ver menos' : 'Ver más';
     });
   });
   listen(dom.scenarioControls, 'change', handleScenarioControl);

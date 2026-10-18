@@ -13,7 +13,7 @@
           <span class="brand__mark"><span class="brand__mark-bar brand__mark-bar--short"></span><span class="brand__mark-bar brand__mark-bar--mid"></span><span class="brand__mark-bar brand__mark-bar--tall"></span></span>
           <span class="brand__name">Aqua<span class="brand__name-accent">Lab</span></span>
         </a>
-        <label class="scenario-picker"><span>Escenario</span><select class="scenario-picker__select" id="scenarioSelect" aria-label="Seleccionar escenario" title="Cambia el sistema que quieres explorar" aria-describedby="scenarioSelectHint"></select><small id="scenarioSelectHint" class="sr-only">Elige entre los escenarios disponibles.</small></label>
+        <label class="scenario-picker"><span class="scenario-picker__label">Escenario</span><select class="scenario-picker__select" id="scenarioSelect" aria-label="Seleccionar escenario" title="Cambia el sistema que quieres explorar" aria-describedby="scenarioSelectHint"></select><small id="scenarioSelectHint" class="sr-only">Elige entre los escenarios disponibles.</small></label>
         <button class="icon-button" id="helpButton" type="button" aria-label="Abrir el tour guiado" title="Abrir el tour guiado">?</button>
       </header>
 
@@ -85,7 +85,7 @@
                   <span class="sr-only" id="playHint">Sigue el recorrido del agua.</span>
                 </div>
                 <details class="fold-panel fold-panel--inline playback-options" id="playbackOptions">
-                  <summary class="fold-panel__summary"><span class="fold-panel__label">Velocidad y tiempo</span><span class="fold-panel__hint">Más</span></summary>
+                  <summary class="fold-panel__summary"><span class="fold-panel__label">Velocidad y tiempo</span><span class="fold-panel__aside"><span class="fold-panel__hint">Ver más</span></span></summary>
                   <div class="fold-panel__body control-meta"><div class="real-time"><span>Tiempo real</span><b class="real-time__value" id="realTime">00:00</b></div><div class="speed-control"><span>Velocidad</span><div class="speed-options" id="speedOptions"><button class="speed-options__button" type="button" data-speed="0.5">0.5×</button><button type="button" data-speed="1" class="speed-options__button is-active">1×</button><button class="speed-options__button" type="button" data-speed="2">2×</button><button class="speed-options__button" type="button" data-speed="4">4×</button></div></div></div>
                 </details>
               </div>
@@ -120,7 +120,7 @@
             </div>
 
             <details class="fold-panel fold-panel--inspector" id="inspectorDetails">
-              <summary class="fold-panel__summary"><span class="fold-panel__label">Parámetros y comparación</span><span class="fold-panel__hint">Ver más</span></summary>
+              <summary class="fold-panel__summary"><span class="fold-panel__label">Parámetros y comparación</span><span class="fold-panel__aside"><span class="fold-panel__hint">Ver más</span></span></summary>
               <div class="fold-panel__body">
                 <div class="metrics-grid" id="metricsGrid"></div>
                 <p class="metrics-note">Valores ilustrativos</p>
@@ -136,7 +136,7 @@
             </details>
           </aside>
           <details class="fold-panel fold-panel--layers floating-layers-panel" id="layersFold">
-            <summary class="fold-panel__summary"><span class="fold-panel__label">Configurar etapas</span><span class="fold-panel__hint">Ver más</span><span class="layer-count layer-count--summary" id="layerCount">3 / 4</span></summary>
+            <summary class="fold-panel__summary"><span class="fold-panel__label">Configurar etapas</span><span class="fold-panel__aside"><span class="fold-panel__meta" id="layerCount">3 / 4</span><span class="fold-panel__hint">Ver más</span></span></summary>
             <aside class="layers-card layers-card--bare" id="layersCard" aria-label="Etapas del sistema">
             <p class="scenario-note" id="scenarioDescription"></p>
             <div class="scenario-controls" id="scenarioControls"></div>
@@ -156,8 +156,9 @@
 
         <section class="lower-grid section-wrap">
           <details class="fold-panel fold-panel--section">
-            <summary class="fold-panel__summary"><span class="fold-panel__label">Evolución del índice</span><span class="fold-panel__hint">Ver más</span><span class="trend-pill trend-pill--summary" id="trendPill">+0 calidad</span></summary>
+            <summary class="fold-panel__summary"><span class="fold-panel__label">Evolución del índice</span><span class="fold-panel__aside"><span class="fold-panel__hint">Ver más</span></span></summary>
             <div class="fold-panel__body evolution-card evolution-card--bare">
+            <p class="evolution-card__trend"><span class="fold-panel__meta" id="trendPill">+0</span> índice vs entrada</p>
             <div class="evolution-chart" id="evolutionChart"></div>
             <div class="chart-legend"><span class="chart-legend__item"><i class="dot dot--before"></i> Antes</span><span class="chart-legend__item"><i class="dot dot--after"></i> Después</span><span class="chart-legend__unit">Índice 0–100</span></div>
             </div>
@@ -165,7 +166,7 @@
         </section>
 
         <details class="fold-panel fold-panel--section section-wrap" id="toolsFold">
-          <summary class="fold-panel__summary"><span class="fold-panel__label">Herramientas del proyecto</span><span class="fold-panel__hint">Ver más</span></summary>
+          <summary class="fold-panel__summary"><span class="fold-panel__label">Herramientas del proyecto</span><span class="fold-panel__aside"><span class="fold-panel__hint">Ver más</span></span></summary>
           <div class="fold-panel__body">
         <section class="tools-panel tools-panel--bare" id="toolsPanel" aria-label="Herramientas compartidas">
           <div class="tools-sections" id="toolsSections" role="tablist" aria-label="Secciones de herramientas">
