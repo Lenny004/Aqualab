@@ -7,31 +7,23 @@
     <title>AquaLab · Simulador 3D de purificación</title>
   </head>
   <body>
-    <div class="app-shell">
+    <div class="app-shell app-shell--focused">
       <header class="topbar">
         <a class="brand" href="/" aria-label="AquaLab inicio">
           <span class="brand__mark"><span class="brand__mark-bar brand__mark-bar--short"></span><span class="brand__mark-bar brand__mark-bar--mid"></span><span class="brand__mark-bar brand__mark-bar--tall"></span></span>
           <span class="brand__name">Aqua<span class="brand__name-accent">Lab</span></span>
         </a>
-        <div class="topbar__meta">
-          <span class="topbar__live-dot"></span>
-          <span>Simulación interactiva</span>
-          <span class="topbar__divider"></span>
-          <span>Modo educativo</span>
-        </div>
         <label class="scenario-picker"><span>Escenario</span><select class="scenario-picker__select" id="scenarioSelect" aria-label="Seleccionar escenario" title="Cambia el sistema que quieres explorar" aria-describedby="scenarioSelectHint"></select><small id="scenarioSelectHint" class="sr-only">Elige entre los escenarios disponibles.</small></label>
         <button class="icon-button" id="helpButton" type="button" aria-label="Abrir el tour guiado" title="Abrir el tour guiado">?</button>
       </header>
 
       <main>
-        <section class="intro section-wrap">
+        <section class="intro section-wrap intro--compact">
           <div>
-            <p class="eyebrow">LABORATORIO VIRTUAL · 01</p>
-            <h1 class="intro__title">Observa cómo el agua <em class="intro__title-em">recupera su claridad.</em></h1>
-            <p class="intro-copy">Elige un escenario, reproduce el recorrido y revisa cada etapa.</p>
-            <div class="intro__tags" aria-label="Características del simulador"><span class="intro__tag" id="activeStagesChip">4 etapas</span><span class="intro__tag">Escena 3D</span><span class="intro__tag">Datos ilustrativos</span></div>
+            <h1 class="intro__title">Purificación del agua en 3D</h1>
+            <p class="intro-copy">Reproduce el recorrido y explora cada etapa.</p>
           </div>
-          <nav class="journey" aria-label="Flujo principal">
+          <nav class="journey journey--aux" aria-label="Flujo principal" hidden>
             <ol class="journey__list">
               <li class="journey__step is-current" id="journeyScenario"><span class="journey__index">1</span><b class="journey__label">Elige escenario</b></li>
               <li class="journey__step" id="journeyPlay"><span class="journey__index">2</span><b class="journey__label">Reproduce</b></li>
@@ -42,7 +34,7 @@
         </section>
 
         <section class="safety-banner safety-banner--visible section-wrap" id="safetyNotice" aria-label="Aviso de seguridad">
-          <strong class="safety-banner__title">Propuesta académica</strong><span class="safety-banner__copy">NO POTABLE sin análisis de laboratorio conforme al RTS 13.02.01:14 (El Salvador). Filtrar no es potabilizar.</span>
+          <strong class="safety-banner__title">NO POTABLE</strong><span class="safety-banner__copy">Filtrar no es potabilizar. Valida con laboratorio antes de beber.</span>
         </section>
 
         <section class="simulation-layout section-wrap" aria-label="Simulación de purificación">
@@ -77,7 +69,7 @@
             </div>
             <section class="controls-section" aria-label="Controles de la simulación">
               <div class="timeline-header">
-                <div class="timeline-title"><span class="timeline-title__eyebrow eyebrow">RECORRIDO DEL AGUA</span><h2 class="timeline-title__heading">Secuencia de purificación</h2></div>
+                <div class="timeline-title"><h2 class="timeline-title__heading">Recorrido</h2></div>
                 <div class="timeline-times"><span class="timeline-times__start" id="currentTime">00:00</span><span class="time-slash">/</span><span class="timeline-times__end" id="totalTime">00:48</span></div>
               </div>
               <div class="timeline-wrap">
@@ -92,7 +84,10 @@
                   <button class="secondary-button" id="restartButton" type="button">↺ <span>Reiniciar</span></button>
                   <span class="sr-only" id="playHint">Sigue el recorrido del agua.</span>
                 </div>
-                <div class="control-meta"><div class="real-time"><span>Tiempo real</span><b class="real-time__value" id="realTime">00:00</b></div><div class="speed-control"><span>Velocidad</span><div class="speed-options" id="speedOptions"><button class="speed-options__button" type="button" data-speed="0.5">0.5×</button><button type="button" data-speed="1" class="speed-options__button is-active">1×</button><button class="speed-options__button" type="button" data-speed="2">2×</button><button class="speed-options__button" type="button" data-speed="4">4×</button></div></div></div>
+                <details class="fold-panel fold-panel--inline playback-options" id="playbackOptions">
+                  <summary class="fold-panel__summary"><span class="fold-panel__label">Velocidad y tiempo</span><span class="fold-panel__hint">Más</span></summary>
+                  <div class="fold-panel__body control-meta"><div class="real-time"><span>Tiempo real</span><b class="real-time__value" id="realTime">00:00</b></div><div class="speed-control"><span>Velocidad</span><div class="speed-options" id="speedOptions"><button class="speed-options__button" type="button" data-speed="0.5">0.5×</button><button type="button" data-speed="1" class="speed-options__button is-active">1×</button><button class="speed-options__button" type="button" data-speed="2">2×</button><button class="speed-options__button" type="button" data-speed="4">4×</button></div></div></div>
+                </details>
               </div>
               <div class="stage-navigation" id="stage-navigation" aria-label="Navegación de etapas">
                 <button class="secondary-button stage-navigation__button" id="previousStageButton" type="button" title="Ir a la etapa anterior" aria-describedby="previousStageHint">← Etapa anterior</button>
@@ -110,69 +105,76 @@
               <button class="mobile-sheet__tab" id="mobileSheetStagesTab" type="button" role="tab" aria-selected="false" aria-controls="layersCard" data-sheet-tab="stages">Etapas</button>
             </div>
             <div class="mobile-sheet__body" id="mobileSheetBody">
-          <aside class="inspector" id="inspector" aria-label="Panel de inspección">
+          <aside class="inspector" id="inspector" aria-label="Estado del agua">
             <div class="inspector-heading">
               <div>
-                <p class="eyebrow">LECTURA EN VIVO</p>
                 <h2 class="inspector__title" id="inspectorTitle">Agua de entrada</h2>
               </div>
               <span class="quality-badge quality-badge--medium" id="qualityBadge">Turbia</span>
             </div>
-            <p class="inspector-description" id="inspectorDescription">Este es el punto de partida. El agua contiene partículas, color y microorganismos antes de atravesar el sistema.</p>
+            <p class="inspector-description" id="inspectorDescription">Agua sin tratar.</p>
 
-            <div class="quality-overview">
-              <div class="quality-ring" id="qualityRing"><div class="quality-ring__body"><strong class="quality-ring__score" id="qualityScore">18</strong><span class="quality-ring__label">calidad</span></div></div>
-              <div class="quality-copy"><span class="quality-copy__eyebrow">Índice de calidad</span><b class="quality-copy__title" id="qualityState">Requiere filtración</b><small class="quality-copy__hint" id="qualityDelta">Punto de partida</small></div>
+            <div class="quality-overview quality-overview--compact">
+              <div class="quality-ring" id="qualityRing"><div class="quality-ring__body"><strong class="quality-ring__score" id="qualityScore">18</strong><span class="quality-ring__label">índice</span></div></div>
+              <div class="quality-copy"><b class="quality-copy__title" id="qualityState">NO POTABLE</b><small class="quality-copy__hint" id="qualityDelta">Filtrar no es potabilizar</small></div>
             </div>
 
-            <div class="metrics-grid" id="metricsGrid"></div>
-            <p class="metrics-note">Valores ilustrativos</p>
-
-            <div class="inspector-divider"></div>
-            <div class="detail-heading"><span class="detail-heading__label">Comparación de la etapa</span><span class="detail-heading__label" id="selectedStageNumber">Entrada</span></div>
-            <div class="before-after">
-              <div class="comparison comparison--before"><span class="comparison__label">Antes de la etapa</span><strong class="comparison__value" id="beforeScore">12</strong><small class="comparison__hint" id="beforeLabel">Agua de entrada</small></div>
-              <div class="comparison__arrow">→</div>
-              <div class="comparison comparison--after"><span class="comparison__label">Después de la etapa</span><strong class="comparison__value" id="afterScore">12</strong><small class="comparison__hint" id="afterLabel">Sin cambios</small></div>
-            </div>
-            <p class="selection-tip"><span class="selection-tip__icon">i</span> Filtrar no es potabilizar. La filtración no lleva E. coli ni coliformes a un nivel seguro.</p>
+            <details class="fold-panel fold-panel--inspector" id="inspectorDetails">
+              <summary class="fold-panel__summary"><span class="fold-panel__label">Parámetros y comparación</span><span class="fold-panel__hint">Ver más</span></summary>
+              <div class="fold-panel__body">
+                <div class="metrics-grid" id="metricsGrid"></div>
+                <p class="metrics-note">Valores ilustrativos</p>
+                <div class="inspector-divider"></div>
+                <div class="detail-heading"><span class="detail-heading__label">Etapa</span><span class="detail-heading__label" id="selectedStageNumber">Entrada</span></div>
+                <div class="before-after">
+                  <div class="comparison comparison--before"><span class="comparison__label">Antes</span><strong class="comparison__value" id="beforeScore">12</strong><small class="comparison__hint" id="beforeLabel">Agua de entrada</small></div>
+                  <div class="comparison__arrow">→</div>
+                  <div class="comparison comparison--after"><span class="comparison__label">Después</span><strong class="comparison__value" id="afterScore">12</strong><small class="comparison__hint" id="afterLabel">Sin cambios</small></div>
+                </div>
+                <p class="selection-tip"><span class="selection-tip__icon">i</span> No apta para beber sin análisis de laboratorio.</p>
+              </div>
+            </details>
           </aside>
-          <aside class="layers-card floating-layers-panel" id="layersCard" aria-label="Etapas del sistema">
-            <div class="card-heading"><div><p class="eyebrow">CONFIGURACIÓN</p><h2 class="card-heading__title">Etapas del sistema</h2></div><span class="layer-count" id="layerCount">3 / 4</span></div>
-            <p class="card-description">Toca el nombre para ver la etapa. El interruptor la incluye o la quita.</p>
+          <details class="fold-panel fold-panel--layers floating-layers-panel" id="layersFold">
+            <summary class="fold-panel__summary"><span class="fold-panel__label">Configurar etapas</span><span class="fold-panel__hint">Ver más</span><span class="layer-count layer-count--summary" id="layerCount">3 / 4</span></summary>
+            <aside class="layers-card layers-card--bare" id="layersCard" aria-label="Etapas del sistema">
             <p class="scenario-note" id="scenarioDescription"></p>
             <div class="scenario-controls" id="scenarioControls"></div>
             <div class="layer-list" id="layerList"></div>
-            <div class="educational-note"><span class="educational-note__icon">✦</span><p class="educational-note__text"><b class="educational-note__title">¿Sabías que?</b><br />Cada etapa retiene o transforma distintos tipos de impurezas.</p></div>
             <details class="advanced-panel" id="advancedPanel">
-              <summary class="advanced-panel__summary"><span class="advanced-panel__summary-label">Diseños listos</span><span class="advanced-panel__summary-note">Abrir</span></summary>
+              <summary class="advanced-panel__summary"><span class="advanced-panel__summary-label">Diseños y rendimiento</span><span class="advanced-panel__summary-note">Abrir</span></summary>
               <div class="advanced-panel__content">
                 <div class="quality-control"><span class="quality-control__label">Calidad de escena</span><select class="quality-control__select" id="qualitySelect" aria-label="Calidad de la escena" title="Ajusta el rendimiento visual" aria-describedby="qualityHint"><option value="auto">Auto</option><option value="high">Alta</option><option value="light">Ligera</option></select><small class="quality-control__status" id="qualityStatus">Auto</small><span class="sr-only" id="qualityHint">Elige entre calidad visual y rendimiento.</span></div>
                 <div class="preset-tool" id="presetTool"></div>
               </div>
             </details>
-          </aside>
+            </aside>
+          </details>
             </div>
           </div>
         </section>
 
         <section class="lower-grid section-wrap">
-          <div class="evolution-card">
-            <div class="card-heading"><div><p class="eyebrow">EVOLUCIÓN</p><h2 class="card-heading__title">Antes y después</h2></div><span class="trend-pill" id="trendPill">+0% claridad</span></div>
+          <details class="fold-panel fold-panel--section">
+            <summary class="fold-panel__summary"><span class="fold-panel__label">Evolución del índice</span><span class="fold-panel__hint">Ver más</span><span class="trend-pill trend-pill--summary" id="trendPill">+0 calidad</span></summary>
+            <div class="fold-panel__body evolution-card evolution-card--bare">
             <div class="evolution-chart" id="evolutionChart"></div>
-            <div class="chart-legend"><span class="chart-legend__item"><i class="dot dot--before"></i> Antes de cada etapa</span><span class="chart-legend__item"><i class="dot dot--after"></i> Después de cada etapa</span><span class="chart-legend__unit">Índice de calidad · 0–100</span></div>
-          </div>
+            <div class="chart-legend"><span class="chart-legend__item"><i class="dot dot--before"></i> Antes</span><span class="chart-legend__item"><i class="dot dot--after"></i> Después</span><span class="chart-legend__unit">Índice 0–100</span></div>
+            </div>
+          </details>
         </section>
 
-        <section class="tools-panel section-wrap" id="toolsPanel" aria-label="Herramientas compartidas">
-          <div class="card-heading"><div><p class="eyebrow">HERRAMIENTAS DEL PROYECTO</p><h2 class="card-heading__title">Planifica, verifica y mantén tu sistema</h2><p class="tools-panel__intro">La escena muestra cómo se purifica el agua; aquí calculas, presupuestas, revisas la calidad y planificas el mantenimiento con los datos de los documentos.</p></div></div>
+        <details class="fold-panel fold-panel--section section-wrap" id="toolsFold">
+          <summary class="fold-panel__summary"><span class="fold-panel__label">Herramientas del proyecto</span><span class="fold-panel__hint">Ver más</span></summary>
+          <div class="fold-panel__body">
+        <section class="tools-panel tools-panel--bare" id="toolsPanel" aria-label="Herramientas compartidas">
           <div class="tools-sections" id="toolsSections" role="tablist" aria-label="Secciones de herramientas">
             <button class="tools-section is-active" id="toolsSectionQuality" role="tab" aria-selected="true" aria-controls="toolsSectionPanelQuality" data-tool-section="quality" type="button">💧 Calidad</button>
             <button class="tools-section" id="toolsSectionPlanning" role="tab" aria-selected="false" aria-controls="toolsSectionPanelPlanning" data-tool-section="planning" type="button">🗓️ Planificación</button>
             <button class="tools-section" id="toolsSectionManagement" role="tab" aria-selected="false" aria-controls="toolsSectionPanelManagement" data-tool-section="management" type="button">🛠️ Gestión</button>
           </div>
           <div class="tools-section-panel" id="toolsSectionPanelQuality" role="tabpanel" aria-labelledby="toolsSectionQuality" data-tool-section-panel="quality">
-            <p class="tools-section__description">Uso final, muestreo, seguridad y parámetros de riego.</p>
+            <p class="tools-section__description">Uso, muestreo y seguridad.</p>
             <div class="tools-tabs" id="toolsTabs" role="tablist" aria-label="Herramientas de Calidad">
               <button class="tools-tab is-active" id="toolTabUsage" role="tab" aria-selected="true" aria-controls="usageTool" data-tool-tab="usageTool" type="button">Uso</button>
               <button class="tools-tab" id="toolTabSampling" role="tab" aria-selected="false" aria-controls="samplingTool" data-tool-tab="samplingTool" type="button">Muestreo</button>
@@ -181,7 +183,7 @@
             </div>
           </div>
           <div class="tools-section-panel" id="toolsSectionPanelPlanning" role="tabpanel" aria-labelledby="toolsSectionPlanning" data-tool-section-panel="planning" hidden>
-            <p class="tools-section__description">Cálculo, presupuesto, costos y cronograma antes de construir.</p>
+            <p class="tools-section__description">Cálculo, presupuesto y cronograma.</p>
             <div class="tools-tabs" role="tablist" aria-label="Herramientas de Planificación">
               <button class="tools-tab" id="toolTabCalculator" role="tab" aria-selected="false" aria-controls="calculatorTool" data-tool-tab="calculatorTool" type="button">Cálculo</button>
               <button class="tools-tab" id="toolTabBudget" role="tab" aria-selected="false" aria-controls="budgetTool" data-tool-tab="budgetTool" type="button">Presupuesto</button>
@@ -190,7 +192,7 @@
             </div>
           </div>
           <div class="tools-section-panel" id="toolsSectionPanelManagement" role="tabpanel" aria-labelledby="toolsSectionManagement" data-tool-section-panel="management" hidden>
-            <p class="tools-section__description">Mantenimiento, deterioro y riesgos para operar el sistema.</p>
+            <p class="tools-section__description">Mantenimiento y riesgos.</p>
             <div class="tools-tabs" role="tablist" aria-label="Herramientas de Gestión">
               <button class="tools-tab" id="toolTabMaintenance" role="tab" aria-selected="false" aria-controls="maintenanceTool" data-tool-tab="maintenanceTool" type="button">Mantenimiento</button>
               <button class="tools-tab" id="toolTabDeterioration" role="tab" aria-selected="false" aria-controls="deteriorationTool" data-tool-tab="deteriorationTool" type="button">Deterioro</button>
@@ -209,9 +211,11 @@
           <div class="tool-panel" data-tool-panel="economicsTool" id="economicsTool" hidden></div>
           <div class="tool-panel" data-tool-panel="agronomyTool" id="agronomyTool" hidden></div>
         </section>
+          </div>
+        </details>
       </main>
 
-      <footer class="footer section-wrap"><span class="footer__meta">AquaLab / Simulador de purificación</span><span class="footer__meta">Modelo educativo parametrizado · Los valores son ilustrativos</span></footer>
+      <footer class="footer section-wrap"><span class="footer__meta">AquaLab · Valores ilustrativos</span></footer>
     </div>
 
     <div class="tour-backdrop" id="tourOverlay" hidden aria-hidden="true">

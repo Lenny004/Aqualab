@@ -23,7 +23,6 @@ const ids = [
   'previousStageButton', 'nextStageButton', 'stageCounter', 'stageDescription',
   'speedOptions', 'layerCount', 'layerList', 'evolutionChart', 'trendPill', 'helpButton',
   'helpModal', 'closeHelpButton', 'helpDescription', 'scenarioDescription',
-  'activeStagesChip',
   'scenarioControls',
   'presetTool',
   'qualitySelect', 'qualityStatus',
@@ -273,6 +272,12 @@ export function createUI(scenario, scene) {
     const note = event.currentTarget.querySelector('.advanced-panel__summary-note');
     if (note) note.textContent = event.currentTarget.open ? 'Cerrar' : 'Abrir';
   });
+  document.querySelectorAll('.fold-panel').forEach((panel) => {
+    listen(panel, 'toggle', (event) => {
+      const hint = event.currentTarget.querySelector('.fold-panel__hint');
+      if (hint) hint.textContent = event.currentTarget.open ? 'Cerrar' : 'Ver más';
+    });
+  });
   listen(dom.scenarioControls, 'change', handleScenarioControl);
   listen(dom.qualitySelect, 'change', (event) => {
     scene.setQuality(event.target.value);
@@ -369,6 +374,8 @@ export function createUI(scenario, scene) {
       button.classList.toggle('is-active', selected);
       button.setAttribute('aria-selected', String(selected));
     });
+    if (activeTab === 'stages') document.getElementById('layersFold')?.setAttribute('open', '');
+    if (activeTab === 'tools') document.getElementById('toolsFold')?.setAttribute('open', '');
     const sheetPanels = [[dom.inspector, activeTab === 'reading'], [toolsPanel, activeTab === 'tools'], [document.getElementById('layersCard'), activeTab === 'stages'], [dom.toolsSections, activeTab === 'tools']];
     sheetPanels.forEach(([node, visible]) => node?.classList.toggle('is-sheet-visible', visible));
     sheetPanels.forEach(([node, visible]) => node?.classList.toggle('is-sheet-hidden', !visible));
@@ -438,9 +445,9 @@ export function createUI(scenario, scene) {
     dom.scenarioControls.innerHTML = `${warning}${scenario.controls.map((control) => {
       if (control.type === 'select') {
         const options = control.options.map((option) => `<option value="${option.value}" ${scenarioState[control.key] === option.value ? 'selected' : ''}>${option.label}</option>`).join('');
-        return `<label class="scenario-controls__field"><span>${control.label}</span><select class="scenario-controls__select" data-scenario-control="${control.key}" title="${control.help}" aria-describedby="scenario-${control.key}-hint">${options}</select><small class="scenario-controls__hint" id="scenario-${control.key}-hint">${control.help}</small></label>`;
+        return `<label class="scenario-controls__field"><span>${control.label}</span><select class="scenario-controls__select" data-scenario-control="${control.key}" title="${control.help}">${options}</select></label>`;
       }
-      return `<label class="scenario-controls__field"><span>${control.label}</span><input class="scenario-controls__input" data-scenario-control="${control.key}" type="${control.type}" value="${scenarioState[control.key]}" min="${control.min}" max="${control.max}" step="${control.step}" title="${control.help}" aria-describedby="scenario-${control.key}-hint" /><small class="scenario-controls__hint" id="scenario-${control.key}-hint">${control.help}</small></label>`;
+      return `<label class="scenario-controls__field"><span>${control.label}</span><input class="scenario-controls__input" data-scenario-control="${control.key}" type="${control.type}" value="${scenarioState[control.key]}" min="${control.min}" max="${control.max}" step="${control.step}" title="${control.help}" /></label>`;
     }).join('')}`;
   }
 
@@ -561,19 +568,23 @@ export function createUI(scenario, scene) {
     });
   }
 
+  const stageLine = (layer) => layer?.short || layer?.name || 'Agua de entrada';
+
   function getDetails(simulation) {
     if (state.selected === 'input') {
-      return { title: 'Agua de entrada', description: scenario.text.inputDescription, before: initial, after: simulation.stages[1]?.quality || initial, beforeLabel: 'Agua sin tratar', afterLabel: simulation.filters[0]?.name || 'Sin etapas activas', stage: 'Entrada' };
+      return { title: 'Entrada', description: scenario.text.inputDescription, before: initial, after: simulation.stages[1]?.quality || initial, beforeLabel: 'Sin tratar', afterLabel: simulation.filters[0]?.name || 'Sin etapas', stage: 'Entrada' };
     }
 
     const layer = layers.find((item) => item.id === state.selected);
     const index = simulation.filters.findIndex((item) => item.id === state.selected);
 
     if (index < 0) {
-      return { title: layer.name, description: scenario.text.disabledDescription, before: initial, after: initial, beforeLabel: 'Sin etapa', afterLabel: 'No participa', stage: 'Desactivada' };
+      return { title: layer.name, description: scenario.text.disabledDescription, before: initial, after: initial, beforeLabel: 'Sin etapa', afterLabel: 'Inactiva', stage: 'Inactiva' };
     }
 
-    return { title: layer.name, description: [layer.description, inspectorNotes[layer.id]].filter(Boolean).join(' '), before: simulation.stages[index].quality, after: simulation.stages[index + 1].quality, beforeLabel: index ? simulation.filters[index - 1].name : 'Agua sin tratar', afterLabel: index === simulation.filters.length - 1 ? 'Resultado actual' : simulation.filters[index + 1].name, stage: `Etapa ${index + 1}` };
+    const note = inspectorNotes[layer.id];
+    const description = note ? `${layer.short}. ${note}` : layer.short;
+    return { title: layer.name, description, before: simulation.stages[index].quality, after: simulation.stages[index + 1].quality, beforeLabel: index ? simulation.filters[index - 1].name : 'Sin tratar', afterLabel: index === simulation.filters.length - 1 ? 'Salida' : simulation.filters[index + 1].name, stage: `Etapa ${index + 1}` };
   }
 
   function rebuildSimulationModel() {
@@ -659,13 +670,16 @@ export function createUI(scenario, scene) {
     lastStageIndex = simulation.currentIndex;
     const detail = getDetails(simulation);
     if (scenarioState.roofType && scenarioState.roofType !== 'compatible' && (state.selected === 'input' || state.selected === 'captacion')) {
-      detail.description = `${detail.description} Excluido para agua de beber; sugiere usos no potables.`;
+      detail.description = `${detail.description} No apta para beber.`;
     }
     const score = qualityScore(simulation.current, initial);
+    const stageCount = simulation.filters.length + 1;
+    const stageIndex = simulation.stageStarts.reduce((stage, start, index) => (state.progress >= start ? index : stage), 0);
+    const stageLayer = stageIndex > 0 ? simulation.filters[stageIndex - 1] : null;
 
-    dom.sceneStatus.textContent = `${state.progress >= 1 ? 'Proceso completo' : state.progress ? `Filtrando con ${simulation.filters[simulation.currentIndex - 1]?.name}` : 'Agua sin tratar'} · NO POTABLE`;
+    dom.sceneStatus.textContent = `${state.progress >= 1 ? 'Proceso completo' : state.progress ? `Filtrando: ${simulation.filters[simulation.currentIndex - 1]?.name}` : 'Agua sin tratar'} · NO POTABLE`;
     dom.activeLayerName.textContent = detail.title.replace('Agua de entrada', 'Entrada');
-    dom.activeLayerHint.textContent = detail.description;
+    dom.activeLayerHint.textContent = stageLayer ? stageLine(stageLayer) : scenario.text.inputDescription;
     dom.totalTime.textContent = formatTime(simulation.totalDuration);
     dom.timelineInput.value = Math.round(state.progress * 1000);
     dom.inspectorTitle.textContent = detail.title;
@@ -687,16 +701,12 @@ export function createUI(scenario, scene) {
     dom.playLabel.textContent = state.playing ? 'Pausar' : 'Reproducir';
     if (playIcon) playIcon.textContent = state.playing ? 'Ⅱ' : '▶';
     updateJourney();
-    const stageCount = simulation.filters.length + 1;
-    const stageIndex = simulation.stageStarts.reduce((stage, start, index) => (state.progress >= start ? index : stage), 0);
-    const stageLayer = stageIndex > 0 ? simulation.filters[stageIndex - 1] : null;
     dom.stageCounter.textContent = `Etapa ${stageIndex + 1} de ${stageCount}`;
-    dom.stageDescription.textContent = stageLayer?.description || scenario.text.inputDescription;
+    dom.stageDescription.textContent = stageLayer ? stageLine(stageLayer) : scenario.text.inputDescription;
     dom.previousStageButton.disabled = stageIndex === 0;
     dom.nextStageButton.disabled = stageIndex >= simulation.filters.length;
     dom.layerCount.textContent = `${simulation.filters.length} / ${layers.length}`;
-    dom.activeStagesChip.textContent = `${simulation.filters.length} ${simulation.filters.length === 1 ? 'etapa' : 'etapas'}`;
-    dom.trendPill.textContent = `+${Math.max(0, score - qualityScore(initial, initial))} calidad`;
+    dom.trendPill.textContent = `+${Math.max(0, score - qualityScore(initial, initial))}`;
     const agronomyTab = dom.toolsTabs?.querySelector('[data-tool-tab="agronomyTool"]');
     agronomyTab?.classList.toggle('is-recommended', state.finalUse === 'cultivar');
     agronomyTab?.setAttribute('aria-label', state.finalUse === 'cultivar' ? 'Agronomía: recomendada para Cultivar' : 'Agronomía');
