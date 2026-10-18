@@ -23,7 +23,7 @@ const RISK_ROWS = [
 export function renderRisks(container, initialUse = 'tomar') {
   container.innerHTML = `<div class="tool-heading"><div><h3 class="tool-heading__title">Matriz de riesgos</h3><p class="tool-note tool-heading__note">Controles orientativos para el uso final seleccionado. No sustituye el análisis de calidad.</p></div><label class="tool-field tool-field--inline"><span class="tool-field__label">Uso final</span><select class="tool-field__control" data-risk-use><option value="tomar">Tomar</option><option value="cultivar">Cultivar</option></select></label></div><div class="risk-table" role="table"><div class="risk-row risk-row--head" role="row"><span class="risk-row__cell">Peligro</span><span class="risk-row__cell">Consecuencia</span><span class="risk-row__cell">Prevención</span><span class="risk-row__cell">Acción correctiva</span></div><div data-risk-rows></div></div>`;
   const useField = toolField({ label: 'Uso final', inline: true, control: '<select class="tool-field__control" data-risk-use><option value="tomar">Tomar</option><option value="cultivar">Cultivar</option></select>' });
-  const heading = toolHeading('Matriz de riesgos', 'Controles orientativos para el uso final seleccionado. No sustituye el análisis de calidad.', useField);
+  const heading = toolHeading('Matriz de riesgos', 'Orientativo según el uso final.', useField);
   container.innerHTML = container.innerHTML.replace(/<div class="tool-heading">[\s\S]*?<\/div><\/div><div class="risk-table">/, `${heading}<div class="risk-table">`);
   const select = container.querySelector('[data-risk-use]');
   select.value = initialUse === 'cultivar' ? 'cultivar' : 'tomar';

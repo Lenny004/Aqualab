@@ -52,10 +52,10 @@ export default {
     },
   ],
   text: {
-    description: 'Barreras múltiples desde el techo hasta el punto de muestreo. Valores ilustrativos; no es un plano constructivo.',
-    inputDescription: 'La lluvia arrastra partículas del techo. La captación requiere una superficie compatible y mantenimiento.',
-    disabledDescription: 'Esta etapa está desactivada. Actívala para incluirla en el recorrido.',
-    help: 'Usa Reproducir para seguir las ocho etapas desde el techo hasta el muestreo. Puedes pausar, seleccionar una etapa y activar Radiografía para inspeccionar el sistema de captación.',
+    description: 'Del techo al muestreo (ilustrativo, no es plano constructivo).',
+    inputDescription: 'Lluvia desde el techo; requiere superficie compatible.',
+    disabledDescription: 'Etapa desactivada.',
+    help: 'Reproduce el recorrido, salta entre etapas y usa Radiografía.',
   },
   deteriorationMap: {
     carbon: ['filtro-granular'],
