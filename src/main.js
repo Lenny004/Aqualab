@@ -5,7 +5,7 @@ import { createUI } from './core/ui.js';
 
 const canvas = document.getElementById('sceneCanvas');
 const selector = document.getElementById('scenarioSelect');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = false;
 renderer.outputColorSpace = THREE.SRGBColorSpace;

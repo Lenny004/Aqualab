@@ -36,11 +36,14 @@ export function qualityScore(quality, initial) {
   return Math.round(clamp(normalized) * 100);
 }
 
-export function computeSimulation(progress = 0, config) {
+const slowFilterIds = new Set(['filtro-granular', 'gravel', 'sand', 'carbon']);
+
+export function createSimulationModel(config) {
   const { initial, layers, deterioration = {} } = config;
   const effects = deterioration.effects || {};
   const filters = getEnabledLayers(layers);
-  const durationFor = (filter) => filter.duration * (filter.id === 'filtro-granular' || ['gravel', 'sand', 'carbon'].includes(filter.id) ? 1 + 0.25 * (effects.clogging || 0) : 1);
+  const clogging = effects.clogging || 0;
+  const durations = filters.map((filter) => filter.duration * (slowFilterIds.has(filter.id) ? 1 + 0.25 * clogging : 1));
   const stages = [{ filter: null, quality: { ...initial }, label: 'Entrada' }];
 
   filters.forEach((filter) => {
@@ -51,51 +54,70 @@ export function computeSimulation(progress = 0, config) {
     });
   });
 
-  const totalDuration = filters.reduce((sum, filter) => sum + durationFor(filter), 0);
+  const totalDuration = durations.reduce((sum, duration) => sum + duration, 0);
   const stageStarts = [0];
-  filters.forEach((filter, index) => {
-    const elapsedBefore = filters.slice(0, index + 1).reduce((sum, item) => sum + durationFor(item), 0);
-    stageStarts.push(totalDuration ? elapsedBefore / totalDuration : 0);
+  let elapsed = 0;
+
+  durations.forEach((duration) => {
+    elapsed += duration;
+    stageStarts.push(totalDuration ? elapsed / totalDuration : 0);
   });
 
+  return {
+    initial,
+    filters,
+    stages,
+    durations,
+    stageStarts,
+    totalDuration,
+    metricKeys: Object.keys(initial),
+    current: {},
+    view: {},
+  };
+}
+
+export function sampleSimulation(model, progress) {
+  const { initial, filters, stages, durations, stageStarts, totalDuration, metricKeys, current, view } = model;
+
   if (!filters.length || !totalDuration) {
-    return {
+    Object.assign(view, {
       filters,
       stages,
-      current: { ...initial },
+      current: initial,
       currentIndex: 0,
       local: 0,
       totalDuration,
       stageStarts,
-    };
+    });
+    return view;
   }
 
-  const elapsed = clamp(progress) * totalDuration;
+  const clamped = clamp(progress);
+  const elapsed = clamped * totalDuration;
   let accumulated = 0;
   let index = filters.length - 1;
   let local = 1;
 
-  if (progress < 1) {
+  if (clamped < 1) {
     for (let candidate = 0; candidate < filters.length; candidate += 1) {
-      if (elapsed < accumulated + durationFor(filters[candidate])) {
+      const duration = durations[candidate];
+      if (elapsed < accumulated + duration) {
         index = candidate;
         break;
       }
-
-      accumulated += durationFor(filters[candidate]);
+      accumulated += duration;
     }
-
-    local = (elapsed - accumulated) / durationFor(filters[index]);
+    local = (elapsed - accumulated) / durations[index];
   }
 
-  const current = Object.fromEntries(
-    Object.keys(initial).map((key) => [
-      key,
-      lerp(stages[index].quality[key], stages[index + 1].quality[key], local),
-    ]),
-  );
+  const from = stages[index].quality;
+  const to = stages[index + 1].quality;
+  for (let keyIndex = 0; keyIndex < metricKeys.length; keyIndex += 1) {
+    const key = metricKeys[keyIndex];
+    current[key] = lerp(from[key], to[key], local);
+  }
 
-  return {
+  Object.assign(view, {
     filters,
     stages,
     current,
@@ -103,7 +125,12 @@ export function computeSimulation(progress = 0, config) {
     local,
     totalDuration,
     stageStarts,
-  };
+  });
+  return view;
+}
+
+export function computeSimulation(progress = 0, config) {
+  return sampleSimulation(createSimulationModel(config), progress);
 }
 
 export const formatNumber = (value) => new Intl.NumberFormat('es-SV', {
