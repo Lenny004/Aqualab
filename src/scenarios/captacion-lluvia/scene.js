@@ -180,10 +180,13 @@ export function createCaptacionLluviaObjects({ scene, layers, addInteractive, in
     boundsObject: root,
     particles,
     update(simulation, state) {
+      const progress = Number.isFinite(state?.progress) ? state.progress : 0;
       const score = qualityScore(simulation.current, INITIAL) / 100;
-      const segment = Math.min(path.length - 1, Math.floor(state.progress * (path.length - 1)));
-      const local = state.progress * (path.length - 1) - segment;
-      water.position.lerpVectors(path[segment], path[Math.min(segment + 1, path.length - 1)], local);
+      const segment = Math.min(path.length - 1, Math.max(0, Math.floor(progress * (path.length - 1))));
+      const local = progress * (path.length - 1) - segment;
+      const from = path[segment];
+      const to = path[Math.min(segment + 1, path.length - 1)];
+      if (from && to) water.position.lerpVectors(from, to, local);
       const waterMaterial = score > 0.62 ? clean : dirty;
       if (water.material !== waterMaterial) water.material = waterMaterial;
       const volume = state.firstFlushVolume || 25;
@@ -192,7 +195,7 @@ export function createCaptacionLluviaObjects({ scene, layers, addInteractive, in
         firstFlush.userData.volume = volume;
         setLabelText(firstFlushLabel, `Primeras aguas ${volume} L`, viewport);
       }
-      const divertedProgress = (state.progress - 0.08) / 0.16;
+      const divertedProgress = (progress - 0.08) / 0.16;
       divertedWater.position.lerpVectors(path[1], path[2], Math.min(1, Math.max(0, divertedProgress)));
       const divertedOpacity = divertedProgress >= 0 && divertedProgress <= 1 ? 0.9 : 0;
       if (divertedWater.material.opacity !== divertedOpacity) divertedWater.material.opacity = divertedOpacity;
@@ -202,7 +205,7 @@ export function createCaptacionLluviaObjects({ scene, layers, addInteractive, in
         stageObjects.forEach((object, id) => { object.visible = layers.find((layer) => layer.id === id)?.enabled !== false; });
         this.layerState = layerState;
       }
-      const dirtyWater = state.progress < 0.2;
+      const dirtyWater = progress < 0.2;
       if (this.dirtyWater !== dirtyWater) {
         particles.material.color.set(dirtyWater ? 0xe9bd78 : 0x9be4c7);
         this.dirtyWater = dirtyWater;

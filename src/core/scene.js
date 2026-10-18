@@ -14,6 +14,9 @@ export class PurificationScene {
     this.qualityMode = 'auto';
     this.needsRender = true;
     this.animationFrame = 0;
+    this.loopScheduled = false;
+    this.wasPlaying = false;
+    this.particleTime = 0;
     this.frameSamples = [];
     this.controlValues = {};
     this.lastFrameTime = performance.now();
@@ -35,8 +38,10 @@ export class PurificationScene {
     this.controls.maxDistance = this.cameraConfig.maxDistance;
     this.controls.target.fromArray(this.cameraConfig.target);
     this.controls.update();
-    this.controls.addEventListener('change', () => this.invalidate());
-    this.clock = new THREE.Clock();
+    this.controls.addEventListener('change', () => {
+      this.cameraChanged = true;
+      this.invalidate();
+    });
     this.viewLocked = false;
     this.createLights();
     this.createEnvironment();
@@ -149,6 +154,41 @@ export class PurificationScene {
     this.fitCameraToContent();
   }
 
+  targetPixelRatio() {
+    if (this.state?.playing || this.qualityMode === 'light') return 1;
+    return Math.min(window.devicePixelRatio || 1, 2);
+  }
+
+  syncPixelRatio() {
+    const ratio = this.targetPixelRatio();
+    if (this.renderer.getPixelRatio() === ratio) return;
+    this.renderer.setPixelRatio(ratio);
+    const width = this.canvas.clientWidth || 700;
+    const height = this.canvas.clientHeight || 575;
+    this.renderer.setSize(width, height, false);
+  }
+
+  applyPlaybackMode(playing) {
+    this.syncPixelRatio();
+    this.scene.traverse((object) => {
+      const materials = Array.isArray(object.material) ? object.material : [object.material];
+      materials.forEach((material) => {
+        if (!material || material.transmission === undefined) return;
+        if (playing) {
+          if (material.transmission > 0) material.userData.savedTransmission = material.transmission;
+          material.transmission = 0;
+          material.needsUpdate = true;
+          return;
+        }
+        if (material.userData.savedTransmission === undefined) return;
+        material.transmission = material.userData.savedTransmission;
+        delete material.userData.savedTransmission;
+        material.needsUpdate = true;
+      });
+    });
+    this.invalidate();
+  }
+
   fitCameraToContent() {
     const content = this.objects?.boundsObject;
     if (!content) return;
@@ -181,19 +221,26 @@ export class PurificationScene {
   }
 
   setState(state) {
+    const playing = Boolean(state.playing);
     this.state = state;
-    if (state.playing) this.invalidate();
+    if (playing !== this.wasPlaying) {
+      this.wasPlaying = playing;
+      this.applyPlaybackMode(playing);
+    } else if (playing) {
+      this.invalidate();
+    }
   }
 
   setQuality(mode) {
     this.qualityMode = mode;
-    this.renderer.setPixelRatio(mode === 'light' ? 1 : Math.min(window.devicePixelRatio, 2));
+    this.syncPixelRatio();
     this.objects.setQuality?.(mode);
     Object.entries(this.controlValues).forEach(([key, value]) => {
       if (this.objects.setControl) this.objects.setControl(key, value);
       else if (key === 'roofType') this.objects.setRoofType?.(value);
     });
-    this.invalidate();
+    if (this.wasPlaying) this.applyPlaybackMode(true);
+    else this.invalidate();
   }
 
   invalidate() {
@@ -207,42 +254,50 @@ export class PurificationScene {
   }
 
   animate() {
+    if (this.disposed || this.loopScheduled) return;
+    this.loopScheduled = true;
+    this.animationFrame = requestAnimationFrame(() => this.renderFrame());
+  }
+
+  renderFrame() {
     if (this.disposed) {
+      this.loopScheduled = false;
+      this.animationFrame = 0;
       return;
     }
 
-    this.animationFrame = requestAnimationFrame(() => {
-      this.animationFrame = 0;
-      const now = performance.now();
-      const frameDelta = now - this.lastFrameTime;
-      this.lastFrameTime = now;
-      if (frameDelta > 0 && frameDelta < 1000) this.frameSamples.push({ time: now, delta: frameDelta });
-      while (this.frameSamples.length && now - this.frameSamples[0].time > 2000) this.frameSamples.shift();
-      if (this.state?.playing) updateParticles(this.objects.particles, this.clock.getElapsedTime(), this.state.progress || 0);
-      this.controls.update();
-      if (this.needsRender || this.state?.playing) {
-        this.renderer.render(this.scene, this.camera);
-        this.needsRender = false;
-      }
-      this.checkAutoQuality(now);
-      if (this.needsRender || this.state?.playing) this.animate();
-    });
+    const now = performance.now();
+    const frameDelta = now - this.lastFrameTime;
+    this.lastFrameTime = now;
+    if (frameDelta > 0 && frameDelta < 1000) this.frameSamples.push({ time: now, delta: frameDelta });
+    while (this.frameSamples.length && now - this.frameSamples[0].time > 2000) this.frameSamples.shift();
+    if (this.state?.playing) {
+      this.particleTime += Math.min(frameDelta / 1000, 0.05);
+      updateParticles(this.objects.particles, this.particleTime, this.state.progress || 0);
+    }
+    this.cameraChanged = false;
+    this.controls.update();
+    const cameraMoving = this.cameraChanged;
+    if (this.needsRender || this.state?.playing || cameraMoving) {
+      this.renderer.render(this.scene, this.camera);
+      this.needsRender = false;
+    }
+    this.checkAutoQuality(now);
+    if (!this.disposed && (this.needsRender || this.state?.playing || cameraMoving)) {
+      this.animationFrame = requestAnimationFrame(() => this.renderFrame());
+      return;
+    }
+    this.loopScheduled = false;
+    this.animationFrame = 0;
   }
 
   checkAutoQuality(now) {
-    if (this.qualityMode !== 'auto' || this.frameSamples.length < 10) return;
-    if (now - this.frameSamples[0].time < 1900) return;
+    if (this.qualityMode !== 'auto' || this.frameSamples.length < 8) return;
+    if (now - this.frameSamples[0].time < 800) return;
     const average = this.frameSamples.reduce((sum, sample) => sum + sample.delta, 0) / this.frameSamples.length;
     if (average > 1000 / 30) {
-      this.qualityMode = 'light';
-      this.renderer.setPixelRatio(1);
-      this.objects.setQuality?.('light');
-      Object.entries(this.controlValues).forEach(([key, value]) => {
-        if (this.objects.setControl) this.objects.setControl(key, value);
-        else if (key === 'roofType') this.objects.setRoofType?.(value);
-      });
+      this.setQuality('light');
       this.onQualityChange?.('light', average);
-      this.invalidate();
     }
   }
 
@@ -271,6 +326,7 @@ export class PurificationScene {
     textures.forEach((texture) => texture.dispose());
     this.controls.dispose();
     this.renderer.renderLists.dispose();
+    this.loopScheduled = false;
     cancelAnimationFrame(this.animationFrame);
   }
 }

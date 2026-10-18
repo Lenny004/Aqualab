@@ -1,4 +1,4 @@
-import { computeSimulation, formatNumber, qualityScore } from './metrics.js';
+import { createSimulationModel, formatNumber, qualityScore, sampleSimulation } from './metrics.js';
 import { formatTime, normalizeProgress, renderTimelineMarkers, updateTimelineMarkers } from './timeline.js';
 import { renderUsage, USAGES } from './tools/usage.js';
 import { renderCalculator } from './tools/calculator.js';
@@ -51,7 +51,6 @@ export function createUI(scenario, scene) {
   const maintenanceState = createMaintenanceState();
   const deteriorationState = createDeteriorationState();
   let currentQuality = initial;
-  let qualityMode = 'auto';
   let lastUiUpdate = 0;
   let lastStageIndex = -1;
   let staticSignature = '';
@@ -62,13 +61,26 @@ export function createUI(scenario, scene) {
   const chartNodes = [];
   const controller = new AbortController();
   let animationFrame;
+  let disposed = false;
   let renderingUi = false;
   let uiErrorLogged = false;
   let economicsUpdater;
   let risksUpdater;
   let journeyStep = 1;
   let currentSimulation;
+  let simulationModel;
   let tourIndex = 0;
+  let trackWidth = 0;
+  let playingClass = false;
+  let lastTimeLabel = '';
+  let lastRealLabel = '';
+  const renderState = {};
+  const playIcon = dom.playButton.querySelector('.play-button__icon');
+  const timelineTrack = dom.timelineThumb.parentElement;
+  const trackObserver = new ResizeObserver((entries) => {
+    trackWidth = entries[0].contentRect.width;
+  });
+  trackObserver.observe(timelineTrack);
   let tourTrigger;
   const tourEnabled = new URLSearchParams(window.location.search).get('tour') !== '0';
   const tourSteps = [
@@ -160,7 +172,6 @@ export function createUI(scenario, scene) {
   dom.scenarioDescription.textContent = scenario.text.description;
   dom.helpDescription.textContent = scenario.text.help;
   scene.onQualityChange = (mode) => {
-    qualityMode = mode;
     if (dom.qualitySelect) dom.qualitySelect.value = mode;
     if (dom.qualityStatus) dom.qualityStatus.textContent = 'Ligera por rendimiento';
   };
@@ -183,6 +194,7 @@ export function createUI(scenario, scene) {
     if (state.progress >= 1) state.progress = 0;
     journeyStep = 2;
     render();
+    if (state.playing) startLoop();
   });
   const jumpToStage = (offset) => {
     const simulation = currentSimulation;
@@ -232,24 +244,37 @@ export function createUI(scenario, scene) {
     dom.speedOptions.querySelectorAll('button').forEach((item) => item.classList.toggle('is-active', item === button));
   });
   listen(dom.layerList, 'click', (event) => {
+    if (event.target.closest('.layer-row__toggle')) return;
     const row = event.target.closest('[data-filter]');
     if (!row) return;
     const layer = layers.find((item) => item.id === row.dataset.filter);
     if (!layer) return;
-    if (event.target.closest('.layer-row__toggle')) {
-      layer.enabled = !layer.enabled;
-      if (!layers.some((item) => item.enabled !== false)) layers[0].enabled = true;
-      render();
-      return;
-    }
     state.selected = layer.id;
     journeyStep = 3;
     render();
   });
-  listen(dom.scenarioControls, 'input', handleScenarioControl);
+  listen(dom.layerList, 'change', (event) => {
+    const input = event.target;
+    if (!input.classList?.contains('layer-row__input')) return;
+    const row = input.closest('[data-filter]');
+    const layer = layers.find((item) => item.id === row?.dataset.filter);
+    if (!layer) return;
+    const enabledCount = layers.filter((item) => item.enabled !== false).length;
+    if (!input.checked && enabledCount <= 1) {
+      input.checked = true;
+      return;
+    }
+    layer.enabled = input.checked;
+    state.selected = layer.id;
+    journeyStep = 3;
+    render();
+  });
+  listen(document.getElementById('advancedPanel'), 'toggle', (event) => {
+    const note = event.currentTarget.querySelector('.advanced-panel__summary-note');
+    if (note) note.textContent = event.currentTarget.open ? 'Cerrar' : 'Abrir';
+  });
   listen(dom.scenarioControls, 'change', handleScenarioControl);
   listen(dom.qualitySelect, 'change', (event) => {
-    qualityMode = event.target.value;
     scene.setQuality(event.target.value);
     dom.qualityStatus.textContent = event.target.value === 'auto' ? 'Auto' : event.target.value === 'light' ? 'Ligera' : 'Alta';
   });
@@ -384,17 +409,23 @@ export function createUI(scenario, scene) {
         const row = document.createElement('div');
         row.className = 'layer-row';
         row.dataset.filter = layer.id;
-        row.innerHTML = `<span class="layer-row__swatch layer-row__swatch--${layer.id}"></span><span class="layer-row__main"><b class="layer-row__title">${layer.name}</b><small class="layer-row__meta">${layer.short}</small></span><label class="layer-row__toggle" aria-label="Activar ${layer.name}"><input class="layer-row__input" type="checkbox" /><span class="layer-row__track"></span></label>`;
+        row.innerHTML = `<span class="layer-row__swatch layer-row__swatch--${layer.id}"></span><span class="layer-row__main"><b class="layer-row__title">${layer.name}</b><small class="layer-row__meta">${layer.short}</small></span><span class="layer-row__state"></span><label class="layer-row__toggle"><input class="layer-row__input" type="checkbox" /><span class="layer-row__track"></span></label>`;
         return row;
       }));
     }
+    const enabledCount = layers.filter((layer) => layer.enabled !== false).length;
     layers.forEach((layer, index) => {
       const row = dom.layerList.children[index];
-      row.classList.toggle('is-disabled', layer.enabled === false);
+      const enabled = layer.enabled !== false;
+      row.classList.toggle('is-disabled', !enabled);
       row.classList.toggle('is-selected', state.selected === layer.id);
       const input = row.querySelector('.layer-row__input');
-      input.checked = layer.enabled !== false;
-      input.parentElement.classList.toggle('is-checked', input.checked);
+      const stateLabel = row.querySelector('.layer-row__state');
+      input.checked = enabled;
+      input.disabled = enabled && enabledCount === 1;
+      input.title = input.disabled ? 'Deja al menos una etapa activa' : '';
+      input.setAttribute('aria-label', `${enabled ? 'Quitar' : 'Incluir'} ${layer.name}`);
+      stateLabel.textContent = enabled ? 'Activa' : 'Inactiva';
     });
   }
 
@@ -545,21 +576,63 @@ export function createUI(scenario, scene) {
     return { title: layer.name, description: [layer.description, inspectorNotes[layer.id]].filter(Boolean).join(' '), before: simulation.stages[index].quality, after: simulation.stages[index + 1].quality, beforeLabel: index ? simulation.filters[index - 1].name : 'Agua sin tratar', afterLabel: index === simulation.filters.length - 1 ? 'Resultado actual' : simulation.filters[index + 1].name, stage: `Etapa ${index + 1}` };
   }
 
-  function render() {
-    renderingUi = true;
+  function rebuildSimulationModel() {
     updateDeterioration(deteriorationState, scenarioState.simulatedWeeks || 0, scenario, maintenanceState);
     const effects = getDeteriorationEffects(deteriorationState);
     const carbon = layers.find((layer) => layer.id === 'carbon');
     if (carbon) carbon.saturation = effects.carbon || 0;
-    const simulation = computeSimulation(state.progress, { initial, layers, deterioration: { effects } });
+    simulationModel = createSimulationModel({ initial, layers, deterioration: { effects } });
+  }
+
+  function updatePlaybackChrome(simulation) {
+    const timeLabel = formatTime(simulation.totalDuration * state.progress);
+    if (timeLabel !== lastTimeLabel) {
+      lastTimeLabel = timeLabel;
+      dom.sceneTime.textContent = timeLabel;
+      dom.currentTime.textContent = timeLabel;
+    }
+    const realLabel = formatTime(state.realElapsed);
+    if (realLabel !== lastRealLabel) {
+      lastRealLabel = realLabel;
+      dom.realTime.textContent = realLabel;
+    }
+    dom.timelineFill.style.transform = `scaleX(${state.progress})`;
+    if (!trackWidth) trackWidth = timelineTrack.getBoundingClientRect().width;
+    dom.timelineThumb.style.transform = `translate3d(${state.progress * trackWidth}px, -50%, 0) translateX(-50%)`;
+  }
+
+  function render(options = {}) {
+    if (disposed) return;
+    const playback = options.playback === true && Boolean(simulationModel);
+    renderingUi = true;
+    if (!playback) rebuildSimulationModel();
+    const simulation = sampleSimulation(simulationModel, state.progress);
     currentSimulation = simulation;
     currentQuality = simulation.current;
-    const renderState = { ...state, ...scenarioState };
-    scene.setState({ ...renderState, deterioration: deteriorationState });
+    renderState.progress = state.progress;
+    renderState.playing = state.playing;
+    renderState.speed = state.speed;
+    renderState.xray = state.xray;
+    renderState.selected = state.selected;
+    renderState.finalUse = state.finalUse;
+    renderState.realElapsed = state.realElapsed;
+    renderState.playedTime = state.playedTime;
+    Object.assign(renderState, scenarioState);
+    renderState.deterioration = deteriorationState;
+    scene.setState(renderState);
     scene.update(simulation, renderState);
+    if (playingClass !== state.playing) {
+      playingClass = state.playing;
+      document.documentElement.classList.toggle('is-playing', state.playing);
+    }
+    updatePlaybackChrome(simulation);
     const now = performance.now();
-    document.documentElement.classList.toggle('is-playing', state.playing);
-    const updateUi = !state.playing || qualityMode !== 'light' || now - lastUiUpdate >= 250;
+    const stageChanged = simulation.currentIndex !== lastStageIndex;
+    if (playback && !stageChanged && now - lastUiUpdate < 120) {
+      renderingUi = false;
+      return;
+    }
+    lastUiUpdate = now;
     const structureSignature = `${layers.map((layer) => `${layer.id}:${layer.enabled !== false}`).join('|')}`;
     if (staticSignature !== structureSignature) {
       staticSignature = structureSignature;
@@ -567,44 +640,34 @@ export function createUI(scenario, scene) {
       renderTimelineMarkers(dom.timelineMarkers, simulation);
       mountEvolutionChart(simulation);
     }
-    if (updateUi) {
-      lastUiUpdate = now;
-      const samplingSimulation = computeSimulation(1, { initial, layers, deterioration: { effects } });
-      const usage = USAGES[state.finalUse] || USAGES.tomar;
-      const samplingData = { metrics: scenario.metrics, initial, stages: samplingSimulation.stages, samplingStages: scenario.samplingStages, usage };
-      const signature = JSON.stringify({ stages: samplingSimulation.stages.map((stage) => stage.quality), samplingStages: scenario.samplingStages, usage: state.finalUse });
-      if (signature !== samplingSignature) {
-        samplingSignature = signature;
-        samplingUpdater = renderSampling(dom.samplingTool, samplingData);
-      } else if (samplingUpdater && simulation.currentIndex !== lastStageIndex) {
-        samplingUpdater(samplingData);
-      }
-      renderMetrics(simulation.current);
-      updateEvolutionChart(simulation);
-      updateTimelineMarkers(dom.timelineMarkers, state.progress);
+    const usage = USAGES[state.finalUse] || USAGES.tomar;
+    const samplingData = { metrics: scenario.metrics, initial, stages: simulation.stages, samplingStages: scenario.samplingStages, usage };
+    const stageKey = simulation.stages.map((stage) => {
+      const quality = stage.quality;
+      return `${quality.turbidity.toFixed(2)}:${quality.color.toFixed(2)}:${quality.odor.toFixed(2)}:${quality.ecoli.toFixed(2)}`;
+    }).join(',');
+    const signature = `${structureSignature}|${state.finalUse}|${simulation.totalDuration}|${stageKey}|${scenario.samplingStages?.filter || ''}|${scenario.samplingStages?.disinfection || ''}`;
+    if (signature !== samplingSignature) {
+      samplingSignature = signature;
+      samplingUpdater = renderSampling(dom.samplingTool, samplingData);
+    } else if (samplingUpdater && stageChanged) {
+      samplingUpdater(samplingData);
     }
+    renderMetrics(simulation.current);
+    updateEvolutionChart(simulation);
+    updateTimelineMarkers(dom.timelineMarkers, state.progress);
     lastStageIndex = simulation.currentIndex;
-    if (!updateUi) {
-      renderingUi = false;
-      return;
-    }
     const detail = getDetails(simulation);
     if (scenarioState.roofType && scenarioState.roofType !== 'compatible' && (state.selected === 'input' || state.selected === 'captacion')) {
       detail.description = `${detail.description} Excluido para agua de beber; sugiere usos no potables.`;
     }
     const score = qualityScore(simulation.current, initial);
-    const time = simulation.totalDuration * state.progress;
 
     dom.sceneStatus.textContent = `${state.progress >= 1 ? 'Proceso completo' : state.progress ? `Filtrando con ${simulation.filters[simulation.currentIndex - 1]?.name}` : 'Agua sin tratar'} · NO POTABLE`;
-    dom.realTime.textContent = formatTime(state.realElapsed);
     dom.activeLayerName.textContent = detail.title.replace('Agua de entrada', 'Entrada');
     dom.activeLayerHint.textContent = detail.description;
-    dom.sceneTime.textContent = formatTime(time);
-    dom.currentTime.textContent = formatTime(time);
     dom.totalTime.textContent = formatTime(simulation.totalDuration);
     dom.timelineInput.value = Math.round(state.progress * 1000);
-    dom.timelineFill.style.transform = `scaleX(${state.progress})`;
-    dom.timelineThumb.style.left = `${state.progress * 100}%`;
     dom.inspectorTitle.textContent = detail.title;
     dom.inspectorDescription.textContent = detail.description;
     dom.qualityBadge.textContent = 'NO POTABLE';
@@ -622,7 +685,7 @@ export function createUI(scenario, scene) {
     dom.beforeLabel.textContent = detail.beforeLabel;
     dom.afterLabel.textContent = detail.afterLabel;
     dom.playLabel.textContent = state.playing ? 'Pausar' : 'Reproducir';
-      dom.playButton.querySelector('.play-button__icon').textContent = state.playing ? 'Ⅱ' : '▶';
+    if (playIcon) playIcon.textContent = state.playing ? 'Ⅱ' : '▶';
     updateJourney();
     const stageCount = simulation.filters.length + 1;
     const stageIndex = simulation.stageStarts.reduce((stage, start, index) => (state.progress >= start ? index : stage), 0);
@@ -640,31 +703,39 @@ export function createUI(scenario, scene) {
     renderingUi = false;
   }
 
-  function tick() {
+  function startLoop() {
+    if (animationFrame) return;
+    state.lastFrame = performance.now();
     animationFrame = requestAnimationFrame(tick);
-    const now = performance.now();
+  }
+
+  function tick(now) {
+    animationFrame = 0;
+    if (disposed || !state.playing) return;
     const delta = Math.min((now - state.lastFrame) / 1000, 0.1);
     state.lastFrame = now;
-
-    if (state.playing) {
-      updateDeterioration(deteriorationState, scenarioState.simulatedWeeks || 0, scenario, maintenanceState);
-      const totalDuration = computeSimulation(0, { initial, layers, deterioration: { effects: getDeteriorationEffects(deteriorationState) } }).totalDuration;
-      state.progress += delta * state.speed / Math.max(totalDuration, 1);
-      state.playedTime += delta * state.speed;
-      state.realElapsed += delta;
-      if (state.progress >= 1) { state.progress = 1; state.playing = false; journeyStep = 4; }
+    state.progress += delta * state.speed / Math.max(simulationModel?.totalDuration || 1, 1);
+    state.playedTime += delta * state.speed;
+    state.realElapsed += delta;
+    if (state.progress >= 1) {
+      state.progress = 1;
+      state.playing = false;
+      journeyStep = 4;
       render();
+      return;
     }
-
+    render({ playback: true });
+    if (!disposed && state.playing) animationFrame = requestAnimationFrame(tick);
   }
 
   mountMetrics();
   render();
-  tick();
 
   return {
     dispose() {
+      disposed = true;
       controller.abort();
+      trackObserver.disconnect();
       cancelAnimationFrame(animationFrame);
       dom.layerList.replaceChildren();
       dom.metricsGrid.replaceChildren();
